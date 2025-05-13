@@ -1,0 +1,142 @@
+import logo from "../assets/logisticsLogo.svg";import { Button } from "./ui/button";
+import { IoIosGitBranch } from "react-icons/io";
+import { FaRegUser } from "react-icons/fa6";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { MdOutlineLock } from "react-icons/md";
+import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { adminLoginApi, getBranchesApi } from "@/api/admin";
+import { branchLoginApi } from "@/api/branch";
+import { VscLoading } from "react-icons/vsc";
+
+interface BranchesType {
+  id: string;
+  branchName: string;
+}
+
+export default function Login() {
+  const router = useNavigate();
+  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
+  const [branches, setBranches] = useState<BranchesType[]>([]);
+  const [selectedValue, setSelectedValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!userName || !password) {
+      toast.warn("Please fill all the fields");
+      return;
+    }
+    setIsLoading(true);
+
+    if (selectedValue === "") {
+      toast.warn("Please select a Branch");
+      return;
+    } else if (selectedValue === "admin") {
+      const response = await adminLoginApi(userName, password);
+      if (response?.status === 200) {
+        toast.success("Login Successful");
+        localStorage.setItem("isAdmin", "true");
+        localStorage.setItem("id", response.data.admin.id);
+        localStorage.setItem("branchName", response.data.admin.branchName);
+        router("/home");
+      } else {
+        toast.error("Invalid Credentials or Server Error");
+      }
+    } else {
+      const response = await branchLoginApi(selectedValue, password);
+      if (response?.status === 200) {
+        toast.success("Login Successful");
+        localStorage.setItem("isAdmin", "false");
+        localStorage.setItem("id", response.data.data.id);
+        localStorage.setItem("branchName", response.data.data.branchName);
+        router("/home");
+      } else {
+        toast.error("Invalid Credentials or Server Error");
+      }
+    }
+    setIsLoading(false);
+  };
+
+  async function fetchBranches() {
+    const response = await getBranchesApi();
+    if (response?.status === 200) {
+      setBranches(response.data.data);
+    }
+  }
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  return (
+    <main className="grid place-content-center h-screen ">
+      <form
+        className="flex flex-col items-center gap-10 w-[20rem]"
+        onSubmit={onFormSubmit}
+      >
+        <img src={logo} alt="logo" />
+        <h3 className="font-medium text-xl">Welcome Back!</h3>
+        <div className="w-full">
+          <Select onValueChange={setSelectedValue} value={selectedValue}>
+            <SelectTrigger className="w-full border-black">
+              <p className="flex text-black items-center gap-2">
+                <IoIosGitBranch size={24} color="black" />
+                {selectedValue ? (
+                  <span className="capitalize">{selectedValue}</span>
+                ) : (
+                  <span>Select Branch</span>
+                )}
+              </p>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Admin</SelectItem>
+              {branches.map((branch) => (
+                <SelectItem value={branch.branchName} key={branch.id}>
+                  {branch.branchName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full text-sm gap-5 flex flex-col">
+          <div className="flex border border-black w-full items-center px-3 p-2 rounded-md gap-2">
+            <FaRegUser size={14} />
+            <input
+              placeholder="Username"
+              className="placeholder:text-black outline-none w-full"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </div>
+          <div className="flex border border-black w-full items-center px-3 p-2 rounded-md gap-2">
+            <MdOutlineLock size={17} />
+            <input
+              placeholder="Password"
+              className="placeholder:text-black outline-none w-full"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+        </div>
+        <Button
+          className="bg-primary w-full cursor-pointer "
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <VscLoading size={24} className="animate-spin" />
+          ) : (
+            "Login"
+          )}
+        </Button>
+      </form>
+    </main>
+  );
+}
