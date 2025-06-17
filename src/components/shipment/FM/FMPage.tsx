@@ -1,16 +1,28 @@
-import { LuSearch } from "react-icons/lu";
 
-import { FiSettings } from "react-icons/fi";
-import { BiBell } from "react-icons/bi";
 
 import { useEffect, useState } from "react";
-import FMCreate, { FMInputs } from "./FMCreate";
+import FMCreate from "./FMCreate";
 import FMList from "./FMList";
 import { getLRApi } from "@/api/shipment";
-import { LrInputs } from "../LR/LRCreate";
+import { FMInputs, LrInputs } from "@/types";
+
 
 export type FMSection = "FMList" | "createNew";
-type SectionsState = Record<FMSection, boolean>;
+type SectionState = Record<FMSection, boolean>;
+export interface BranchDetails {
+  id: string;
+  branchName: string;
+  branchManager: string;
+  contactNumber: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  username: string;
+  password: string;
+  employeeCount: string;
+  email:string
+}
 
 export default function FMPage() {
   const [selectedForm, setSelectedForm] = useState({
@@ -19,9 +31,8 @@ export default function FMPage() {
   });
   const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [selectedFMData, setSelectedFMData] = useState<FMInputs>();
-  const [formStatus, setFormStatus] = useState<
-    "edit" | "create" 
-  >("create");
+  const [branchDetails, setBranchDetails] = useState<BranchDetails>();
+  const [formStatus, setFormStatus] = useState<"edit" | "create">("create");
 
   const setSelectedFMDataToEdit = (data: FMInputs) => {
     setSelectedFMData(data);
@@ -40,57 +51,58 @@ export default function FMPage() {
 
   const sectionChangeHandler = (section: FMSection) => {
     setSelectedForm((prev) => {
-      const updatedSections: SectionsState = Object.keys(prev).reduce(
+      const updatedSections: SectionState = Object.keys(prev).reduce(
         (acc, key) => {
           acc[key as FMSection] = key === section;
           return acc;
         },
-        {} as SectionsState,
+        {} as SectionState,
       );
       return updatedSections;
     });
   };
 
-  async function fetchLRs() {
+  async function fetchLRs(branchId?: string) {
     const response = await getLRApi();
     if (response?.status === 200) {
-      setLRData(response.data.data);
+      const allLRs: LrInputs[] = response.data.data;
+
+      const filteredLRs = branchId
+        ? allLRs.filter((lr) => lr.branchId === branchId)
+        : allLRs;
+      setLRData(filteredLRs);
     }
   }
 
+
   useEffect(() => {
-    fetchLRs();
+    const id = localStorage.getItem("id");
+    if (!id) {
+      return;
+    }
+    const branch = localStorage.getItem("branchDetails");
+    if (!branch) {
+      return;
+    }    
+    const branchDetails = JSON.parse(branch);
+    setBranchDetails(branchDetails);
+    if(branchDetails){
+      fetchLRs(branchDetails.id);
+    }else{
+      fetchLRs();
+    }
   }, []);
+
+
 
   return (
     <>
-      <div className="flex w-full justify-between">
-        <div>
-          <p className="text-sm font-medium text-[#707EAE]">Admin</p>
-          <p className="text-3xl font-medium">Freight Memos (FMs)</p>
-        </div>
-        <div className="flex gap-5 rounded-full bg-white p-3 px-5">
-          <div className="flex items-center gap-2 rounded-full bg-[#F4F7FE] p-2">
-            <LuSearch size={18} />
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <FiSettings size={22} color="#A3AED0" />
-          </div>
-          <div className="flex items-center">
-            <BiBell size={24} color="#A3AED0" />
-          </div>
-        </div>
-      </div>
       {selectedForm.FMList && (
         <FMList
           sectionChangeHandler={sectionChangeHandler}
           setSelectedFMDataToEdit={setSelectedFMDataToEdit}
           setFormStatus={setFormStatus}
+          branchDetails={branchDetails}
         />
       )}
       {selectedForm.createNew && (
@@ -99,6 +111,7 @@ export default function FMPage() {
           selectedFMDataToEdit={selectedFMData}
           formStatus={formStatus}
           lrData={LRData}
+          branchDetails={branchDetails}
         />
       )}
     </>

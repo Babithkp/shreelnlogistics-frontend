@@ -1,7 +1,21 @@
 import { Page, Text, View, Document, Image } from "@react-pdf/renderer";
-import { FMInputs } from "./FMCreate";
+import { ProfileInputs } from "@/components/settings/Settings";
+import { BranchDetails } from "./FMPage";
+import { FMInputs } from "@/types";
 
-export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
+interface ExtendedFmInputs extends FMInputs {
+  mailBody?: string;
+}
+
+export const FMTemplate = ({
+  FmData,
+  branchDetails,
+  companyProfile
+}: {
+  FmData?: ExtendedFmInputs;
+  branchDetails: BranchDetails;
+  companyProfile?: ProfileInputs;
+}) => (
   <Document>
     <Page size="A4" style={{ fontSize: "12px", padding: 20 }}>
       <View
@@ -15,7 +29,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
           }}
         >
           <Image
-            src="https://i.ibb.co/5gkLZsD0/logo.png"
+            src="https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png"
             style={{
               width: 200,
               height: 50,
@@ -32,16 +46,13 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             </Text>
             <Text style={{ fontWeight: 500 }}>An ISO 9001 : 2015 Company</Text>
             <Text style={{ fontWeight: 500 }}>
-              Flat No.203, 3rd Floor, Sai Godavari Apartment, Kuduregere Road,
+              {companyProfile?.address}
             </Text>
             <Text style={{ fontWeight: 500 }}>
-              Madanayakanahalli, Bangalore Rural - 562162
+              Email: {companyProfile?.email}
             </Text>
             <Text style={{ fontWeight: 500 }}>
-              Email: bangalore@shreelnlogistics.com
-            </Text>
-            <Text style={{ fontWeight: 500 }}>
-              Ph.: Mob: 9036416520, 90364416521
+              Ph.: Mob: {companyProfile?.contactNumber}, {companyProfile?.alternateContactNumber}
             </Text>
           </View>
           <View
@@ -160,9 +171,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>Weight</Text>
-            <Text style={{ textAlign: "center" }}>{            <Text style={{ textAlign: "center" }}>[FmData.e]</Text>
-          }</Text>
-           
+            <Text style={{ textAlign: "center" }}>{FmData?.weight}</Text>
           </View>
           <View
             style={{
@@ -176,7 +185,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             <Text style={{ textAlign: "center", fontWeight: 500 }}>
               Payable at
             </Text>
-            <Text style={{ textAlign: "center" }}>Bangalore</Text>
+            <Text style={{ textAlign: "center" }}>{FmData?.to}</Text>
           </View>
           <View
             style={{
@@ -190,7 +199,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             <Text style={{ textAlign: "center", fontWeight: 500 }}>
               Package
             </Text>
-            <Text style={{ textAlign: "center" }}>10</Text>
+            <Text style={{ textAlign: "center" }}>{FmData?.package}</Text>
           </View>
           <View
             style={{
@@ -202,7 +211,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>To</Text>
-            <Text style={{ textAlign: "center" }}>Peenya</Text>
+            <Text style={{ textAlign: "center" }}>{FmData?.to}</Text>
           </View>
         </View>
         <View
@@ -211,7 +220,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             padding: 10,
             paddingHorizontal: 40,
             gap: 5,
-            minHeight: 150,
+            minHeight: 200,
           }}
         >
           <View
@@ -224,46 +233,19 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             <Text>Consigmnment No.</Text>
             <Text>Date</Text>
           </View>
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text>1. 5985</Text>
-            <Text>10-12-2015</Text>
-          </View>
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text>2. 5985</Text>
-            <Text>10-12-2015</Text>
-          </View>
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text>3. 5985</Text>
-            <Text>10-12-2015</Text>
-          </View>
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text>3. 5985</Text>
-            <Text>10-12-2015</Text>
-          </View>
+          {FmData?.LRDetails?.map((lrdata) => (
+            <View
+              style={{
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+              key={lrdata.lrNumber}
+            >
+              <Text>{lrdata.lrNumber}</Text>
+              <Text>{lrdata.date}</Text>
+            </View>
+          ))}
         </View>
         <View style={{ fontSize: 12, flexDirection: "row" }}>
           <View
@@ -280,7 +262,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
               }}
             >
               <Text>Broker Name: </Text>
-              <Text> Shree LN Logistics</Text>
+              <Text> {FmData?.vendorName}</Text>
             </View>
             <View
               style={{
@@ -293,11 +275,6 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             >
               <View style={{ flexDirection: "row" }}>
                 <Text>Telephone No. </Text>
-                <Text>994549935 </Text>
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <Text>Contact No. </Text>
-                <Text>994549935 </Text>
               </View>
             </View>
             <View
@@ -311,11 +288,11 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             >
               <View style={{ flexDirection: "row" }}>
                 <Text>Driver Name </Text>
-                <Text>BAbith</Text>
+                <Text>{FmData?.DriverName}</Text>
               </View>
               <View style={{ flexDirection: "row" }}>
                 <Text>Contact No. </Text>
-                <Text>994549935 </Text>
+                <Text>{FmData?.contactNumber}</Text>
               </View>
             </View>
             <View
@@ -329,11 +306,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             >
               <View style={{ flexDirection: "row" }}>
                 <Text>Owner Name </Text>
-                <Text>sudarshan</Text>
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <Text>Contact No. </Text>
-                <Text>994549935 </Text>
+                <Text>{FmData?.ownerName}</Text>
               </View>
             </View>
             <View
@@ -373,7 +346,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.hire}
               </Text>
             </View>
             <View
@@ -401,7 +374,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.advance}
               </Text>
             </View>
             <View
@@ -429,7 +402,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.balance}
               </Text>
             </View>
             <View
@@ -457,7 +430,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.otherCharges}
               </Text>
             </View>
             <View
@@ -485,7 +458,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.detentionCharges}
               </Text>
             </View>
             <View
@@ -513,7 +486,7 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.rtoCharges}
               </Text>
             </View>
             <View
@@ -541,15 +514,15 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
                   padding: 5,
                 }}
               >
-                10,500.12
+                {FmData?.netBalance}
               </Text>
             </View>
             <View style={{ gap: 5 }}>
               <Text style={{ paddingLeft: 20, padding: 5 }}>
                 Amount in words
               </Text>
-              <Text style={{ paddingRight: 20, padding: 5 }}>
-                One Thousand Rupees only
+              <Text style={{ paddingRight: 20, padding: 5,textTransform:"capitalize" }}>
+                {FmData?.amountInwords} rupees only
               </Text>
             </View>
           </View>
@@ -578,8 +551,8 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
               compenalte office of the challan.
             </Text>
             <View>
-              <Text>Driver's Name ...........................</Text>
-              <Text>D.L. No ...........................</Text>
+              <Text>Driver's Name ..............................</Text>
+              <Text>D.L. No ....................................</Text>
               <Text>Driver Signature ...........................</Text>
             </View>
           </View>
@@ -600,14 +573,14 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
               the goods entrusted to the said lorry for safe arrival at the
               destination
             </Text>
-            <Text style={{ width: "50%", textAlign: "center" }}>
+            <Text style={{ width: "60%", textAlign: "center" }}>
               Signature of Lorry Guarantor
             </Text>
           </View>
           <View
             style={{
               border: "1px solid black",
-              width: "100%",
+              width: "90%",
               borderRadius: 10,
               paddingVertical: 10,
               gap: 5,
@@ -625,15 +598,15 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
               }}
             >
               <Text>Issue Branch</Text>
-              <Text>Bangalore</Text>
+              <Text>{branchDetails.branchName}</Text>
             </View>
             <View
               style={{
                 paddingHorizontal: 10,
                 width: "100%",
                 textAlign: "center",
-                justifyContent:"center",
-                alignItems:"center",
+                justifyContent: "center",
+                alignItems: "center",
                 padding: 5,
                 gap: 10,
               }}
@@ -643,14 +616,24 @@ export const FMTemplate = ({FmData}:{FmData?:FMInputs}) => (
             </View>
           </View>
         </View>
-        <View style={{ borderTop: "1px solid black",fontSize:10,paddingHorizontal:5,gap:10 ,paddingVertical:10}}>
+        <View
+          style={{
+            borderTop: "1px solid black",
+            fontSize: 10,
+            paddingHorizontal: 5,
+            gap: 10,
+            paddingVertical: 10,
+          }}
+        >
           <Text>
             No Delivery on Sunday. 1. Deduction @ 1000 per Ton will be made if
             the goods are transhipped on enrouted. 2. Delay Delivery will be
             deducted if goods not delivered above mentioned days. 3. Balance
             Payment will made on payment original copy only.
           </Text>
-          <Text style={{fontWeight:600,textAlign:"center"}}>DRIVER COPY</Text>
+          <Text style={{ fontWeight: 600, textAlign: "center" }}>
+            DRIVER COPY
+          </Text>
         </View>
       </View>
     </Page>

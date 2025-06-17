@@ -1,10 +1,6 @@
-
-
-import { FiSettings } from "react-icons/fi";
-import { BiBell } from "react-icons/bi";
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
-import { FaChevronDown, FaRegClock } from "react-icons/fa";
-import { LuSearch } from "react-icons/lu";
+import { FaChevronDown } from "react-icons/fa";
+
 import { RiDeleteBin6Line, RiEditBoxLine, RiTruckLine } from "react-icons/ri";
 import { LiaHandsHelpingSolid } from "react-icons/lia";
 import { Select as AntSelect } from "antd";
@@ -59,41 +55,21 @@ import {
   updateVehicleDetailsApi,
   updateVendorDetailsApi,
 } from "@/api/partner";
-
-export type VendorInputs = {
-  id: string;
-  name: string;
-  GSTIN: string;
-  branchName: string;
-  contactPerson: string;
-  contactNumber: string;
-  pincode: string;
-  address: string;
-  TDS: string;
-  email: string;
-  city: string;
-  state: string;
-  outstandingLimit: string;
-  vehicles: VehicleInputs[];
-};
-
-export type VehicleInputs = {
-  id: string;
-  vendorName: string;
-  vehicletypes: string;
-  vehicleNumber: string;
-  ownerName: string;
-  ownerPhone: string;
-  driverName: string;
-  driverPhone: string;
-  insurance: string;
-  RC: string;
-};
+import { getGeneralSettingsApi } from "@/api/settings";
+import { generalSettings, VehicleInputs, VendorInputs } from "@/types";
+import { createNotificationApi } from "@/api/admin";
+import { LuSearch } from "react-icons/lu";
 
 type Option = { value: string; label: string };
 type SortOrder = "asc" | "desc";
 
-export default function VendorManagement({vendorsData, vehiclesData}:{vendorsData:VendorInputs[], vehiclesData:VehicleInputs[]}) {
+export default function VendorManagement({
+  vendorsData,
+  vehiclesData,
+}: {
+  vendorsData: VendorInputs[];
+  vehiclesData: VehicleInputs[];
+}) {
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,15 +85,34 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleInputs>();
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [modalStatus, setModalStatus] = useState<"vendor" | "vehicle">(
-    "vendor"
+    "vendor",
   );
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
+  const [branch, setBranch] = useState({
+    branchId: "",
+    branchName: "",
+    isAdmin: false,
+  });
+  const [search, setSearch] = useState("");
 
-  useEffect(()=>{
-    setVehicles(vehiclesData)
-    setFilteredVehicles(vehiclesData)
-    setVendors(vendorsData)
-    setFilteredVendors(vendorsData)
-  },[vendorsData, vehiclesData])
+  async function fetchVehicleType() {
+    const response = await getGeneralSettingsApi();
+    if (response?.status === 200) {
+      const vehicles: generalSettings = response.data.data;
+
+      setVehicleTypes(vehicles.vehicleTypes);
+    }
+  }
+  useEffect(() => {
+    fetchVehicleType();
+  }, []);
+
+  useEffect(() => {
+    setVehicles(vehiclesData);
+    setFilteredVehicles(vehiclesData);
+    setVendors(vendorsData);
+    setFilteredVendors(vendorsData);
+  }, [vendorsData, vehiclesData]);
 
   const {
     handleSubmit,
@@ -137,6 +132,35 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
     watch: VehicleWatch,
     formState: { errors: VehicleErrors },
   } = useForm<VehicleInputs>();
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const text = search.trim().toLowerCase();
+
+      if (!text) {
+        setFilteredVendors(vendors);
+        return;
+      }
+      const filtered = vendors.filter((vendor) =>
+        [
+          vendor.name,
+          vendor.GSTIN,
+          vendor.contactPerson,
+          vendor.contactNumber,
+          vendor.address,
+          vendor.city,
+          vendor.state,
+          vendor.pincode,
+        ]
+          .filter(Boolean)
+          .some((field) => field?.toLowerCase().includes(text)),
+      );
+
+      setFilteredVendors(filtered);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search, vendors]);
 
   const onVehicleSubmit = async (data: VehicleInputs) => {
     setIsLoading(true);
@@ -158,6 +182,16 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
         VehicleReset();
         setIsCreateVehicleOpen(false);
         fetchVendors();
+        if (!branch.isAdmin) {
+          const notificationData = {
+            requestId: selectedVehicle?.id,
+            title: "Vehicle edit",
+            message: branch.branchName,
+            description: selectedVehicle?.vendorName,
+            status: "editable",
+          };
+          await createNotificationApi(notificationData);
+        }
       } else {
         toast.error("Something Went Wrong");
       }
@@ -176,9 +210,9 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
       const response = await createVendorApi(data);
       if (response?.status === 200) {
         toast.success("Vendor Created");
+        fetchVendors();
         reset();
         setIsModalOpen(false);
-        fetchVendors();
       } else if (response?.status === 201) {
         setIsVendorNameAvailable(false);
         setTimeout(() => {
@@ -194,6 +228,16 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
         reset();
         setIsModalOpen(false);
         fetchVendors();
+        if (!branch.isAdmin) {
+          const notificationData = {
+            requestId: selectedVendor?.id,
+            title: "Vendor edit",
+            message: branch.branchName,
+            description: selectedVendor?.name,
+            status: "editable",
+          };
+          await createNotificationApi(notificationData);
+        }
       } else if (response?.status === 201) {
         setIsVendorNameAvailable(false);
         setTimeout(() => {
@@ -212,6 +256,16 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
       toast.success("Vendor Deleted");
       fetchVendors();
       setIsDetailsModalOpen(false);
+      if (!branch.isAdmin) {
+        const notificationData = {
+          requestId: selectedVendor?.id,
+          title: "Vendor delete",
+          message: branch.branchName,
+          description: selectedVendor?.name,
+          status: "editable",
+        };
+        await createNotificationApi(notificationData);
+      }
     } else {
       toast.error("Failed to Delete Vendor");
     }
@@ -225,6 +279,16 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
       setIsDetailsModalOpen(false);
       fetchVehicles();
       fetchVendors();
+      if (!branch.isAdmin) {
+        const notificationData = {
+          requestId: selectedVendor?.id,
+          title: "Vehicle delete",
+          message: branch.branchName,
+          description: selectedVendor?.name,
+          status: "editable",
+        };
+        await createNotificationApi(notificationData);
+      }
     } else {
       toast.error("Failed to Delete Vehicle");
     }
@@ -235,18 +299,24 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
     const sorted = [...vendors].sort((a, b) =>
       newOrder === "asc"
         ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name)
+        : b.name.localeCompare(a.name),
     );
     setVendorSortOrder(newOrder);
     setFilteredVendors(sorted);
   };
+
+  function extractVehicleTypeOptions(types: string[]): Option[] {
+    return types.map((type) => ({
+      label: type,
+      value: type,
+    }));
+  }
 
   function extractVendorNameOptions(vendors: VendorInputs[]): Option[] {
     const vendorOptions = vendors.map((vendor) => ({
       value: vendor.name,
       label: vendor.name,
     }));
-    vendorOptions.push({ value: "Others", label: "Others" });
     return vendorOptions;
   }
 
@@ -256,7 +326,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
     if (selectedVendor) {
       VehicleSetValue("ownerName", selectedVendor.contactPerson);
       VehicleSetValue("ownerPhone", selectedVendor.contactNumber);
-    }else{
+    } else {
       VehicleSetValue("ownerName", "");
       VehicleSetValue("ownerPhone", "");
     }
@@ -318,81 +388,85 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
     }
   }
 
+  useEffect(() => {
+    fetchVehicles();
+
+    const isAdmin = localStorage.getItem("isAdmin");
+    const branchDetails = localStorage.getItem("branchDetails");
+    if (isAdmin === "false" && branchDetails) {
+      const branchData = JSON.parse(branchDetails);
+      setBranch({
+        branchId: branchData.id,
+        branchName: branchData.branchName,
+        isAdmin: false,
+      });
+    } else {
+      setBranch({
+        branchId: "",
+        branchName: "",
+        isAdmin: true,
+      });
+    }
+  }, []);
+
   return (
     <>
-      <div className="flex w-full justify-between ">
-        <div>
-          <p className="text-sm text-[#707EAE] font-medium ">Admin</p>
-          <p className="font-medium text-3xl">Vendor Management</p>
+      <div className="relative flex gap-10">
+        <div className="absolute -top-17 right-[13vw] flex items-center gap-2 rounded-full bg-white p-3 px-5">
+          <LuSearch size={18} />
+          <input
+            placeholder="Search"
+            className="outline-none placeholder:font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <div className="bg-white p-3 rounded-full flex px-5 gap-5">
-          <div className="bg-[#F4F7FE] rounded-full flex p-2 items-center gap-2">
-            <LuSearch size={18} />
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <FiSettings size={22} color="#A3AED0" />
-          </div>
-          <div className="flex items-center">
-            <BiBell size={24} color="#A3AED0" />
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-10">
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
+        <div className="flex w-full rounded-xl bg-white p-5">
+          <div className="flex items-center gap-5">
+            <div className="rounded-full bg-[#F4F7FE] p-3">
               <LiaHandsHelpingSolid size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className=" text-sm text-muted">Vendors</p>
-              <p className=" text-xl">{vendors?.length}</p>
+              <p className="text-muted text-sm">Vendors</p>
+              <p className="text-xl">{vendors?.length}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
+        <div className="flex w-full rounded-xl bg-white p-5">
+          <div className="flex items-center gap-5">
+            <div className="rounded-full bg-[#F4F7FE] p-3">
               <HiOutlineCurrencyRupee size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className=" text-sm text-muted">Total outstanding payment</p>
-              <p className=" text-xl">INR 25,000</p>
+              <p className="text-muted text-sm">Total outstanding payment</p>
+              <p className="text-xl">
+                INR{" "}
+                {vendors
+                  .reduce((acc, data) => acc + data.currentOutStanding, 0)
+                  .toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
+        <div className="flex w-full rounded-xl bg-white p-5">
+          <div className="flex items-center gap-5">
+            <div className="rounded-full bg-[#F4F7FE] p-3">
               <RiTruckLine size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className=" text-sm text-muted">Total vehicles</p>
-              <p className=" text-xl">{vehicles?.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
-              <FaRegClock size={30} color="#2196F3" />
-            </div>
-            <div className="font-medium">
-              <p className=" text-sm text-muted">Average delivery time</p>
-              <p className=" text-xl">10 Days</p>
+              <p className="text-muted text-sm">Total vehicles</p>
+              <p className="text-xl">{vehicles?.length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-5 bg-white rounded-md flex flex-col gap-5">
-        <div className="flex justify-between items-center">
-          <p className="font-medium text-xl">Vendors</p>
+      <div className="flex flex-col gap-5 rounded-md bg-white p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-medium">
+            {showVehicles ? "All Vechiles" : "All Vendors"}
+          </p>
           <div className="flex gap-5">
             <Modal
               open={isModalOpen}
@@ -407,11 +481,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
               >
                 <p className="w-full text-xl font-semibold">New Vendor</p>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Vendor Name</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("name", { required: true })}
                     />
                   </div>
@@ -425,11 +499,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Vendor’s GSTIN</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("GSTIN", {
                         required: true,
                         minLength: 15,
@@ -444,23 +518,23 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">
                       Branch Name (Optional)
                     </label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("branchName")}
                     />
                   </div>
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Contact Person</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("contactPerson", {
                         required: true,
                       })}
@@ -471,11 +545,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Contact Number</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("contactNumber", {
                         required: true,
                         minLength: 10,
@@ -490,11 +564,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Email ID</label>
                     <input
                       type="email"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("email", {
                         required: true,
                       })}
@@ -507,10 +581,10 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-full">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Address</label>
                     <textarea
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("address", { required: true })}
                     />
                   </div>
@@ -519,11 +593,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Pincode</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("pincode", {
                         required: true,
                       })}
@@ -534,11 +608,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">City</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("city", {
                         required: true,
                       })}
@@ -549,11 +623,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[30%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">State</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("state", {
                         required: true,
                       })}
@@ -565,7 +639,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                 </div>
 
                 <div className="w-[49%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">TDS</label>
                     <Controller
                       control={control}
@@ -581,7 +655,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                           ]}
                           placeholder="Select TDS"
                           size="large"
-                          className="outline outline-primary rounded-md"
+                          className="outline-primary rounded-md outline"
                         />
                       )}
                     />
@@ -591,14 +665,14 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[49%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label className="font-medium">Outstanding Limit</label>
-                    <div className="flex border border-primary  rounded-md items-center pl-2 ">
+                    <div className="border-primary flex items-center rounded-md border pl-2">
                       <p className="text-xs font-medium">INR</p>
                       <input
                         type="number"
                         placeholder="00000.00"
-                        className="pl-2 p-1 py-2 outline-none w-full"
+                        className="w-full p-1 py-2 pl-2 outline-none"
                         {...register("outstandingLimit", {
                           required: true,
                         })}
@@ -611,8 +685,8 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                     </p>
                   )}
                 </div>
-                <div className="w-full justify-end flex">
-                  <Button className="px-7 rounded-xl" disabled={isLoading}>
+                <div className="flex w-full justify-end">
+                  <Button className="rounded-xl px-7" disabled={isLoading}>
                     {isLoading ? (
                       <VscLoading size={24} className="animate-spin" />
                     ) : formStatus === "New" ? (
@@ -639,7 +713,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   {formStatus === "New" ? "New Vehicle" : "Edit Vehicle"}
                 </p>
                 <div className="w-[32%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Vendor Name</label>
                     <Controller
                       name="vendorName"
@@ -650,7 +724,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                           {...field}
                           options={extractVendorNameOptions(vendors)}
                           placeholder="Select Vendor Name"
-                          className="w-full outline outline-primary  rounded-md "
+                          className="outline-primary w-full rounded-md outline"
                           size="large"
                           onChange={(value) => {
                             field.onChange(value);
@@ -663,7 +737,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   </div>
                 </div>
                 <div className="w-[32%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Vehicle Type</label>
                     <Controller
                       name="vehicletypes"
@@ -673,12 +747,9 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                       render={({ field }) => (
                         <AntSelect
                           {...field}
-                          options={[
-                            { value: "Car", label: "Car" },
-                            { value: "Motorcycle", label: "Motorcycle" },
-                          ]}
+                          options={extractVehicleTypeOptions(vehicleTypes)}
                           placeholder="Select vehicle types"
-                          className="w-full outline outline-primary  rounded-md "
+                          className="outline-primary w-full rounded-md outline"
                           size="large"
                         />
                       )}
@@ -691,7 +762,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[32%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Vehicle Number</label>
                     <Controller
                       name="vehicleNumber"
@@ -701,7 +772,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                       render={({ field }) => (
                         <input
                           type="text"
-                          className="border border-primary p-1 py-2 rounded-md pl-2"
+                          className="border-primary rounded-md border p-1 py-2 pl-2"
                           {...field}
                           onChange={(e) =>
                             field.onChange(formatText(e.target.value))
@@ -715,11 +786,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[23%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Owner Name</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       style={
                         formStatus === "editing"
                           ? {
@@ -745,11 +816,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[23%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Owner Contact</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       style={
                         formStatus === "editing"
                           ? {
@@ -779,11 +850,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[23%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Driver Name</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...VehicleRegister("driverName", {
                         validate: (value) =>
                           !VehicleWatch("vendorName")
@@ -799,11 +870,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[23%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Driver Contact</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...VehicleRegister("driverPhone", {
                         minLength: 10,
                         maxLength: 10,
@@ -823,7 +894,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                 </div>
 
                 <div className="w-[49%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>Insurance</label>
                     <Controller
                       name="insurance"
@@ -838,7 +909,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                             { value: "Not insured", label: "Not insured" },
                           ]}
                           placeholder="Select insurance"
-                          className="w-full outline outline-primary  rounded-md "
+                          className="outline-primary w-full rounded-md outline"
                           size="large"
                         />
                       )}
@@ -849,7 +920,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   )}
                 </div>
                 <div className="w-[49%]">
-                  <div className="flex flex-col gap-2 ">
+                  <div className="flex flex-col gap-2">
                     <label>RC</label>
                     <Controller
                       control={VehicleControl}
@@ -860,12 +931,12 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                         <AntSelect
                           {...field}
                           options={[
-                            { value: "Available", label: "Avialable" },
-                            { value: "Not Avialable", label: "Not Avialable" },
+                            { value: "Available", label: "Available" },
+                            { value: "Not Available", label: "Not Available" },
                           ]}
                           placeholder="Select RC"
                           size="large"
-                          className="outline outline-primary rounded-md"
+                          className="outline-primary rounded-md outline"
                         />
                       )}
                     />
@@ -874,15 +945,15 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                     <p className="text-red-500">{VehicleErrors.RC.message}</p>
                   )}
                 </div>
-                <div className="w-full justify-end flex gap-5">
+                <div className="flex w-full justify-end gap-5">
                   <Button
                     onClick={() => VehicleReset()}
-                    className="px-7 rounded-xl"
+                    className="rounded-xl px-7"
                     disabled={isLoading}
                   >
                     Reset
                   </Button>
-                  <Button className="px-7 rounded-xl" disabled={isLoading}>
+                  <Button className="rounded-xl px-7" disabled={isLoading}>
                     {isLoading ? (
                       <VscLoading size={24} className="animate-spin" />
                     ) : formStatus === "New" ? (
@@ -896,7 +967,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
             </Modal>
 
             <Button
-              className="bg-secondary hover:bg-muted/30 rounded-xl text-black cursor-pointer"
+              className="bg-secondary hover:bg-muted/30 cursor-pointer rounded-xl text-black"
               onClick={() => setShowVehicles(!showVehicles)}
             >
               {showVehicles ? "Show Vendors" : "Show Vehicles"}
@@ -908,14 +979,14 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                 VehicleReset(),
                 setFormStatus("New"),
               ]}
-              className="text-[#2196F3] rounded-xl py-5 border-primary cursor-pointer"
+              className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
             >
               <IoMdAdd size={30} />
               Add Vehicle
             </Button>
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="rounded-xl py-5 cursor-pointer"
+              className="cursor-pointer rounded-xl py-5"
             >
               <IoMdAdd color="white" size={30} />
               Add Vendor
@@ -926,7 +997,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
           <table>
             <thead>
               <tr>
-                <th className="font-[400] text-start text-[#797979] flex items-center gap-2">
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
                   <p>Vendor Name</p>
                   <FaChevronDown
                     size={15}
@@ -934,24 +1005,23 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                     onClick={sortVendorsByName}
                   />
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Owner Name
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Fleet size
                 </th>
-                <th className="font-[400] text-start text-[#797979] flex items-center gap-2">
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
                   <p>Pending payment</p>
-                  <FaChevronDown size={15} className="cursor-pointer" />
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Total Hire Cost
                 </th>
-                <th className="font-[400] text-start text-[#797979]">TDS</th>
+                <th className="text-start font-[400] text-[#797979]">TDS</th>
               </tr>
             </thead>
             <tbody>
-              {filteredVendors?.map((vendor) => (
+              {filteredVendors?.map((vendor: VendorInputs) => (
                 <tr
                   key={vendor.id}
                   className="hover:bg-accent cursor-pointer"
@@ -963,8 +1033,16 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   <td className="py-2">{vendor.name}</td>
                   <td className="py-2">{vendor.contactPerson}</td>
                   <td className="py-2">{vendor.vehicles.length}</td>
-                  <td className="py-2">INR 0</td>
-                  <td className="py-2">INR 0</td>
+                  <td className="py-2">
+                    INR {vendor.currentOutStanding.toFixed(2)}
+                  </td>
+                  <td className="py-2">
+                    INR{" "}
+                    {vendor.FM?.reduce(
+                      (acc, data) => acc + parseFloat(data.netBalance || "0"),
+                      0,
+                    )}
+                  </td>
                   <td className="py-2">{vendor.TDS}</td>
                 </tr>
               ))}
@@ -975,19 +1053,19 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
           <table>
             <thead>
               <tr>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Vendor Name
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Vehicle Number
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Vehicle Type
                 </th>
-                <th className="font-[400] text-start text-[#797979]">
+                <th className="text-start font-[400] text-[#797979]">
                   Insurance
                 </th>
-                <th className="font-[400] text-start text-[#797979]">RC</th>
+                <th className="text-start font-[400] text-[#797979]">RC</th>
               </tr>
             </thead>
             <tbody>
@@ -1008,11 +1086,11 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
         <DialogTrigger className="hidden"></DialogTrigger>
         {modalStatus === "vendor" && (
           <DialogContent className="min-w-7xl">
-            <DialogHeader className="flex flex-row justify-between items-start ">
+            <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">Vendor Details</DialogTitle>
-              <div className="mr-10 flex gap-3 ">
+              <div className="mr-10 flex gap-3">
                 <Button
-                  className="bg-[#F0F8FF] hover:bg-[#dfecf9] text-black cursor-pointer"
+                  className="cursor-pointer bg-[#F0F8FF] text-black hover:bg-[#dfecf9]"
                   onClick={() => setModalStatus("vehicle")}
                 >
                   Vehicle List
@@ -1035,7 +1113,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Alert!</AlertDialogTitle>
-                      <AlertDialogDescription className="text-black font-medium">
+                      <AlertDialogDescription className="font-medium text-black">
                         Are you sure you want to remove this vendor? This action
                         will remove all the vehicles associated with this
                         vendor. This action is permanent and cannot be undone.
@@ -1045,7 +1123,9 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                        onClick={() => onVendorDeleteHandler(selectedVendor!.id)}
+                        onClick={() =>
+                          onVendorDeleteHandler(selectedVendor!.id)
+                        }
                       >
                         Delete
                       </AlertDialogAction>
@@ -1056,32 +1136,32 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
             </DialogHeader>
             <DialogDescription></DialogDescription>
             <div className="grid grid-cols-3 gap-5">
-              <div className="flex  gap-5 items-center">
+              <div className="flex items-center gap-5">
                 <label className="font-medium">Vendor Name</label>
                 <p>{selectedVendor?.name}</p>
               </div>
-              <div className="flex  gap-5 items-center col-span-2">
+              <div className="col-span-2 flex items-center gap-5">
                 <label className="font-medium">Vendor GSTIN</label>
                 <p>{selectedVendor?.GSTIN}</p>
               </div>
-              <div className="flex  gap-5 items-center ">
+              <div className="flex items-center gap-5">
                 <label className="font-medium">Contact Person</label>
                 <p>{selectedVendor?.contactPerson}</p>
               </div>
-              <div className="flex  gap-5 items-center ">
+              <div className="flex items-center gap-5">
                 <label className="font-medium">Contact Number</label>
                 <p>{selectedVendor?.contactNumber}</p>
               </div>
-              <div className="flex  gap-5 items-center ">
+              <div className="flex items-center gap-5">
                 <label className="font-medium">Email id</label>
                 <p>{selectedVendor?.email}</p>
                 <Popover>
-                  <PopoverTrigger className="cursor-pointer ">
+                  <PopoverTrigger className="cursor-pointer">
                     <TbCopy
                       size={20}
                       onClick={() =>
                         navigator.clipboard.writeText(
-                          selectedVendor!.email.toString()
+                          selectedVendor!.email.toString(),
                         )
                       }
                     />
@@ -1089,80 +1169,95 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                   <PopoverContent className="w-fit p-2">Copied!</PopoverContent>
                 </Popover>
               </div>
-              <div className="flex  gap-2 items-start flex-col col-span-full ">
+              <div className="col-span-full flex flex-col items-start gap-2">
                 <label className="font-medium">Address</label>
                 <p>{selectedVendor?.address}</p>
               </div>
-              <div className="flex  gap-5 items-start ">
+              <div className="flex items-start gap-5">
                 <label className="font-medium">Pin Code</label>
                 <p>{selectedVendor?.pincode}</p>
               </div>
-              <div className="flex  gap-5 items-start ">
+              <div className="flex items-start gap-5">
                 <label className="font-medium">City</label>
                 <p>{selectedVendor?.city}</p>
               </div>
-              <div className="flex  gap-5 items-start ">
+              <div className="flex items-start gap-5">
                 <label className="font-medium">State</label>
                 <p>{selectedVendor?.state}</p>
               </div>
-              <div className="flex  gap-2 items-start flex-col col-span-full">
+              <div className="col-span-full flex flex-col items-start gap-2">
                 <label className="font-medium">Vehicle type available</label>
-                <div className=" pl-5 grid grid-cols-3 w-full ">
+                <div className="grid w-full grid-cols-3 pl-5">
                   {selectedVendor?.vehicles.map((vehicles) => (
-                    <div className="flex items-center gap-3 ">
+                    <div className="flex items-center gap-3">
                       <GoDotFill size={12} />
                       <p>{vehicles.vehicletypes}</p>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="flex  gap-5 items-start ">
+              <div className="flex items-start gap-5">
                 <label className="font-medium">Current Outstanding</label>
-                <p>INR {selectedVendor?.outstandingLimit}</p>
+                <p>INR {selectedVendor?.currentOutStanding}</p>
               </div>
-              <div className="flex  gap-5 items-start col-span-2 justify-end">
+              <div className="col-span-2 flex items-start justify-end gap-5">
                 <label className="font-medium">Outstanding Limit</label>
                 <p>INR {selectedVendor?.outstandingLimit}</p>
               </div>
-              <div className="col-span-full">
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger className="bg-primary/30 px-4">
-                      Recent Payments
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-primary/30 px-2 rounded-b-md">
-                      <table className="bg-white rounded-md px-2 w-full">
-                        <thead>
-                          <tr>
-                            <th className="font-medium p-1">Sl no</th>
-                            <th className="font-medium">Amount Received</th>
-                            <th className="font-medium">Date</th>
-                            <th className="font-medium">Payment mode</th>
-                            <th className="font-medium">
-                              Trans. ID/Cheque Number
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="text-center hover:bg-accent">
-                            <td className="p-2">1</td>
-                            <td>INR 25,000</td>
-                            <td>20/10/2022</td>
-                            <td>Cash</td>
-                            <td>1234567890</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
+              {selectedVendor?.FM?.some(
+                (fm) => fm.PaymentRecords?.length > 0,
+              ) && (
+                <div className="col-span-full">
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger className="bg-primary/30 px-4">
+                        Recent Payments
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-primary/30 rounded-b-md px-2">
+                        <table className="w-full rounded-md bg-white px-2">
+                          <thead>
+                            <tr>
+                              <th className="p-1 font-medium">Sl no</th>
+                              <th className="font-medium">Amount Received</th>
+                              <th className="font-medium">Date</th>
+                              <th className="font-medium">Payment mode</th>
+                              <th className="font-medium">
+                                Trans. ID/Cheque Number
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedVendor?.FM?.map((FMdata, i) => (
+                              <>
+                                {FMdata.PaymentRecords.map((record) => (
+                                  <tr
+                                    className="hover:bg-accent text-center"
+                                    key={record.id}
+                                  >
+                                    <td className="p-2">{i + 1}</td>
+                                    <td>
+                                      INR {parseFloat(record.amount).toFixed(2)}
+                                    </td>
+                                    <td>{record.date}</td>
+                                    <td>{record.paymentMode}</td>
+                                    <td>{record.transactionNumber}</td>
+                                  </tr>
+                                ))}
+                              </>
+                            ))}
+                          </tbody>
+                        </table>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              )}
             </div>
           </DialogContent>
         )}
         {modalStatus === "vehicle" && (
           <DialogContent className="min-w-7xl">
-            <DialogHeader className="flex flex-row justify-between items-start">
+            <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">
                 Vehicle List - {selectedVendor?.name}
               </DialogTitle>
@@ -1172,22 +1267,22 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="font-medium text-start text-[#797979]">
+                    <th className="text-start font-medium text-[#797979]">
                       Sl no
                     </th>
-                    <th className="font-medium text-start text-[#797979]">
+                    <th className="text-start font-medium text-[#797979]">
                       Vehicle Number
                     </th>
-                    <th className="font-medium text-start text-[#797979]">
+                    <th className="text-start font-medium text-[#797979]">
                       Vehicle Type
                     </th>
-                    <th className="font-medium text-start text-[#797979]">
+                    <th className="text-start font-medium text-[#797979]">
                       Insturance
                     </th>
-                    <th className="font-medium text-start text-[#797979]">
+                    <th className="text-start font-medium text-[#797979]">
                       RC
                     </th>
-                    <th className="font-medium  text-[#797979]">Actions</th>
+                    <th className="font-medium text-[#797979]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1198,8 +1293,8 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                       <td>{vehicle.vehicletypes}</td>
                       <td>{vehicle.insurance}</td>
                       <td>{vehicle.RC}</td>
-                      <td className="flex justify-center items-center">
-                        <div className="flex gap-2 ">
+                      <td className="flex items-center justify-center">
+                        <div className="flex gap-2">
                           <button
                             className="cursor-pointer"
                             onClick={() => [
@@ -1219,14 +1314,19 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Alert!</AlertDialogTitle>
-                                <AlertDialogDescription className="text-black font-medium">
+                                <AlertDialogDescription className="font-medium text-black">
                                   Are you sure you want to remove this vehicle?
                                   This action is permanent and cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50" onClick={() => onVehicleDeleteHandler(vehicle.id)}>
+                                <AlertDialogAction
+                                  className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
+                                  onClick={() =>
+                                    onVehicleDeleteHandler(vehicle.id)
+                                  }
+                                >
                                   Delete
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -1239,7 +1339,7 @@ export default function VendorManagement({vendorsData, vehiclesData}:{vendorsDat
                 </tbody>
               </table>
               <Button
-                className="bg-[#F0F8FF] hover:bg-[#dfecf9] text-black cursor-pointer w-fit"
+                className="w-fit cursor-pointer bg-[#F0F8FF] text-black hover:bg-[#dfecf9]"
                 onClick={() => setModalStatus("vendor")}
               >
                 Vendor details

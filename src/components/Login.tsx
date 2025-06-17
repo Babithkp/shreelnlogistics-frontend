@@ -44,8 +44,8 @@ export default function Login() {
       if (response?.status === 200) {
         toast.success("Login Successful");
         localStorage.setItem("isAdmin", "true");
-        localStorage.setItem("id", response.data.admin.id);
-        localStorage.setItem("branchName", response.data.admin.branchName);
+        localStorage.setItem("id", response.data.data.id);
+        localStorage.setItem("branchDetails", JSON.stringify(response.data.data));
         router("/home");
       } else {
         toast.error("Invalid Credentials or Server Error");
@@ -56,7 +56,7 @@ export default function Login() {
         toast.success("Login Successful");
         localStorage.setItem("isAdmin", "false");
         localStorage.setItem("id", response.data.data.id);
-        localStorage.setItem("branchName", response.data.data.branchName);
+        localStorage.setItem("branchDetails", JSON.stringify(response.data.data));
         router("/home");
       } else {
         toast.error("Invalid Credentials or Server Error");
@@ -123,6 +123,7 @@ export default function Login() {
               className="placeholder:text-black outline-none w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              type="password"
             />
           </div>
         </div>

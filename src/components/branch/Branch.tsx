@@ -1,8 +1,3 @@
-import { LuSearch } from "react-icons/lu";
-import { BiBell } from "react-icons/bi";
-
-
-import { FiSettings } from "react-icons/fi";
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { PiBuildingOfficeLight } from "react-icons/pi";
 import { Button } from "../ui/button";
@@ -53,22 +48,8 @@ import { FaChevronDown } from "react-icons/fa6";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { TbCopy } from "react-icons/tb";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-
-export type CreateBranchInputs = {
-  id: string;
-  branchName: string;
-  branchManager: string;
-  contactNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  username: string;
-  password: string;
-  employeeCount: string;
-  totalBillingValue: string;
-  email: string;
-};
+import { BranchInputs } from "@/types";
+import { LuSearch } from "react-icons/lu";
 
 type EditBranchPassword = {
   adminPassword: string;
@@ -78,10 +59,9 @@ type EditBranchPassword = {
 
 type SortOrder = "asc" | "desc" | "";
 
-export default function Branch({ data }: { data: CreateBranchInputs[] }) {
-  const [filteredBranches, setFilteredBranches] = useState<
-    CreateBranchInputs[]
-  >([]);
+export default function Branch() {
+  const [filteredBranches, setFilteredBranches] = useState<BranchInputs[]>([]);
+  const [branches, setBranches] = useState<BranchInputs[]>([]);
 
   const [sortState, setSortState] = useState<{
     employeeCount: SortOrder;
@@ -97,10 +77,11 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [isBranchDetailsModalOpen, setIsBranchDetailsModalOpen] =
     useState(false);
-  const [branchDetails, setBranchDetails] = useState<CreateBranchInputs>();
+  const [branchDetails, setBranchDetails] = useState<BranchInputs>();
   const [showPassword, setShowPassword] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [isBranchNameAvailable, setIsBranchNameAvailable] = useState(true);
+  const [search, setSearch] = useState("");
 
   const deleteBranchHandler = async () => {
     const id = selectedBranch;
@@ -120,10 +101,52 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
     const response = await getAllBranchDetailsApi();
     if (response?.status === 200) {
       setFilteredBranches(response.data.data);
+      setBranches(response.data.data);
     } else {
       toast.error("Failed to fetch Branch Details");
     }
   }
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const text = search.trim().toLowerCase();
+  
+      if (!text) {
+        setFilteredBranches(branches);
+        return;
+      }
+  
+      const filtered = branches.filter((branch) => {
+        const fieldsToSearch: (string | number | undefined | null)[] = [
+          branch.branchName,
+          branch.branchManager,
+          branch.contactNumber,
+          branch.address,
+          branch.city,
+          branch.state,
+          branch.pincode,
+          branch.username,
+          branch.totalBillingValue,
+          branch.email,
+        ];
+  
+        return fieldsToSearch.some((field) => {
+          if (typeof field === "string") {
+            return field.toLowerCase().includes(text);
+          }
+          if (typeof field === "number") {
+            return field.toString().includes(text);
+          }
+          return false;
+        });
+      });
+  
+      setFilteredBranches(filtered);
+    }, 300);
+  
+    return () => clearTimeout(delay);
+  }, [search, branches]);
+  
 
   const handleSort = (key: keyof typeof sortState) => {
     const toggleOrder = (current: SortOrder): SortOrder =>
@@ -134,10 +157,10 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
       totalBillingValue: "",
       [key]: newOrder,
     });
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...branches].sort((a, b) => {
       if (key === "employeeCount" || key === "totalBillingValue") {
-        const aNum = Number(a[key as keyof CreateBranchInputs]);
-        const bNum = Number(b[key as keyof CreateBranchInputs]);
+        const aNum = Number(a[key as keyof BranchInputs]);
+        const bNum = Number(b[key as keyof BranchInputs]);
         return newOrder === "asc" ? aNum - bNum : bNum - aNum;
       }
       return 0;
@@ -146,17 +169,13 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
     setFilteredBranches(sorted);
   };
 
-  useEffect(() => {
-    setFilteredBranches(data);
-  }, [data]);
-
   const {
     register,
     handleSubmit,
     reset,
     setValue,
     formState: { errors },
-  } = useForm<CreateBranchInputs>();
+  } = useForm<BranchInputs>();
   const {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
@@ -165,7 +184,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
     formState: { errors: passwordErrors },
   } = useForm<EditBranchPassword>();
 
-  const setDataToEditDetails = (data: CreateBranchInputs) => {
+  const setDataToEditDetails = (data: BranchInputs) => {
     setValue("branchName", data.branchName);
     setValue("branchManager", data.branchManager);
     setValue("contactNumber", data.contactNumber);
@@ -179,9 +198,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
     setValue("email", data.email);
   };
 
-  const onCreateBranchSubmit: SubmitHandler<CreateBranchInputs> = async (
-    data
-  ) => {
+  const onCreateBranchSubmit: SubmitHandler<BranchInputs> = async (data) => {
     setIsloading(true);
     if (formStatus === "New") {
       const response = await createBranchApi(data);
@@ -214,7 +231,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
   };
 
   const onChangePasswordSubmit: SubmitHandler<EditBranchPassword> = async (
-    data
+    data,
   ) => {
     const finalInput = {
       adminPassword: data.adminPassword,
@@ -234,61 +251,52 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
     setIsloading(false);
   };
 
+  useEffect(()=>{
+    getBranchDetails();
+  },[])
+
   return (
     <>
-      <div className="flex w-full justify-between ">
-        <div>
-          <p className="text-sm text-[#707EAE] font-medium ">Admin</p>
-          <p className="font-medium text-3xl">Branch Management</p>
+      <div className="relative flex gap-10">
+      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+          <LuSearch size={18} />
+          <input
+            placeholder="Search"
+            className="outline-none placeholder:font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <div className="bg-white p-3 rounded-full flex px-5 gap-5">
-          <div className="bg-[#F4F7FE] rounded-full flex p-2 items-center gap-2">
-            <LuSearch size={18} />
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <FiSettings size={22} color="#A3AED0" />
-          </div>
-          <div className="flex items-center">
-            <BiBell size={24} color="#A3AED0" />
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-10">
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
+        <div className="flex w-full rounded-xl bg-white p-5">
+          <div className="flex items-center gap-5">
+            <div className="rounded-full bg-[#F4F7FE] p-3">
               <PiBuildingOfficeLight size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className=" text-sm text-[#A3AED0]">Branches</p>
-              <p className=" text-xl">{data.length}</p>
+              <p className="text-sm text-[#A3AED0]">Branches</p>
+              <p className="text-xl">{branches.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 w-full flex ">
-          <div className="items-center gap-5 flex">
-            <div className="p-3 rounded-full bg-[#F4F7FE]">
+        <div className="flex w-full rounded-xl bg-white p-5">
+          <div className="flex items-center gap-5">
+            <div className="rounded-full bg-[#F4F7FE] p-3">
               <HiOutlineCurrencyRupee size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className=" text-sm text-[#A3AED0]">Total Branch expenses</p>
-              <p className=" text-xl">INR 25,000</p>
+              <p className="text-sm text-[#A3AED0]">Total Branch expenses</p>
+              <p className="text-xl">INR 25,000</p>
             </div>
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-md p-5 gap-5 flex flex-col">
-        <div className="flex justify-between items-center">
-          <p className="font-medium text-xl">Branches</p>
+      <div className="flex flex-col gap-5 rounded-md bg-white p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-medium">Branches</p>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger
-              className="bg-primary hover:bg-primary rounded-2xl flex p-2 items-center gap-2 text-white px-4 font-medium cursor-pointer"
+              className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
               onClick={() => [setFormStatus("New"), reset()]}
             >
               <IoMdAdd color="white" size={20} />
@@ -302,15 +310,15 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
               </DialogHeader>
               <DialogDescription></DialogDescription>
               <form
-                className="flex justify-between flex-wrap gap-5"
+                className="flex flex-wrap justify-between gap-5"
                 onSubmit={handleSubmit(onCreateBranchSubmit)}
               >
-                <div className=" w-[23%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[23%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Branch Name</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("branchName", {
                         required: true,
                         minLength: 3,
@@ -318,22 +326,22 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                     />
                   </div>
                   {errors.branchName && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Branch Name must be atleast 3 characters
                     </p>
                   )}
                   {!isBranchNameAvailable && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Branch Name already exists, please try another one
                     </p>
                   )}
                 </div>
-                <div className=" w-[23%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[23%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Branch Manager</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("branchManager", {
                         required: true,
                         minLength: 3,
@@ -341,17 +349,17 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                     />
                   </div>
                   {errors.branchManager && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Branch Manager must be atleast 3 characters
                     </p>
                   )}
                 </div>
-                <div className=" w-[23%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[23%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Contact Number</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("contactNumber", {
                         required: true,
                         maxLength: 10,
@@ -360,135 +368,135 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                     />
                   </div>
                   {errors.contactNumber && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Contact Number must be 10 characters
                     </p>
                   )}
                 </div>
-                <div className=" w-[23%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[23%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Email ID</label>
                     <input
                       type="email"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("email", {
                         required: true,
                       })}
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Email ID must be valid
                     </p>
                   )}
                 </div>
-                <div className=" w-full">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-full">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Address</label>
                     <textarea
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("address", { required: true })}
                     />
                   </div>
                   {errors.address && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Address is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>City</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md pl-2"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
                       {...register("city", { required: true })}
                     />
                   </div>
                   {errors.city && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       City is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>State</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md"
+                      className="border-primary rounded-md border p-1 py-2"
                       {...register("state", { required: true })}
                     />
                   </div>
                   {errors.state && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       State is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Pincode</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md"
+                      className="border-primary rounded-md border p-1 py-2"
                       {...register("pincode", { required: true, minLength: 4 })}
                     />
                   </div>
                   {errors.pincode && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Pincode is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Username</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md"
+                      className="border-primary rounded-md border p-1 py-2"
                       {...register("username", { required: true })}
                     />
                   </div>
                   {errors.username && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Username is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Password</label>
                     <input
                       type="text"
-                      className="border border-primary p-1 py-2 rounded-md"
+                      className="border-primary rounded-md border p-1 py-2"
                       {...register("password", { required: true })}
                     />
                   </div>
                   {errors.password && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Password is required
                     </p>
                   )}
                 </div>
-                <div className=" w-[30%]">
-                  <div className="w-full flex flex-col gap-2">
+                <div className="w-[30%]">
+                  <div className="flex w-full flex-col gap-2">
                     <label>Employee count</label>
                     <input
                       type="number"
-                      className="border border-primary p-1 py-2 rounded-md"
+                      className="border-primary rounded-md border p-1 py-2"
                       {...register("employeeCount", { required: true })}
                     />
                   </div>
                   {errors.employeeCount && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       Employee count is required
                     </p>
                   )}
                 </div>
                 <div className="flex w-full justify-end">
                   <Button
-                    className="bg-primary hover:bg-primary cursor-pointer "
+                    className="bg-primary hover:bg-primary cursor-pointer"
                     type="submit"
                     disabled={isloading}
                   >
@@ -505,20 +513,20 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
             </DialogContent>
           </Dialog>
         </div>
-        <table className="w-full h-full">
+        <table className="h-full w-full">
           <thead>
-            <tr className="text-[#797979]  ">
-              <th className="font-medium text-start ">
+            <tr className="text-[#797979]">
+              <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Branch Name</p>
                 </div>
               </th>
-              <th className="font-medium text-start ">
+              <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Branch Manager</p>
                 </div>
               </th>
-              <th className="font-medium text-start">
+              <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Employee count</p>
                   <FaChevronDown
@@ -528,7 +536,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                   />
                 </div>
               </th>
-              <th className="font-medium text-start">
+              <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Total Billing value</p>
                   <FaChevronDown
@@ -538,13 +546,13 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                   />
                 </div>
               </th>
-              <th className="font-medium text-start">Username</th>
-              <th className="font-medium text-start">Password</th>
+              <th className="text-start font-medium">Username</th>
+              <th className="text-start font-medium">Password</th>
             </tr>
           </thead>
           <tbody className="">
             {filteredBranches?.map((branch) => (
-              <tr className="hover:bg-accent cursor-pointer">
+              <tr className="hover:bg-accent cursor-pointer" key={branch.id}>
                 <td
                   className="py-3"
                   onClick={() => [
@@ -605,9 +613,9 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                       <DialogHeader>
                         <DialogTitle>Change Password</DialogTitle>
                       </DialogHeader>
-                      <DialogDescription className="text-black text-base">
+                      <DialogDescription className="text-base text-black">
                         This will update the password for the{" "}
-                        <span className="font-medium ">
+                        <span className="font-medium">
                           {selectedBranch} Branch
                         </span>
                         . User will have to login again.
@@ -621,14 +629,14 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                             <label>Enter admin password</label>
                             <input
                               type="password"
-                              className="border border-primary p-1 py-2 rounded-md pl-2"
+                              className="border-primary rounded-md border p-1 py-2 pl-2"
                               {...registerPassword("adminPassword", {
                                 required: true,
                               })}
                             />
                           </div>
                           {passwordErrors.adminPassword && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-500">
                               Admin password is required
                             </p>
                           )}
@@ -638,14 +646,14 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                             <label>Enter new password</label>
                             <input
                               type="password"
-                              className="border border-primary p-1 py-2 rounded-md pl-2"
+                              className="border-primary rounded-md border p-1 py-2 pl-2"
                               {...registerPassword("newPassword", {
                                 required: true,
                               })}
                             />
                           </div>
                           {passwordErrors.newPassword && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-500">
                               Password is required
                             </p>
                           )}
@@ -655,7 +663,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                             <label>Confirm new password</label>
                             <input
                               type="password"
-                              className="border border-primary p-1 py-2 rounded-md pl-2"
+                              className="border-primary rounded-md border p-1 py-2 pl-2"
                               {...registerPassword("confirmNewPassword", {
                                 required: "Please confirm your password",
                                 validate: (value) =>
@@ -665,7 +673,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                             />
                           </div>
                           {passwordErrors.confirmNewPassword && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-500">
                               {passwordErrors.confirmNewPassword.message}
                             </p>
                           )}
@@ -709,10 +717,10 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
       >
         <DialogTrigger className="hidden"></DialogTrigger>
         <DialogContent className="min-w-6xl">
-          <DialogHeader className="flex ">
-            <div className="flex justify-between pr-10 items-start">
+          <DialogHeader className="flex">
+            <div className="flex items-start justify-between pr-10">
               <DialogTitle className="text-2xl">Branch Details</DialogTitle>
-              <div className="flex gap-5 ">
+              <div className="flex gap-5">
                 <button
                   className="cursor-pointer"
                   onClick={() => [
@@ -735,7 +743,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Alert!</AlertDialogTitle>
-                      <AlertDialogDescription className="text-black font-medium">
+                      <AlertDialogDescription className="font-medium text-black">
                         Are you sure you want to remove this branch? This action
                         is permanent and cannot be undone.
                       </AlertDialogDescription>
@@ -759,28 +767,28 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
           </DialogHeader>
           <DialogDescription></DialogDescription>
           <div className="grid grid-cols-3 gap-5">
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Branch Name</label>
               <p>{branchDetails?.branchName}</p>
             </div>
-            <div className="flex gap-5 items-center col-span-2">
+            <div className="col-span-2 flex items-center gap-5">
               <label className="font-medium">Branch Manager</label>
               <p>{branchDetails?.branchManager}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Contact Number</label>
               <p>{branchDetails?.contactNumber}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Email Id</label>
               <p>{branchDetails?.email}</p>
               <Popover>
-                <PopoverTrigger className="cursor-pointer ">
+                <PopoverTrigger className="cursor-pointer">
                   <TbCopy
                     size={20}
                     onClick={() =>
                       navigator.clipboard.writeText(
-                        branchDetails!.email.toString()
+                        branchDetails!.email.toString(),
                       )
                     }
                   />
@@ -788,27 +796,27 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                 <PopoverContent className="w-fit p-2">Copied!</PopoverContent>
               </Popover>
             </div>
-            <div className="flex gap-2  flex-col items-start  col-span-full">
+            <div className="col-span-full flex flex-col items-start gap-2">
               <label className="font-medium">Address</label>
               <p>{branchDetails?.address}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">City</label>
               <p>{branchDetails?.city}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">State</label>
               <p>{branchDetails?.state}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Pin Code</label>
               <p>{branchDetails?.pincode}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Username</label>
               <p>{branchDetails?.username}</p>
             </div>
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center gap-5">
               <label className="font-medium">Password</label>
               <input
                 value={branchDetails?.password}
@@ -816,7 +824,7 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                 className="outline-none"
                 disabled
               />
-              <div className="flex gap-2 ">
+              <div className="flex gap-2">
                 <button onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? (
                     <AiFillEyeInvisible size={24} className="text-primary" />
@@ -835,43 +843,55 @@ export default function Branch({ data }: { data: CreateBranchInputs[] }) {
                 </button>
               </div>
             </div>
-            <div className="flex gap-5 items-center  ">
-              <label className="font-medium ">Total Billing value</label>
+            <div className="flex items-center gap-5">
+              <label className="font-medium">Total Billing value</label>
               <p>{branchDetails?.username}</p>
             </div>
-            <div className="col-span-full">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="bg-primary/30 px-4">
-                    Recent Payments
-                  </AccordionTrigger>
-                  <AccordionContent className="bg-primary/30 px-2 rounded-b-md">
-                    <table className="bg-white rounded-md px-2 w-full">
-                      <thead>
-                        <tr>
-                          <th className="font-medium p-1">Sl no</th>
-                          <th className="font-medium">Amount Received</th>
-                          <th className="font-medium">Date</th>
-                          <th className="font-medium">Payment mode</th>
-                          <th className="font-medium">
-                            Trans. ID/Cheque Number
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="text-center hover:bg-accent">
-                          <td className="p-2">1</td>
-                          <td>INR 25,000</td>
-                          <td>20/10/2022</td>
-                          <td>Cash</td>
-                          <td>1234567890</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+            {branchDetails?.PaymentRecords &&
+              branchDetails?.PaymentRecords?.length > 0 && (
+                <div className="col-span-3 w-full">
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger className="bg-primary/20 px-4">
+                        Recent Payments
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-primary/20 max-h-[30vh] overflow-y-auto rounded-b-md px-2">
+                        <table className="w-full rounded-md bg-white px-2">
+                          <thead>
+                            <tr>
+                              <th className="p-1 font-medium">Sl no</th>
+                              <th className="font-medium">Amount</th>
+                              <th className="font-medium">For</th>
+                              <th className="font-medium">Date</th>
+                              <th className="font-medium">Payment mode</th>
+                              <th className="font-medium">
+                                Trans. ID/Cheque Number
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {branchDetails?.PaymentRecords?.map(
+                              (record, index) => (
+                                <tr
+                                  className="hover:bg-accent text-center"
+                                  key={record.id}
+                                >
+                                  <td className="p-2">{index + 1}</td>
+                                  <td>{record.amount}</td>
+                                  <td>{record.IDNumber}</td>
+                                  <td>{record.date}</td>
+                                  <td>{record.paymentMode}</td>
+                                  <td>{record.transactionNumber}</td>
+                                </tr>
+                              ),
+                            )}
+                          </tbody>
+                        </table>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              )}
           </div>
         </DialogContent>
       </Dialog>

@@ -1,14 +1,5 @@
-import { LuSearch } from "react-icons/lu";
-import {
-  Select as SelectN,
-  SelectContent as SelectContentN,
-  SelectItem as SelectItemN,
-  SelectTrigger as SelectTriggerN,
-} from "@/components/ui/select copy";
-
 import { Modal } from "antd";
-import { FiSettings } from "react-icons/fi";
-import { BiBell } from "react-icons/bi";
+
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { Button } from "../ui/button";
 import {
@@ -45,7 +36,11 @@ import {
 import { IoMdAdd } from "react-icons/io";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { createClientApi, getAllClientsApi } from "@/api/admin";
+import {
+  createClientApi,
+  createNotificationApi,
+  getAllClientsApi,
+} from "@/api/admin";
 import { useEffect, useState } from "react";
 import { VscLoading } from "react-icons/vsc";
 import { PiUsersThree } from "react-icons/pi";
@@ -53,28 +48,15 @@ import { FaChevronDown } from "react-icons/fa6";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import { TbCopy } from "react-icons/tb";
 import { deleteClientApi, updateClientDetailsApi } from "@/api/branch";
+import { ClientInputs } from "@/types";
+import { LuSearch } from "react-icons/lu";
 
-export type ClientInputs = {
-  id: string;
-  name: string;
-  GSTIN: string;
-  branchName: string;
-  contactPerson: string;
-  email: string;
-  contactNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  panNumber: string;
-  creditLimit: string;
-  createdAt: string;
-};
 type SortOrder = "asc" | "desc" | "";
 
 export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   const [isloading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [clients, setClients] = useState<ClientInputs[]>([]);
   const [filteredClients, setFilteredClients] = useState<ClientInputs[]>([]);
   const [sortState, setSortState] = useState<{
     name: SortOrder;
@@ -90,6 +72,12 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientInputs>();
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
+  const [branch, setBranch] = useState({
+    branchId: "",
+    branchName: "",
+    isAdmin: false,
+  });
+  const [search, setSearch] = useState("");
 
   const {
     register,
@@ -98,6 +86,50 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     setValue,
     formState: { errors },
   } = useForm<ClientInputs>();
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const text = search.trim().toLowerCase();
+
+      if (!text) {
+        setFilteredClients(clients);
+        return;
+      }
+
+      const filtered = clients.filter((client) => {
+        const fieldsToSearch: (string | number | undefined | null)[] = [
+          client.name,
+          client.GSTIN,
+          client.contactPerson,
+          client.email,
+          client.address,
+          client.city,
+          client.state,
+          client.pincode,
+          client.panNumber,
+          client.creditLimit,
+          client.branchName,
+          client.contactNumber,
+          client.createdAt,
+          client.pendingPayment,
+        ];
+
+        return fieldsToSearch.some((field) => {
+          if (typeof field === "string") {
+            return field.toLowerCase().includes(text);
+          }
+          if (typeof field === "number") {
+            return field.toString().includes(text);
+          }
+          return false;
+        });
+      });
+
+      setFilteredClients(filtered);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search, clients]);
 
   const onSubmit: SubmitHandler<ClientInputs> = async (data) => {
     if (data.branchName) {
@@ -128,6 +160,16 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         reset();
         setIsOpen(false);
         getClientDetails();
+        if (!branch.isAdmin) {
+          const notificationData = {
+            requestId: selectedClient?.id,
+            title: "Client edit",
+            message: branch.branchName,
+            description: selectedClient?.name,
+            status: "editable",
+          };
+          await createNotificationApi(notificationData);
+        }
       } else if (response?.status === 201) {
         setIsClientNameAvailable(false);
         setTimeout(() => {
@@ -146,6 +188,16 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
       toast.success("Client Deleted");
       getClientDetails();
       setIsClientDetailsModalOpen(false);
+      if (!branch.isAdmin) {
+        const notificationData = {
+          requestId: selectedClient?.id,
+          title: "Client delete",
+          message: branch.branchName,
+          description: selectedClient?.name,
+          status: "editable",
+        };
+        await createNotificationApi(notificationData);
+      }
     } else {
       toast.error("Failed to Delete Client");
     }
@@ -154,6 +206,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   async function getClientDetails() {
     const response = await getAllClientsApi();
     if (response?.status === 200) {
+      setClients(response.data.data);
       setFilteredClients(response.data.data);
     } else {
       toast.error("Failed to fetch Client Details");
@@ -192,8 +245,8 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         const bNum = Number(b[key as keyof ClientInputs]);
         return newOrder === "asc" ? aNum - bNum : bNum - aNum;
       } else if (key === "createdAt") {
-        const aDate = new Date(a[key as keyof ClientInputs]).getTime();
-        const bDate = new Date(b[key as keyof ClientInputs]).getTime();
+        const aDate = new Date(a.createdAt).getTime();
+        const bDate = new Date(b.createdAt).getTime();
         return newOrder === "asc" ? aDate - bDate : bDate - aDate;
       } else if (key === "name") {
         return newOrder === "asc"
@@ -207,45 +260,30 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   };
 
   useEffect(() => {
-    setFilteredClients(data);
-  }, [data]);
+    getClientDetails();
+    const isAdmin = localStorage.getItem("isAdmin");
+    const branchDetails = localStorage.getItem("branchDetails");
+    if (isAdmin === "false" && branchDetails) {
+      const branchData = JSON.parse(branchDetails);
+      setBranch({
+        branchId: branchData.id,
+        branchName: branchData.branchName,
+        isAdmin: false,
+      });
+    }
+  }, []);
   return (
     <>
-      <div className="flex w-full justify-between">
-        <div>
-          <p className="text-sm font-medium text-[#707EAE]">Admin</p>
-          <p className="text-3xl font-medium">Client Management</p>
+      <div className="relative flex gap-10">
+        <div className="absolute -top-17 right-[13vw] flex items-center gap-2 rounded-full bg-white p-3 px-5">
+          <LuSearch size={18} />
+          <input
+            placeholder="Search"
+            className="outline-none placeholder:font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <div className="flex gap-5 rounded-full bg-white p-3 px-5">
-          <div className="flex items-center gap-2 rounded-full bg-[#F4F7FE] p-2">
-            <LuSearch size={18} />
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-            />
-          </div>
-          <div>
-            <SelectN>
-              <SelectTriggerN className="bg-primary gap-0 rounded-full border-none shadow-none">
-                <p className="font-medium text-white">Generate Quote</p>
-              </SelectTriggerN>
-              <SelectContentN>
-                <SelectItemN value="light">Light</SelectItemN>
-                <SelectItemN value="dark">Dark</SelectItemN>
-                <SelectItemN value="system">System</SelectItemN>
-              </SelectContentN>
-            </SelectN>
-          </div>
-
-          <div className="flex items-center">
-            <FiSettings size={22} color="#A3AED0" />
-          </div>
-          <div className="flex items-center">
-            <BiBell size={24} color="#A3AED0" />
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
             <div className="rounded-full bg-[#F4F7FE] p-3">
@@ -264,7 +302,15 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Total pending payment</p>
-              <p className="text-xl">INR 25,000</p>
+              <p className="text-xl">
+                INR{" "}
+                {data
+                  .reduce(
+                    (acc, data) => acc + parseFloat(data.pendingPayment),
+                    0,
+                  )
+                  .toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
@@ -275,9 +321,9 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
           <div>
             <button
               className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
-              onClick={() => [setIsOpen(true)]}
+              onClick={() => [setIsOpen(true), reset(), setFormStatus("New")]}
             >
-              <IoMdAdd size={24}/> Create Client
+              <IoMdAdd size={24} /> Create Client
             </button>
             <Modal
               open={isOpen}
@@ -524,7 +570,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
               </th>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
                 <p>Pending payment</p>
-                <FaChevronDown size={15} className="cursor-pointer" />
               </th>
               <th className="text-start font-[400] text-[#797979]">
                 <div className="flex items-center gap-2">
@@ -551,7 +596,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 <td className="py-2">{client.name}</td>
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
-                <td className="py-2">INR 0</td>
+                <td className="py-2">INR {client.pendingPayment}</td>
                 <td className="py-2">{client.createdAt.substring(0, 10)}</td>
               </tr>
             ))}
@@ -657,11 +702,11 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Pending payment</label>
-              <p>INR 0</p>
+              <p>INR {selectedClient?.pendingPayment}</p>
             </div>
             <div className="col-span-2 flex items-center justify-end gap-5 pr-10">
               <label className="font-medium">Credit Limit</label>
-              <p>INR 0</p>
+              <p>INR {selectedClient?.creditLimit}</p>
             </div>
             <div className="col-span-full">
               <Accordion type="single" collapsible>
@@ -669,7 +714,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                   <AccordionTrigger className="bg-primary/30 px-4">
                     Recent Payments
                   </AccordionTrigger>
-                  <AccordionContent className="bg-primary/30 rounded-b-md px-2">
+                  <AccordionContent className="bg-primary/30 max-h-[30vh] overflow-y-auto rounded-b-md px-2">
                     <table className="w-full rounded-md bg-white px-2">
                       <thead>
                         <tr>
@@ -683,13 +728,18 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="hover:bg-accent text-center">
-                          <td className="p-2">1</td>
-                          <td>INR 25,000</td>
-                          <td>20/10/2022</td>
-                          <td>Cash</td>
-                          <td>1234567890</td>
-                        </tr>
+                        {selectedClient?.PaymentRecord.map((record, index) => (
+                          <tr
+                            className="hover:bg-accent text-center"
+                            key={record.id}
+                          >
+                            <td className="p-2">{index + 1}</td>
+                            <td>INR {record.amount}</td>
+                            <td>{record.date}</td>
+                            <td>{record.paymentMode}</td>
+                            <td>{record.transactionNumber}</td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </AccordionContent>

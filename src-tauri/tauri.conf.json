@@ -24,6 +24,7 @@
     }
   },
   "bundle": {
+    "publisher": "Trikona Tech",
     "active": true,
     "targets": "all",
     "icon": [

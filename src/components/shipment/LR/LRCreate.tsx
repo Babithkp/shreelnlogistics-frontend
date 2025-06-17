@@ -8,18 +8,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-import { VehicleInputs, VendorInputs } from "../../partner/VendorManagement";
 import { Select as AntSelect } from "antd";
 import {
   createLRApi,
   getLRApi,
   updateLRDetailsApi,
 } from "../../../api/shipment";
-import { getAllClientsApi } from "../../../api/admin";
+import { createNotificationApi, getAllClientsApi } from "../../../api/admin";
 import { toast } from "react-toastify";
 import { VscLoading } from "react-icons/vsc";
 import { getAllVendorsApi } from "@/api/partner";
+import { LrInputs, VehicleInputs, VendorInputs } from "@/types";
+import { filterOnlyCompletePrimitiveDiffs, getUnmatchingFields } from "@/lib/utils";
 
 const allOptions = [
   "unLoading",
@@ -30,56 +42,6 @@ const allOptions = [
 ];
 
 type Option = { value: string; label: string };
-
-export interface LrInputs {
-  id: string;
-  lrNumber: string;
-  date: string;
-  from: string;
-  to: string;
-  insurance: string;
-  consignorName: string;
-  consignorGSTIN: string;
-  consignorPincode: string;
-  consignorAddress: string;
-  consigneeName: string;
-  consigneeGSTIN: string;
-  consigneeGSTIN_1: string;
-  consigneePincode: string;
-  consigneeAddress: string;
-  noOfPackages: string;
-  methodOfPacking: string;
-  description: string;
-  invoiceNo: string;
-  invoiceDate: string;
-  value: string;
-  weight: string;
-  sizeL: string;
-  sizeW: string;
-  sizeH: string;
-  ftl: string;
-  vehicleNo: string;
-  vehicleType: string;
-  paymentType: string;
-  freightCharges: string;
-  hamali: string;
-  surcharge: string;
-  stCh: string;
-  riskCh: string;
-  unLoading: string;
-  extraKms: string;
-  detention: string;
-  weightment: string;
-  others: string;
-  ewbNumber: string;
-  ewbExpiryDate: string;
-  totalAmt: number;
-  adminId: string;
-  branchId: string;
-  driverName: string;
-  driverPhone: string;
-  emails: String[];
-}
 
 export default function LRCreate({
   resetToDefault,
@@ -92,7 +54,10 @@ export default function LRCreate({
 }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [existingLRData, setExistingLRData] = useState<LrInputs[]>([]);
-  const [branchId, setBranchId] = useState("");
+  const [branch, setBranch] = useState({
+    id: "",
+    branchName: "",
+  });
   const [members, setMembers] = useState<VendorInputs[]>([]);
   const [size, setSize] = useState<string>("LxWxH");
   const [availableOptions, setAvailableOptions] = useState(allOptions);
@@ -106,6 +71,9 @@ export default function LRCreate({
   const [editAbleData, setEditAbleData] = useState<LrInputs | undefined>(
     selectedLRDataToEdit,
   );
+  const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
+  const [notificationData, setNotificationData] =
+    useState<Record<string, any>>();
 
   const {
     handleSubmit,
@@ -120,17 +88,9 @@ export default function LRCreate({
     },
   });
 
-  useEffect(() => {
-    const id = localStorage.getItem("id");
-    if (!id) {
-      return;
-    }
-    setBranchId(id);
-    setIsAdmin(localStorage.getItem("isAdmin") === "true");
-  }, []);
-
   const setAllDataTOEdit = (data: LrInputs) => {
     if (data) {
+      setValue("id", data.id);
       setValue("lrNumber", data.lrNumber);
       setValue("date", data.date);
       setValue("from", data.from);
@@ -161,10 +121,11 @@ export default function LRCreate({
         setSize("FTL");
         setValue("ftl", data.ftl);
       }
-      setValue("vehicleNo", data.vehicleNo);
-      setValue("vehicleType", data.vehicleType);
-      setValue("driverName", data.driverName);
-      setValue("driverPhone", data.driverPhone);
+      setValue("Vehicle.vehicleNumber", data.Vehicle.vehicleNumber);
+      setValue("vehicleId", data.Vehicle.id);
+      setValue("Vehicle.vehicletypes", data.Vehicle.vehicletypes);
+      setValue("Vehicle.driverName", data.Vehicle.driverName);
+      setValue("Vehicle.driverPhone", data.Vehicle.driverPhone);
       setValue("paymentType", data.paymentType);
       setValue("freightCharges", data.freightCharges);
       setValue("hamali", data.hamali);
@@ -269,7 +230,7 @@ export default function LRCreate({
     return vendors.flatMap(
       (vendor) =>
         vendor.vehicles?.map((vehicle) => ({
-          value: vehicle.vehicleNumber,
+          value: vehicle.id,
           label: vehicle.vehicleNumber,
         })) || [],
     );
@@ -284,15 +245,15 @@ export default function LRCreate({
 
   function extractLRNumberOptions(LRData: LrInputs[]): Option[] {
     const lrCountMap: Record<string, number> = {};
-  
+
     for (const data of LRData) {
       const [baseLR, suffix] = data.lrNumber.split("/");
       const base = baseLR.trim();
-      const version = suffix ? parseInt(suffix) : 0; // <-- fix here
-  
+      const version = suffix ? parseInt(suffix) : 0;
+
       lrCountMap[base] = Math.max(lrCountMap[base] || 0, version);
     }
-  
+
     return Object.entries(lrCountMap).map(([baseLR, version]) => {
       const nextVersion = version + 1;
       const formattedLR = `${baseLR}/${nextVersion}`;
@@ -302,8 +263,8 @@ export default function LRCreate({
       };
     });
   }
-  
-  
+
+
 
   async function fetchVendors() {
     const responseVendors = await getAllVendorsApi();
@@ -312,17 +273,19 @@ export default function LRCreate({
       setMembers(responseVendors.data.data.concat(responseClients.data.data));
     }
   }
-  async function fetchLRData() {
+  async function fetchLRData(branchId?: string) {
     const response = await getLRApi();
     if (response?.status === 200) {
-      setExistingLRData(response.data.data);
+      const allLRs: LrInputs[] = response.data.data;
+
+      const filteredLRs = branchId
+        ? allLRs.filter((lr) => lr.branchId === branchId)
+        : allLRs;
+      setExistingLRData(filteredLRs);
     }
   }
 
-  useEffect(() => {
-    fetchVendors();
-    fetchLRData();
-  }, []);
+
 
   const setLRData = (data: LrInputs) => {
     setValue("from", data.from);
@@ -361,17 +324,17 @@ export default function LRCreate({
   };
 
   const setVechicleData = (data: VehicleInputs) => {
-    setValue("vehicleType", data.vehicletypes);
-    setValue("driverName", data.driverName);
-    setValue("driverPhone", data.driverPhone);
+    setValue("Vehicle.vehicletypes", data.vehicletypes);
+    setValue("Vehicle.driverName", data.driverName);
+    setValue("Vehicle.driverPhone", data.driverPhone);
   };
 
   const onSubmit = async (data: LrInputs) => {
     setIsloading(true);
-    if (isAdmin && branchId) {
-      data.adminId = branchId;
-    } else if (!isAdmin && branchId) {
-      data.branchId = branchId;
+    if(isAdmin){
+      data.adminId = branch.id;
+    }else{
+      data.branchId = branch.id;
     }
     if (selectedEmails)
       data.emails = selectedEmails.filter((email: string) => email !== "");
@@ -391,6 +354,17 @@ export default function LRCreate({
         toast.error("Something Went Wrong, Check All Fields");
       }
     } else {
+      if (!isAdmin) {
+        setNotificationData(
+          filterOnlyCompletePrimitiveDiffs(
+            getUnmatchingFields(data, selectedLRDataToEdit!),
+          ),
+        );
+        setIsloading(false);
+        setNotificationAlertOpen(true);
+        return;
+      }
+
       const response = await updateLRDetailsApi(data, data.id);
       if (response?.status === 200) {
         toast.success("LR has been updated");
@@ -401,10 +375,58 @@ export default function LRCreate({
     }
     setIsloading(false);
   };
+
+  const onNotificationSubmit = async () => {
+    if (!selectedLRDataToEdit) return;
+    const data = {
+      requestId: selectedLRDataToEdit.lrNumber,
+      title: "LR edit",
+      message: selectedLRDataToEdit.branch.branchName,
+      description: selectedLRDataToEdit.branch.id,
+      data: JSON.stringify(notificationData),
+      status: "editable",
+    };
+
+    const response = await createNotificationApi(data);
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      resetToDefault();
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setNotificationAlertOpen(false);
+  };
+
+  useEffect(() => {
+    const branchDetailsRaw = localStorage.getItem("branchDetails");
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (!branchDetailsRaw) return;
+    const branchDetails = JSON.parse(branchDetailsRaw);
+    if (isAdmin === "true") {
+      setIsAdmin(true);
+      fetchLRData();
+      setBranch({
+        id: branchDetails.id,
+        branchName: branchDetails.branchName,
+      });
+    } else {
+      fetchLRData(branchDetails.id);
+      setBranch({
+        id: branchDetails.id,
+        branchName: branchDetails.branchName,
+      });
+    }
+    fetchVendors();
+  }, []);
+
   return (
     <div className="flex flex-col gap-2 rounded-md bg-white p-5">
       <p className="text-xl font-medium">
-        {formStatus === "edit" ? "Edit LR" : formStatus === "supplementary" ? "Add Supplementary" : "Create LR"}
+        {formStatus === "edit"
+          ? "Edit LR"
+          : formStatus === "supplementary"
+            ? "Add Supplementary"
+            : "Create LR"}
       </p>
       <form
         className="flex flex-wrap justify-between gap-5"
@@ -512,7 +534,6 @@ export default function LRCreate({
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={formStatus === "supplementary"}
                 >
                   <SelectTrigger className="boder border-primary h-full w-full py-5 shadow-none data-[placeholder]:text-black">
                     <SelectValue />
@@ -619,7 +640,7 @@ export default function LRCreate({
               name="consigneeName"
               control={control}
               defaultValue={""}
-              rules={{ required: "Please enter consigneeName name" }}
+              rules={{ required: true }}
               render={({ field }) => (
                 <AntSelect
                   {...field}
@@ -805,7 +826,8 @@ export default function LRCreate({
                       <input
                         placeholder="Type here..."
                         className="p-1 outline-none"
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         {...register("value")}
                       />
                     </div>
@@ -872,7 +894,7 @@ export default function LRCreate({
                       <div className="flex items-center gap-5">
                         <p className="text-xs font-medium">Vehicle No.</p>
                         <Controller
-                          name="vehicleNo"
+                          name="Vehicle.vehicleNumber"
                           control={control}
                           defaultValue=""
                           rules={{ required: "Please select a vehicle" }}
@@ -888,7 +910,7 @@ export default function LRCreate({
                                 field.onChange(value);
                                 const selectedVehicle = members
                                   .flatMap((v) => v.vehicles)
-                                  .find((veh) => veh.vehicleNumber === value);
+                                  .find((veh) => veh.id === value);
                                 if (selectedVehicle) {
                                   setVechicleData(selectedVehicle);
                                 }
@@ -897,7 +919,7 @@ export default function LRCreate({
                           )}
                         />
                       </div>
-                      {errors.vehicleNo && (
+                      {errors.Vehicle?.vehicleNumber && (
                         <p className="text-red-500">
                           Vehicle number is required
                         </p>
@@ -907,10 +929,12 @@ export default function LRCreate({
                         <input
                           className="p-2 outline-none"
                           placeholder="Vehicle Type"
-                          {...register("vehicleType", { required: true })}
+                          {...register("Vehicle.vehicletypes", {
+                            required: true,
+                          })}
                         />
                       </div>
-                      {errors.vehicleType && (
+                      {errors.Vehicle?.vehicletypes && (
                         <p className="text-red-500">Vehicle type is required</p>
                       )}
                       <div className="flex items-center gap-2">
@@ -918,10 +942,12 @@ export default function LRCreate({
                         <input
                           className="p-2 outline-none"
                           placeholder="Type here..."
-                          {...register("driverName", { required: true })}
+                          {...register("Vehicle.driverName", {
+                            required: true,
+                          })}
                         />
                       </div>
-                      {errors.driverName && (
+                      {errors.Vehicle?.driverName && (
                         <p className="text-red-500">Driver Name is required</p>
                       )}
                       <div className="flex items-center gap-2">
@@ -929,10 +955,12 @@ export default function LRCreate({
                         <input
                           className="p-2 outline-none"
                           placeholder="Type here..."
-                          {...register("driverPhone", { required: true })}
+                          {...register("Vehicle.driverPhone", {
+                            required: true,
+                          })}
                         />
                       </div>
-                      {errors.driverPhone && (
+                      {errors.Vehicle?.driverPhone && (
                         <p className="text-red-500">Driver Phone is required</p>
                       )}
                     </div>
@@ -978,14 +1006,16 @@ export default function LRCreate({
                       <p className="text-xs font-medium">Freight Charges</p>
                       <input
                         className="border-primary rounded-md border p-1"
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         {...register("freightCharges")}
                       />
                     </div>
                     <div className="flex justify-between">
                       <p className="text-xs font-medium">Hamali</p>
                       <input
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         className="border-primary rounded-md border p-1"
                         {...register("hamali")}
                       />
@@ -993,7 +1023,8 @@ export default function LRCreate({
                     <div className="flex justify-between">
                       <p className="text-xs font-medium">Surcharge</p>
                       <input
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         className="border-primary rounded-md border p-1"
                         {...register("surcharge")}
                       />
@@ -1001,7 +1032,8 @@ export default function LRCreate({
                     <div className="flex justify-between">
                       <p className="text-xs font-medium">ST. Ch.</p>
                       <input
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         className="border-primary rounded-md border p-1"
                         {...register("stCh")}
                       />
@@ -1009,7 +1041,8 @@ export default function LRCreate({
                     <div className="flex justify-between">
                       <p className="text-xs font-medium">Risk Ch.</p>
                       <input
-                        type="number"
+                        type="text"
+                        pattern="[0-9]*.[0-9]*"
                         className="border-primary rounded-md border p-1"
                         {...register("riskCh")}
                       />
@@ -1079,7 +1112,7 @@ export default function LRCreate({
             <p className="text-sm font-medium">Total INR </p>
             <input
               className="w-[5%] cursor-default outline-none"
-              type="number"
+              type="text"
               {...register("totalAmt")}
               readOnly
             />
@@ -1117,12 +1150,35 @@ export default function LRCreate({
               <VscLoading size={24} className="animate-spin" />
             ) : formStatus === "edit" ? (
               "Update LR"
+            ) : formStatus === "supplementary" ? (
+              "Add Supplementary"
             ) : (
-              formStatus === "supplementary" ? "Add Supplementary" : "Create LR"
+              "Create LR"
             )}
           </Button>
         </div>
       </form>
+      <AlertDialog
+        open={notificationAlertOpen}
+        onOpenChange={setNotificationAlertOpen}
+      >
+        <AlertDialogTrigger className="cursor-pointer"></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alert!</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-black">
+              This will send the admin an edit request. Upon approval the
+              changes will be updated
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onNotificationSubmit}>
+              Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

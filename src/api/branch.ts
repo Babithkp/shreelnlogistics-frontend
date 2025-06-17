@@ -1,6 +1,6 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:3000";
-// const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+// const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
 
 export const branchLoginApi = async (branchName: string, password: string) => {
   try {
@@ -66,3 +66,55 @@ export const deleteClientApi = async (id: string) => {
   }
 };
 
+export const getAllRecordPaymentApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/getAllRecordPayment`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterRecordPaymentApi = async (data:any) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/api/v1/filterRecordPayment`, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBranchBymonthApi = async (data:any) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/api/v1/filterBranchBymonth`, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+
+
+export const getBranchNotificationsApi = async (branchId: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getBranchNotifications/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createNotificationForBranchApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/createNotificationForBranch`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};

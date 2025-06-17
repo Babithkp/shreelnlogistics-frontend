@@ -1,10 +1,10 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:3000";
-// const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+// const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
 
 export const getAllVendorsApi = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}/api/v1/getvendor`);
+    const response = await axios.get(`${BASE_URL}/api/v1/getAllvendors`);
     return response;
   } catch (error) {
     console.log(error);
@@ -84,10 +84,21 @@ export const deleteVehicleApi = async (id: string) => {
   }
 };
 
-export const getVehicleByDataApi = async (data: any) => {
+export const getVehicleByIdApi = async (id: string) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/api/v1/getVehicleBydata`,
+      `${BASE_URL}/api/v1/getVehicleById/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillByClientApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/filterBillByClient`,
       data,
     );
     return response;

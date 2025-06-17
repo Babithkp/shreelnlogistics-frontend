@@ -1,119 +1,81 @@
 import { Button } from "../../ui/button";
 import { useEffect, useState } from "react";
-import { Controller, set, useForm, useWatch } from "react-hook-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../ui/select";
-
-import { VehicleInputs, VendorInputs } from "../../partner/VendorManagement";
 import { Select as AntSelect } from "antd";
-import {
-  createFMApi,
-  createLRApi,
-  getLRApi,
-  updateFMApi,
-  updateLRDetailsApi,
-} from "../../../api/shipment";
-import { getAllClientsApi } from "../../../api/admin";
+import { createFMApi, updateFMApi } from "../../../api/shipment";
 import { toast } from "react-toastify";
 import { VscLoading } from "react-icons/vsc";
-import { LrInputs } from "../LR/LRCreate";
-import { getVehicleByDataApi } from "@/api/partner";
-import { toWords } from "number-to-words";
-
-const allOptions = [
-  "unLoading",
-  "extraKms",
-  "detention",
-  "weightment",
-  "others",
-];
+import { getAllVendorsApi, getVehicleByIdApi } from "@/api/partner";
+import { BranchDetails } from "./FMPage";
+import {
+  convertToINRWords,
+  getUnmatchingFields,
+  filterOnlyCompletePrimitiveDiffs,
+} from "@/lib/utils";
+import { FMInputs, LrInputs, VendorInputs } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { createNotificationApi } from "@/api/admin";
 
 type Option = { value: string; label: string };
-
-export interface FMInputs {
-  id: string;
-  fmNumber: string;
-  date: string;
-  from: string;
-  to: string;
-  vehicleNo: string;
-  vehicleType: string;
-  weight: string;
-  package: string;
-  payableAt: string;
-  vendorName: string;
-  vendorEmail: string;
-  ContactPerson: string;
-  DriverName: string;
-  contactNumber: string;
-  ownerName: string;
-  TDS: string;
-  insturance: string;
-  Rc: string;
-  LRNumbers: {
-    lrNumber: string;
-    date: string;
-  }[];
-  hire: string;
-  advance: string;
-  balance: string;
-  otherCharges: string;
-  detentionCharges: string;
-  rtoCharges: string;
-  tds: string;
-  netBlance: string;
-  driverSignature: string;
-  dlNumber: string;
-  amountInwords: string;
-  zeroToThirty: string;
-  thirtyToSixty: string;
-  sixtyToNinety: string;
-  ninetyPlus: string;
-}
 
 export default function FMCreate({
   resetToDefault,
   selectedFMDataToEdit,
   formStatus,
   lrData,
+  branchDetails,
 }: {
   resetToDefault: () => void;
   selectedFMDataToEdit?: FMInputs;
   formStatus: "edit" | "create";
   lrData: LrInputs[];
+  branchDetails?: BranchDetails;
 }) {
-  const [isAdmin, setIsAdmin] = useState(false);
   const [LRData, setLRData] = useState<LrInputs[]>([]);
-  const [branchName, setBranchName] = useState("");
+  const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [isloading, setIsloading] = useState(false);
   const [fmNumberAlreadyExists, setFMNumberAlreadyExists] = useState(false);
-
+  const [branchId, setBranchId] = useState({
+    branchId: "",
+    adminId: "",
+  });
+  const [branchData, setBranchData] = useState({
+    id: "",
+    branchName: "",
+  });
+  const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
+  const [notificationData, setNotificationData] =
+    useState<Record<string, any>>();
   const [lrList, setLRList] = useState<{ lrNumber: string; date: string }[]>(
     [],
   );
   const [fmData, setFMData] = useState({
     date: new Date().toISOString().split("T")[0],
     fmNumber: "",
-    hire: 0,
-    advance: 0,
-    balance: 0,
-    otherCharges: 0,
-    detentionCharges: 0,
-    rtoCharges: 0,
-    tds: 0, // hire+ other + detention + rto * 0.01
-    netBlance: 0, // balance + others + detention + rto - tds
+    hire: "",
+    advance: "",
+    balance: "",
+    otherCharges: "",
+    detentionCharges: "",
+    rtoCharges: "",
+    tds: "", // hire+ other + detention + rto * 0.01
+    netBalance: "", // balance + others + detention + rto - tds
     amountInwords: "",
     dlNumber: "",
     driverSignature: "",
+    vendorsId: "",
   });
   const [lrDataToFM, setLRDataToFM] = useState({
     lrNumber: "",
-    date: new Date().toISOString().split("T")[0],
     from: "-",
     to: "-",
     vehicleNo: "-",
@@ -134,27 +96,27 @@ export default function FMCreate({
 
   useEffect(() => {
     let tds = 0;
-    const hire = fmData.hire || 0;
-    const advance = fmData.advance || 0;
-    const otherCharges = fmData.otherCharges || 0;
-    const detentionCharges = fmData.detentionCharges || 0;
-    const rtoCharges = fmData.rtoCharges || 0;
+    const hire = parseFloat(fmData.hire) || 0;
+    const advance = parseFloat(fmData.advance) || 0;
+    const otherCharges = parseFloat(fmData.otherCharges) || 0;
+    const detentionCharges = parseFloat(fmData.detentionCharges) || 0;
+    const rtoCharges = parseFloat(fmData.rtoCharges) || 0;
 
     const balance = hire - advance;
 
     if (lrDataToFM?.TDS === "Not-declared") {
-      tds = (hire - otherCharges - detentionCharges - rtoCharges) * 0.01;
+      tds = (hire + otherCharges + detentionCharges + rtoCharges) * 0.01;
     }
 
     const netBalance =
-      balance + otherCharges + detentionCharges + rtoCharges - tds;
+      (hire + otherCharges + detentionCharges + rtoCharges) - tds;
 
     setFMData((prev) => ({
       ...prev,
-      tds,
-      balance,
-      netBlance: netBalance,
-      amountInwords: toWords(netBalance),
+      tds: tds.toFixed(2), // optional: format to 2 decimals
+      balance: balance.toFixed(2),
+      netBalance: netBalance.toFixed(2),
+      amountInwords: convertToINRWords(netBalance),
     }));
   }, [
     fmData.hire,
@@ -167,19 +129,22 @@ export default function FMCreate({
 
   useEffect(() => {
     if (formStatus === "edit") {
-      const lrList = selectedFMDataToEdit?.LRNumbers;
+      console.log(selectedFMDataToEdit);
+
+      const lrList = selectedFMDataToEdit?.LRDetails;
 
       const fmData = {
+        vendorsId: selectedFMDataToEdit?.vendorsId || "",
         date: selectedFMDataToEdit?.date || "",
         fmNumber: selectedFMDataToEdit?.fmNumber || "",
-        hire: Number(selectedFMDataToEdit?.hire || 0),
-        advance: Number(selectedFMDataToEdit?.advance || 0),
-        balance: Number(selectedFMDataToEdit?.balance || 0),
-        otherCharges: Number(selectedFMDataToEdit?.otherCharges || 0),
-        detentionCharges: Number(selectedFMDataToEdit?.detentionCharges || 0),
-        rtoCharges: Number(selectedFMDataToEdit?.rtoCharges || 0),
-        tds: Number(selectedFMDataToEdit?.tds || 0),
-        netBlance: Number(selectedFMDataToEdit?.netBlance || 0),
+        hire: selectedFMDataToEdit?.hire || "",
+        advance: selectedFMDataToEdit?.advance || "",
+        balance: selectedFMDataToEdit?.balance || "",
+        otherCharges: selectedFMDataToEdit?.otherCharges || "",
+        detentionCharges: selectedFMDataToEdit?.detentionCharges || "",
+        rtoCharges: selectedFMDataToEdit?.rtoCharges || "",
+        tds: selectedFMDataToEdit?.tds || "",
+        netBalance: selectedFMDataToEdit?.netBalance || "",
         amountInwords: selectedFMDataToEdit?.amountInwords || "",
         dlNumber: selectedFMDataToEdit?.dlNumber || "",
         driverSignature: selectedFMDataToEdit?.driverSignature || "",
@@ -203,6 +168,7 @@ export default function FMCreate({
         TDS: selectedFMDataToEdit?.TDS || "",
         insturance: selectedFMDataToEdit?.insturance || "",
         Rc: selectedFMDataToEdit?.Rc || "",
+        emails: selectedFMDataToEdit?.emails || [],
       };
       if (lrList) {
         setLRList(lrList);
@@ -233,12 +199,7 @@ export default function FMCreate({
       ...prev,
       { lrNumber: data.lrNumber, date: data.date },
     ]);
-    const vendor = await getVehicleByDataApi({
-      vehicleNumber: data.vehicleNo,
-      vehicletypes: data.vehicleType,
-      driverName: data.driverName,
-      driverPhone: data.driverPhone,
-    });
+    const vendor = await getVehicleByIdApi(data.vehicleId);
     if (vendor?.status === 200) {
       const vehicleData = vendor.data.data;
       setLRDataToFM((prev) => ({
@@ -250,6 +211,7 @@ export default function FMCreate({
         weight: data.weight,
         packages: data.noOfPackages,
         payableAt: data.to,
+        emails: data.emails,
         contactNumber: vehicleData.vendor.contactNumber,
         ContactPerson: vehicleData.vendor.contactPerson,
         driverName: vehicleData.driverName,
@@ -268,30 +230,23 @@ export default function FMCreate({
   };
 
   useEffect(() => {
-    const id = localStorage.getItem("id");
-    if (!id) {
-      return;
-    }
-    const branchName = localStorage.getItem("branchName");
-    if (!branchName) {
-      return;
-    }
-    setBranchName(branchName);
-    setIsAdmin(localStorage.getItem("isAdmin") === "true");
-  }, []);
-
-  useEffect(() => {
     setLRData(lrData);
   }, [lrData]);
 
   const onSubmit = async () => {
     setIsloading(true);
-    if (!fmData.fmNumber || lrList.length === 0 || fmData.netBlance === 0) {
+    if (!fmData.fmNumber || lrList.length === 0 || fmData.netBalance === "") {
       toast.error("Please fill all the fields");
       setIsloading(false);
       return;
     }
-    const data = { ...lrDataToFM, ...fmData, lrNumbers: lrList };
+    const data = {
+      ...lrDataToFM,
+      ...fmData,
+      LRDetails: lrList,
+      branchId: branchId.branchId,
+      adminId: branchId.adminId,
+    };
     if (formStatus === "create") {
       const response = await createFMApi(data);
       if (response?.status === 200) {
@@ -307,6 +262,16 @@ export default function FMCreate({
         toast.error("Something Went Wrong, Check All Fields");
       }
     } else if (formStatus === "edit") {
+      if (branchId.branchId) {
+        setNotificationData(
+          filterOnlyCompletePrimitiveDiffs(
+            getUnmatchingFields(data, selectedFMDataToEdit!),
+          ),
+        );
+        setNotificationAlertOpen(true);
+        setIsloading(false);
+        return;
+      }
       const response = await updateFMApi(data);
       if (response?.status === 200) {
         toast.success("FM has been updated");
@@ -317,6 +282,62 @@ export default function FMCreate({
     }
     setIsloading(false);
   };
+
+  async function fetchVendorsData() {
+    const response = await getAllVendorsApi();
+    if (response?.status === 200) {
+      setVendors(response.data.data);
+    }
+  }
+
+  const onNotificationSubmit = async () => {
+    if (!selectedFMDataToEdit) return;
+    const data = {
+      requestId: selectedFMDataToEdit.fmNumber,
+      title: "FM edit",
+      message: branchData.branchName,
+      description: branchData.id,
+      status: "editable",
+      data: JSON.stringify(notificationData),
+    };
+    const response = await createNotificationApi(data);
+    if (response?.status === 200) {
+      toast.success("Request has been sent to admin");
+      resetToDefault();
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setNotificationAlertOpen(false);
+  };
+
+  useEffect(() => {
+    fetchVendorsData();
+
+    const isAdmin = localStorage.getItem("isAdmin");
+    const branchDetails = localStorage.getItem("branchDetails");
+    if (isAdmin === "true" && branchDetails) {
+      const branchData = JSON.parse(branchDetails);
+      setBranchId({
+        branchId: "",
+        adminId: branchData.id,
+      });
+      setBranchData({
+        id: branchData.id,
+        branchName: branchData.branchName,
+      });
+    } else if (isAdmin === "false" && branchDetails) {
+      const branchData = JSON.parse(branchDetails);
+      setBranchId({
+        branchId: branchData.id,
+        adminId: "",
+      });
+      setBranchData({
+        id: branchData.id,
+        branchName: branchData.branchName,
+      });
+    }
+  }, []);
+
   return (
     <div className="flex flex-col gap-2 rounded-md bg-white p-5">
       <p className="text-xl font-medium">
@@ -387,9 +408,37 @@ export default function FMCreate({
         </div>
         <div className="flex w-[49%] flex-col gap-2">
           <label className="font-medium">Vendor Name</label>
-          <p className="border-primary rounded-md border p-2">
-            {lrDataToFM.vendorName}
-          </p>
+          <AntSelect
+            showSearch
+            placeholder="Select Vendor... "
+            className="border-primary rounded-md border outline"
+            options={vendors.map((vendor) => ({
+              value: vendor.id,
+              label: vendor.name,
+            }))}
+            onChange={(value) => {
+              const selectedVendor = vendors.find((v) => v.id === value);
+              if (selectedVendor) {
+                const allLRs: LrInputs[] = selectedVendor.vehicles.flatMap(
+                  (vehicle) => vehicle.LR || [],
+                );
+                if (branchId.branchId) {
+                  setLRData(
+                    allLRs.filter((lr) => lr.branchId === branchId.branchId),
+                  );
+                } else {
+                  setLRData(allLRs);
+                }
+                setFMData({ ...fmData, vendorsId: value });
+              }
+            }}
+            size="large"
+            style={{
+              border: "1px solid #64BAFF",
+              borderRadius: "10px",
+              outline: "none",
+            }}
+          />
         </div>
         <div className="flex w-[49%] flex-col gap-2">
           <label className="font-medium">Contact person</label>
@@ -472,9 +521,12 @@ export default function FMCreate({
               </table>
             </div>
             <div className="flex justify-end">
-              <button className="bg-primary/50 w-fit rounded-md p-1 px-2 font-medium text-white" onClick={()=>setLRList([])}>
+              <Button
+                className="bg-primary/50 w-fit rounded-md p-1 px-3 font-medium text-white"
+                onClick={() => setLRList([])}
+              >
                 Reset
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -486,9 +538,7 @@ export default function FMCreate({
               type="number"
               placeholder="Type here..."
               value={fmData?.hire}
-              onChange={(e) =>
-                setFMData({ ...fmData, hire: parseInt(e.target.value) })
-              }
+              onChange={(e) => setFMData({ ...fmData, hire: e.target.value })}
             />
           </div>
           <div className="flex w-full items-center justify-between gap-2">
@@ -499,7 +549,7 @@ export default function FMCreate({
               placeholder="Type here..."
               value={fmData?.advance}
               onChange={(e) =>
-                setFMData({ ...fmData, advance: parseInt(e.target.value) })
+                setFMData({ ...fmData, advance: e.target.value })
               }
             />
           </div>
@@ -521,7 +571,7 @@ export default function FMCreate({
               placeholder="Type here..."
               value={fmData?.otherCharges}
               onChange={(e) =>
-                setFMData({ ...fmData, otherCharges: parseInt(e.target.value) })
+                setFMData({ ...fmData, otherCharges: e.target.value })
               }
             />
           </div>
@@ -535,7 +585,7 @@ export default function FMCreate({
               onChange={(e) =>
                 setFMData({
                   ...fmData,
-                  detentionCharges: parseInt(e.target.value),
+                  detentionCharges: e.target.value,
                 })
               }
             />
@@ -548,7 +598,7 @@ export default function FMCreate({
               placeholder="Type here..."
               value={fmData?.rtoCharges}
               onChange={(e) =>
-                setFMData({ ...fmData, rtoCharges: parseInt(e.target.value) })
+                setFMData({ ...fmData, rtoCharges: e.target.value })
               }
             />
           </div>
@@ -567,7 +617,7 @@ export default function FMCreate({
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
-              value={fmData?.netBlance}
+              value={fmData?.netBalance}
             />
           </div>
           <div className="flex w-full items-center justify-between gap-2">
@@ -636,7 +686,7 @@ export default function FMCreate({
           <label className="font-medium">Issuing Branch</label>
           <div className="text-sm font-medium">
             <p className="border-primary w-fit rounded-md border p-2">
-              {branchName}
+              {branchDetails?.branchName}
             </p>
           </div>
         </div>
@@ -662,6 +712,27 @@ export default function FMCreate({
           )}
         </Button>
       </div>
+      <AlertDialog
+        open={notificationAlertOpen}
+        onOpenChange={setNotificationAlertOpen}
+      >
+        <AlertDialogTrigger className="cursor-pointer"></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alert!</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-black">
+              This will send the admin an edit request. Upon approval the
+              changes will be updated
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onNotificationSubmit}>
+              Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

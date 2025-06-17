@@ -1,6 +1,6 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:3000";
-// const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+// const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
 
 export const createLRApi = async (data: any) => {
   try {
@@ -14,6 +14,17 @@ export const createLRApi = async (data: any) => {
 export const getLRApi = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/api/v1/getLR`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getLRByLrNumberApi = async (lrNumber: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getLRByLrNumber/${lrNumber}`,
+    );
     return response;
   } catch (error) {
     console.log(error);
@@ -78,9 +89,7 @@ export const getFMApi = async () => {
 
 export const deleteFMApi = async (id: string) => {
   try {
-    const response = await axios.delete(
-      `${BASE_URL}/api/v1/deleteFM/${id}`,
-    );
+    const response = await axios.delete(`${BASE_URL}/api/v1/deleteFM/${id}`);
     return response;
   } catch (error) {
     console.log(error);
@@ -89,9 +98,169 @@ export const deleteFMApi = async (id: string) => {
 
 export const updateFMApi = async (data: any) => {
   try {
+    const response = await axios.patch(`${BASE_URL}/api/v1/updateFM`, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const sendFMEmailApi = async (email: string, file: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/sendFMEmail/${email}`,
+      file,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const addPaymentRecordToFMApi = async (data: any, fmNumber: string) => {
+  try {
     const response = await axios.patch(
-      `${BASE_URL}/api/v1/updateFM`,
+      `${BASE_URL}/api/v1/addPaymentRecordToFM/${fmNumber}`,
       data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deletePaymentRecordFromFMApi = async (
+  fmNumber: string,
+  id: string,
+) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/deletePaymentRecordFromFM/${fmNumber}/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterFMBymonthApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/filterFMBymonth`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getFmByBranchId = async (branchId: string) => {
+  
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getFMByBranchId/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const getLRByBranchId = async (branchId: string) => {
+  
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getLRByBranchId/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+
+export const updateLRByNotificationApi = async (id: string, data: any) => {
+  try {
+    const response = await axios.patch(
+      `${BASE_URL}/api/v1/updateLRByNotification/${id}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateFMByNotificationApi = async (id: string, data: any) => {
+  try {
+    const response = await axios.patch(
+      `${BASE_URL}/api/v1/updateFMByNotification/${id}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const deleteFMByNotificationApi = async (id: string) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/deleteFMByNotification/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteLRByNotificationApi = async (id: string) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/deleteLRByNotification/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateRecordPaymentByNotificationApi = async (id: string,LRnumber:string, data: any) => {
+  try {
+    const response = await axios.patch(
+      `${BASE_URL}/api/v1/updateRecordPaymentByNotification/${id}/${LRnumber}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteFMRecordByNotificationApi = async (id: string, IDNumber: string) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/deleteFMRecordByNotification/${id}/${IDNumber}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterLRDetailsApi = async (text: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterLRDetails/${text}`,
     );
     return response;
   } catch (error) {

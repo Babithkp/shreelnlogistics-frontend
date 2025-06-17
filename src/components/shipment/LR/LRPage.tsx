@@ -1,14 +1,10 @@
-import { LuSearch } from "react-icons/lu";
-
-import { FiSettings } from "react-icons/fi";
-import { BiBell } from "react-icons/bi";
-
 import LRList from "./LRList";
-import LRCreate, { LrInputs } from "./LRCreate";
+import LRCreate from "./LRCreate";
 import { useState } from "react";
+import { LrInputs } from "@/types";
 
-export type Section = "LRList" | "createNew";
-type SectionsState = Record<Section, boolean>;
+type Sections = "LRList" | "createNew";
+type SectionState = Record<Sections, boolean>;
 
 export default function LRPage() {
   const [selectedForm, setSelectedForm] = useState({
@@ -16,7 +12,9 @@ export default function LRPage() {
     createNew: false,
   });
   const [selectedLRData, setSelectedLRData] = useState<LrInputs>();
-  const [formStatus, setFormStatus] = useState<"edit" | "create" | "supplementary">("create");
+  const [formStatus, setFormStatus] = useState<
+    "edit" | "create" | "supplementary"
+  >("create");
 
   const setSelectedLRDataToEdit = (data: LrInputs) => {
     setSelectedLRData(data);
@@ -33,14 +31,14 @@ export default function LRPage() {
     });
   };
 
-  const sectionChangeHandler = (section: Section) => {
+  const sectionChangeHandler = (section: Sections) => {
     setSelectedForm((prev) => {
-      const updatedSections: SectionsState = Object.keys(prev).reduce(
+      const updatedSections: SectionState = Object.keys(prev).reduce(
         (acc, key) => {
-          acc[key as Section] = key === section;
+          acc[key as Sections] = key === section;
           return acc;
         },
-        {} as SectionsState,
+        {} as SectionState,
       );
       return updatedSections;
     });
@@ -48,28 +46,6 @@ export default function LRPage() {
 
   return (
     <>
-      <div className="flex w-full justify-between">
-        <div>
-          <p className="text-sm font-medium text-[#707EAE]">Admin</p>
-          <p className="text-3xl font-medium">Lorry Receipts (LRs)</p>
-        </div>
-        <div className="flex gap-5 rounded-full bg-white p-3 px-5">
-          <div className="flex items-center gap-2 rounded-full bg-[#F4F7FE] p-2">
-            <LuSearch size={18} />
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <FiSettings size={22} color="#A3AED0" />
-          </div>
-          <div className="flex items-center">
-            <BiBell size={24} color="#A3AED0" />
-          </div>
-        </div>
-      </div>
       {selectedForm.LRList && (
         <LRList
           sectionChangeHandler={sectionChangeHandler}

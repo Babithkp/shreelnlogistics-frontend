@@ -6,8 +6,9 @@ import {
   Image,
   StyleSheet,
 } from "@react-pdf/renderer";
-import { LrInputs } from "./LRCreate";
-import  {toWords} from "number-to-words"
+import { ProfileInputs } from "@/components/settings/Settings";
+import { convertToINRWords } from "@/lib/utils";
+import { LrInputs } from "@/types";
 // Define styles
 const styles = StyleSheet.create({
   page: {
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
   headerLeft: {
     width: "50%",
     paddingRight: 10,
+    lineHeight: 0.8,
   },
   headerRight: {
     width: "50%",
@@ -86,7 +88,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
+const LRTemplate = ({
+  LRData,
+  companyProfile,
+}: {
+  LRData?: LrInputs | undefined;
+  companyProfile?: ProfileInputs;
+}) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
@@ -96,20 +104,16 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
             (Fleet owners & Transport Contractors)
           </Text>
           <Text style={styles.subText}>An ISO 9001 : 2015 Company</Text>
+          <Text style={styles.subText}>{companyProfile?.address}</Text>
+          <Text style={styles.subText}>Email: {companyProfile?.email}</Text>
           <Text style={styles.subText}>
-            Flat No.203, 3rd Floor, Sai Godavari Apartment, Kuduregere Road,
+            Ph.: Mob: {companyProfile?.contactNumber},{" "}
+            {companyProfile?.alternateContactNumber}
           </Text>
-          <Text style={styles.subText}>
-            Madanayakanahalli, Bangalore Rural - 562162
-          </Text>
-          <Text style={styles.subText}>
-            Email: bangalore@shreelnlogistics.com
-          </Text>
-          <Text style={styles.subText}>Ph.: Mob: 9036416520, 90364416521</Text>
         </View>
         <View style={[styles.headerRight, { gap: 5 }]}>
           <Image
-            src="https://i.ibb.co/5gkLZsD0/logo.png"
+            src="https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png"
             style={{
               width: 200,
               height: 50,
@@ -119,7 +123,7 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
           />
           <Text style={styles.subText}>
             <Text style={styles.label}>GSTIN: </Text>
-            29BDQPJ8107H1Z5
+            {companyProfile?.GSTIN}
           </Text>
           <Text style={styles.subText}>
             <Text style={styles.label}>MSME: </Text>
@@ -156,8 +160,7 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
               <Text>:</Text>
               <View>
                 <Text>{LRData?.consignorAddress},</Text>
-
-                <Text>Tamil Nadu - {LRData?.consignorPincode}</Text>
+                <Text>{LRData?.consignorPincode}</Text>
               </View>
             </View>
           </View>
@@ -181,13 +184,12 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
               <Text>:</Text>
               <View>
                 <Text>{LRData?.consigneeAddress},</Text>
-                <Text>Krishnagiri,</Text>
-                <Text>Tamil Nadu - {LRData?.consigneePincode}</Text>
+                <Text>{LRData?.consigneePincode}</Text>
               </View>
             </View>
           </View>
         </View>
-        <View style={{ width: "40%", gap: 3 }}>
+        <View style={{ width: "30%", gap: 3 }}>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>LR#</Text>
             <Text>: {LRData?.lrNumber}</Text>
@@ -224,7 +226,7 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
           </Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Size</Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Weight</Text>
-          <Text style={[styles.tableCol, { width: "30%" }]}>Rate</Text>
+          <Text style={[ { width: "30%",padding:5 }]}>Rate</Text>
         </View>
 
         <View style={styles.tableRow}>
@@ -243,9 +245,7 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
               },
             ]}
           >
-            <Text style={{ width: "90%" }}>
-              {LRData?.description}
-            </Text>
+            <Text style={{ width: "90%" }}>{LRData?.description}</Text>
             <View style={{ textAlign: "center" }}>
               <Text>Invoice no.: {LRData?.invoiceNo}</Text>
               <Text>Invoice date: {LRData?.invoiceDate}</Text>
@@ -264,7 +264,7 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
           <Text style={[styles.tableCol, { width: "10%" }]}>
             {LRData?.weight}
           </Text>
-          <View style={[styles.tableCol, { width: "30%", gap: 3 }]}>
+          <View style={[ { width: "30%", gap: 3,padding:5 }]}>
             {LRData?.freightCharges && (
               <View style={{ flexDirection: "row", gap: 5 }}>
                 <Text>Freight Charges</Text>
@@ -325,7 +325,6 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
                 <Text>{LRData?.weightment}</Text>
               </View>
             )}
-
           </View>
         </View>
         <View
@@ -339,10 +338,11 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
             alignItems: "center",
           }}
         >
-          <Text style={{ width: "50%" }}>
-            Amount in words {LRData?.totalAmt && toWords(LRData?.totalAmt)} rupees only
+          <Text style={{ width: "50%",textTransform:"capitalize" }}>
+            Amount in words{" "}
+            {LRData?.totalAmt && convertToINRWords(LRData?.totalAmt)}
           </Text>
-          <Text>Total INR {LRData?.totalAmt}</Text>
+          <Text>Total INR {LRData?.totalAmt.toFixed(2)}</Text>
         </View>
       </View>
 
@@ -350,13 +350,13 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
         <View style={[styles.detailsColumn, { gap: 5 }]}>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>Vehicle type</Text>
-            <Text>: {LRData?.vehicleType}</Text>
+            <Text>: {LRData?.Vehicle?.vehicletypes}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>
               Vehicle Number
             </Text>
-            <Text>: {LRData?.vehicleNo}</Text>
+            <Text>: {LRData?.Vehicle?.vehicleNumber}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>Value</Text>
@@ -364,19 +364,25 @@ const LRTemplate = ({ LRData }: { LRData: LrInputs | undefined }) => (
           </View>
         </View>
         <View style={[styles.detailsColumn, { gap: 5 }]}>
-          {LRData?.ewbNumber &&<View style={{ flexDirection: "row", gap: 8 }}>
-            <Text style={[styles.label, { width: "8rem" }]}>EWB Number </Text>
-            <View style={{ flexDirection: "row", gap: 3 }}>
-              <Text>:</Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                <Text>{LRData?.ewbNumber}</Text>
+          {LRData?.ewbNumber && (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Text style={[styles.label, { width: "8rem" }]}>EWB Number </Text>
+              <View style={{ flexDirection: "row", gap: 3 }}>
+                <Text>:</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  <Text>{LRData?.ewbNumber}</Text>
+                </View>
               </View>
             </View>
-          </View>}
-          {LRData?.ewbExpiryDate && <View style={{ flexDirection: "row" }}>
-            <Text style={[styles.label, { width: "8rem" }]}>EWB Exp Date</Text>
-            <Text>: {LRData?.ewbExpiryDate}</Text>
-          </View>}
+          )}
+          {LRData?.ewbExpiryDate && (
+            <View style={{ flexDirection: "row" }}>
+              <Text style={[styles.label, { width: "8rem" }]}>
+                EWB Exp Date
+              </Text>
+              <Text>: {LRData?.ewbExpiryDate}</Text>
+            </View>
+          )}
         </View>
       </View>
 
