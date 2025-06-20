@@ -172,6 +172,7 @@ export default function Statements() {
   const recordPaymentsExporthandler = () => {
     exportRecordExcel(formatRecordData(transactions), "Payment Records");
   };
+
   const BillExporthandler = () => {
     exportToExcelWithImage(
       formatBillData(billData),
@@ -531,8 +532,8 @@ export default function Statements() {
                     <td className="max-w-[20rem] overflow-y-auto py-2">
                       {bill.lrData.map((lr) => lr.lrNumber)}
                     </td>
-                    <td className="py-2">{bill.lrData[0].from}</td>
-                    <td className="py-2">{bill.lrData[0].to}</td>
+                    <td className="py-2">{bill.lrData.length === 0 ? "-" : bill.lrData[0].from}</td>
+                    <td className="py-2">{bill.lrData.length === 0 ? "-" : bill.lrData[0].to}</td>
                     <td className="py-2">{bill.total}</td>
                     <td className="py-2">{bill.total - bill.pendingAmount}</td>
                     <td className="py-2">
@@ -541,9 +542,9 @@ export default function Statements() {
                       )}
                     </td>
                     <td className="py-2">{bill.pendingAmount}</td>
-                    <td className="py-2">{bill.zeroToThirty}</td>
-                    <td className="py-2">{bill.thirtyToSixty}</td>
-                    <td className="py-2">{bill.sixtyPlus}</td>
+                    <td className="py-2">{bill.zeroToThirty ?? 0}</td>
+                    <td className="py-2">{bill.thirtyToSixty ?? 0}</td>
+                    <td className="py-2">{bill.sixtyPlus ?? 0}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,6 +1,6 @@
 import axios from "axios";
 // const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+const BASE_URL = "https://shreeln-backend.vercel.app";
 
 
 export const adminLoginApi = async (userName: string, password: string) => {
@@ -111,6 +111,24 @@ export const updateNotificationApi = async (id: string, status: string) => {
 export const createNotificationApi = async (data: any) => {
   try {
     const response = await axios.post(`${BASE_URL}/api/v1/createNotification`, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getExpenseIdApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getExpenseId`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getBillIdApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getBillId`);
     return response;
   } catch (error) {
     console.log(error);

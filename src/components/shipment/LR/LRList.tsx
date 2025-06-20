@@ -1,11 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MdOutlineAdd } from "react-icons/md";
 import { useEffect, useState } from "react";
-import {
-  deleteLRApi,
-  getLRApi,
-  sendLREmailApi,
-} from "@/api/shipment";
+import { deleteLRApi, getLRApi, sendLREmailApi } from "@/api/shipment";
 import { motion } from "motion/react";
 import { RxCross2 } from "react-icons/rx";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -75,8 +71,6 @@ export default function LRList({
   const [isAdmin, setIsAdmin] = useState(false);
   const [search, setSearch] = useState("");
 
-
-
   useEffect(() => {
     if (selectedLR) {
       setEmailIds(selectedLR.emails.join(", "));
@@ -102,7 +96,7 @@ export default function LRList({
           lr.description,
         ]
           .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text))
+          .some((field) => field?.toLowerCase().includes(text)),
       );
 
       setFilteredLRs(filtered);
@@ -110,7 +104,6 @@ export default function LRList({
 
     return () => clearTimeout(delay);
   }, [search, LRData]);
-
 
   const getPdfFile = async () => {
     const pdfFile = await pdf(<LRTemplate LRData={selectedLR} />).toBlob();
@@ -212,8 +205,8 @@ export default function LRList({
         ? allLRs.filter((lr) => lr.branchId === branchId)
         : allLRs;
 
-        setLRData(filteredLRs);
-        setFilteredLRs(filteredLRs);
+      setLRData(filteredLRs);
+      setFilteredLRs(filteredLRs);
     }
   }
 
@@ -242,15 +235,15 @@ export default function LRList({
 
   return (
     <section className="relative flex gap-5">
-     <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+        <LuSearch size={18} />
+        <input
+          placeholder="Search"
+          className="outline-none placeholder:font-medium"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
       <motion.div
         animate={{ width: showPreview ? "50%" : "100%" }}
         transition={{ duration: 0.3 }}
@@ -281,7 +274,7 @@ export default function LRList({
             </Button>
           </div>
         </div>
-        <table className="w-full">
+        <table className={`w-full ${showPreview ? "text-xs":""}`}>
           <thead>
             <tr>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
@@ -312,7 +305,11 @@ export default function LRList({
                 onClick={() => selectLRForPreview(data)}
               >
                 <td className="py-2">{data.lrNumber}</td>
-                <td className="py-2">{data.consignorName}</td>
+                <td className="py-2">
+                  {data.client === "consignee"
+                    ? data.consigneeName
+                    : data.consignorName}
+                </td>
                 <td className="py-2">{data.date}</td>
                 <td className="py-2">{data.from}</td>
                 <td className="py-2">{data.to}</td>
@@ -359,7 +356,7 @@ export default function LRList({
               <DialogTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
                 Send mail
               </DialogTrigger>
-              <DialogContent className="min-w-7xl">
+              <DialogContent className="h-[80vh] min-w-7xl overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-2xl">Send Mail</DialogTitle>
                 </DialogHeader>
@@ -393,7 +390,7 @@ export default function LRList({
                       </div>
                       <div className="flex">
                         <label>LR Number</label>
-                        <p>: #{selectedLR?.lrNumber}</p>
+                        <p>: #{selectedLR?.lrNumber}</p> ``
                       </div>
                       <div className="flex">
                         <label>Date</label>

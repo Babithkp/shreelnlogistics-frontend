@@ -103,7 +103,7 @@ const BillTemplate = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
-            src="https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png"
+            src="https://shreeln-bucket.s3.ap-south-1.amazonaws.com/logo.png"
             style={{
               width: 200,
               height: 50,
@@ -428,15 +428,15 @@ const BillTemplate = ({
         <Text style={{ width: "70%" }}>
           Amount in words {billInputs?.totalInWords} rupees only
         </Text>
-        <Text>Total INR {billInputs?.total.toFixed(2)}</Text>
+        <Text>Total INR {billInputs?.subTotal.toFixed(2)}</Text>
       </View>
       <View style={{ marginTop: 10, gap: 3 }}>
         <Text>GST Payable on reverse charge basis Yes/No : Yes</Text>
         <Text>GST Amount payable under RCM by the billed party</Text>
         <View style={{ flexDirection: "row", gap: 3 }}>
-          <Text>Name</Text>
+          <Text style={{ fontWeight: 600 }}>Name</Text>
           <Text>:</Text>
-        <Text style={{ fontWeight: 600 }}>SHREE LN LOGISTICS</Text>
+        <Text >SHREE LN LOGISTICS</Text>
         </View>
         <View style={{ flexDirection: "row", gap: 3 }}>
           <Text style={{ fontWeight: 600 }}>Bank Name</Text>

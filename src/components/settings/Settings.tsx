@@ -404,7 +404,7 @@ export default function Settings({ data }: { data?: Setting }) {
             <div className="flex justify-between pr-30 text-sm">
               <div className="flex w-full justify-between">
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium">Vehicle List</label>
+                  <label className="font-medium">Bank Name</label>
                   <p>{bankDetailsData?.name}</p>
                 </div>
                 <div className="flex flex-col gap-2">

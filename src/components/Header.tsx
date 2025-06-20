@@ -61,8 +61,8 @@ const sectionLabels: Record<keyof SectionsState, string> = {
   FM: "Freight Management",
   generateBill: "Generate Bill",
   viewBill: "View Bills",
-  vendor: "Vendors",
-  client: "Clients",
+  vendor: "Vendor Management",
+  client: "Client Management",
   outstanding: "Outstanding",
   branch: "Branches",
   expenses: "Expenses",
@@ -247,7 +247,6 @@ export default function Header({
     const response = await getAllAdminNotificationsApi();
     if (response?.status === 200) {
       setNotifications(response.data.data);
-      console.log(response.data.data);
       const oneTimeMessages = response.data.data.filter(
         (message: Notification) => message.status !== "read",
       );
@@ -267,10 +266,10 @@ export default function Header({
   }
 
   async function fetchBranchNotifications(branchId: string) {
+    setIsLoading(true);
     const response = await getBranchNotificationsApi(branchId);
     if (response?.status === 200) {
       setNotifications(response.data.data);
-      console.log(response.data.data);
       const oneTimeMessages = response.data.data.filter(
         (message: Notification) => message.status !== "read",
       );
@@ -287,6 +286,7 @@ export default function Header({
         });
       }
     }
+    setIsLoading(false);
   }
 
   function formatForUpdate(diffObj: Record<string, any>) {
@@ -306,14 +306,19 @@ export default function Header({
     data: JSON,
     notificationId: string,
   ) => {
-    const formattedData = formatForUpdate(data);
-    const response = await updateLRByNotificationApi(id, formattedData);
+    const apiData = {
+      data: formatForUpdate(data),
+      lrNumber: id,
+    };
+    setIsLoading(true);
+    const response = await updateLRByNotificationApi(apiData);
     if (response?.status === 200) {
       toast.success("Data Updated");
       await deleteNotificationHandler(notificationId);
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onLREditDeclineHandler = async (notification: Notification) => {
@@ -326,7 +331,7 @@ export default function Header({
       branchId: notification.description,
       description: "declined",
     };
-
+    setIsLoading(true);
     const response = await createNotificationForBranchApi(data);
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -335,6 +340,7 @@ export default function Header({
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onFMEditUpdateHandler = async (
@@ -342,6 +348,7 @@ export default function Header({
     data: JSON,
     notificationId: string,
   ) => {
+    setIsLoading(true);
     const formattedData = formatForUpdate(data);
     const response = await updateFMByNotificationApi(id, formattedData);
     if (response?.status === 200) {
@@ -350,6 +357,7 @@ export default function Header({
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onFmEditDeclineHandler = async (notification: Notification) => {
@@ -362,7 +370,7 @@ export default function Header({
       branchId: notification.description,
       description: "declined",
     };
-
+    setIsLoading(true);
     const response = await createNotificationForBranchApi(data);
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -370,9 +378,11 @@ export default function Header({
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onFMDeleteHandler = async (notification: Notification) => {
+    setIsLoading(true);
     const response = await deleteFMByNotificationApi(notification.requestId);
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -380,16 +390,22 @@ export default function Header({
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onLRDeleteHandler = async (notification: Notification) => {
-    const response = await deleteLRByNotificationApi(notification.requestId);
+    const data = {
+      id: notification.requestId,
+    }
+    setIsLoading(true);
+    const response = await deleteLRByNotificationApi(data);
     if (response?.status === 200) {
       toast.success("Notification Sent");
       deleteNotificationHandler(notification.id);
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
+    setIsLoading(false);
   };
 
   const onLRDeleteDeclineHandler = async (notification: Notification) => {

@@ -1,6 +1,6 @@
 import axios from "axios";
 // const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createLRApi = async (data: any) => {
   try {
@@ -161,7 +161,6 @@ export const filterFMBymonthApi = async (data: any) => {
 };
 
 export const getFmByBranchId = async (branchId: string) => {
-  
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/getFMByBranchId/${branchId}`,
@@ -172,9 +171,7 @@ export const getFmByBranchId = async (branchId: string) => {
   }
 };
 
-
 export const getLRByBranchId = async (branchId: string) => {
-  
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/getLRByBranchId/${branchId}`,
@@ -185,12 +182,10 @@ export const getLRByBranchId = async (branchId: string) => {
   }
 };
 
-
-
-export const updateLRByNotificationApi = async (id: string, data: any) => {
+export const updateLRByNotificationApi = async (data: any) => {
   try {
     const response = await axios.patch(
-      `${BASE_URL}/api/v1/updateLRByNotification/${id}`,
+      `${BASE_URL}/api/v1/updateLRByNotification`,
       data,
     );
     return response;
@@ -211,7 +206,6 @@ export const updateFMByNotificationApi = async (id: string, data: any) => {
   }
 };
 
-
 export const deleteFMByNotificationApi = async (id: string) => {
   try {
     const response = await axios.delete(
@@ -223,10 +217,10 @@ export const deleteFMByNotificationApi = async (id: string) => {
   }
 };
 
-export const deleteLRByNotificationApi = async (id: string) => {
+export const deleteLRByNotificationApi = async (data: any) => {
   try {
-    const response = await axios.delete(
-      `${BASE_URL}/api/v1/deleteLRByNotification/${id}`,
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/deleteLRByNotification`,data
     );
     return response;
   } catch (error) {
@@ -234,7 +228,11 @@ export const deleteLRByNotificationApi = async (id: string) => {
   }
 };
 
-export const updateRecordPaymentByNotificationApi = async (id: string,LRnumber:string, data: any) => {
+export const updateRecordPaymentByNotificationApi = async (
+  id: string,
+  LRnumber: string,
+  data: any,
+) => {
   try {
     const response = await axios.patch(
       `${BASE_URL}/api/v1/updateRecordPaymentByNotification/${id}/${LRnumber}`,
@@ -246,7 +244,10 @@ export const updateRecordPaymentByNotificationApi = async (id: string,LRnumber:s
   }
 };
 
-export const deleteFMRecordByNotificationApi = async (id: string, IDNumber: string) => {
+export const deleteFMRecordByNotificationApi = async (
+  id: string,
+  IDNumber: string,
+) => {
   try {
     const response = await axios.delete(
       `${BASE_URL}/api/v1/deleteFMRecordByNotification/${id}/${IDNumber}`,

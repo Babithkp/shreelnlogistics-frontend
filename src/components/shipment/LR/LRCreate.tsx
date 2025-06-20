@@ -31,7 +31,10 @@ import { toast } from "react-toastify";
 import { VscLoading } from "react-icons/vsc";
 import { getAllVendorsApi } from "@/api/partner";
 import { LrInputs, VehicleInputs, VendorInputs } from "@/types";
-import { filterOnlyCompletePrimitiveDiffs, getUnmatchingFields } from "@/lib/utils";
+import {
+  filterOnlyCompletePrimitiveDiffs,
+  getUnmatchingFields,
+} from "@/lib/utils";
 
 const allOptions = [
   "unLoading",
@@ -147,6 +150,7 @@ export default function LRCreate({
       setValue("adminId", data.adminId);
       setValue("branchId", data.branchId);
       setValue("emails", data.emails);
+      setValue("client", data.client);
 
       const filledFields = allOptions
         .filter(
@@ -264,8 +268,6 @@ export default function LRCreate({
     });
   }
 
-
-
   async function fetchVendors() {
     const responseVendors = await getAllVendorsApi();
     const responseClients = await getAllClientsApi();
@@ -285,8 +287,6 @@ export default function LRCreate({
     }
   }
 
-
-
   const setLRData = (data: LrInputs) => {
     setValue("from", data.from);
     setValue("to", data.to);
@@ -300,6 +300,7 @@ export default function LRCreate({
     setValue("consigneeGSTIN_1", data.consigneeGSTIN);
     setValue("consigneePincode", data.consigneePincode);
     setValue("consigneeAddress", data.consigneeAddress);
+    setValue("client", data.client);
   };
 
   const setConsignorData = (data: VendorInputs) => {
@@ -331,9 +332,9 @@ export default function LRCreate({
 
   const onSubmit = async (data: LrInputs) => {
     setIsloading(true);
-    if(isAdmin){
+    if (isAdmin) {
       data.adminId = branch.id;
-    }else{
+    } else {
       data.branchId = branch.id;
     }
     if (selectedEmails)
@@ -531,10 +532,7 @@ export default function LRCreate({
               defaultValue={""}
               rules={{ required: "Please select insurance" }}
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="boder border-primary h-full w-full py-5 shadow-none data-[placeholder]:text-black">
                     <SelectValue />
                     <div></div>
@@ -1118,20 +1116,49 @@ export default function LRCreate({
             />
           </div>
           <div className="flex w-full justify-between py-2">
-            <div className="flex w-[49%] flex-col gap-2">
+            <div className="flex w-[30%] flex-col gap-2">
               <label className="font-medium">EWB Number</label>
               <input
                 className="border-primary rounded-md border p-2"
                 {...register("ewbNumber")}
               />
             </div>
-            <div className="flex w-[49%] flex-col gap-2">
+            <div className="flex w-[30%] flex-col gap-2">
               <label className="font-medium">EWB Expiry date</label>
               <input
                 className="border-primary rounded-md border p-2"
                 type="date"
                 {...register("ewbExpiryDate")}
               />
+            </div>
+            <div className="flex w-[30%] flex-col gap-2">
+              <label className="font-medium">Client</label>
+              <Controller
+                name="client"
+                control={control}
+                defaultValue={""}
+                rules={{ required: true}}
+                render={({ field }) => (
+                  <AntSelect
+                    {...field}
+                    size="large"
+                    onChange={(value) => {
+                      field.onChange(value);
+                    }}
+                    options={[
+                      { value: "consignee", label: "Consignee" },
+                      { value: "consignor", label: "Consignor" },
+                    ]}
+                    style={{
+                      border: "1px solid #64BAFF",
+                      borderRadius: "10px",
+                    }}
+                  />
+                )}
+              />
+              {errors.client && (
+                <p className="text-red-500">Select consignee or consignor </p>
+              )}
             </div>
           </div>
         </div>

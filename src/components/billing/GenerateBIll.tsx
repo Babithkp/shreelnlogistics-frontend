@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { getLRApi } from "@/api/shipment";
-import { createNotificationApi, getAllClientsApi } from "@/api/admin";
+import { createNotificationApi, getAllClientsApi, getBillIdApi } from "@/api/admin";
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import {
@@ -82,6 +82,29 @@ export default function GenerateBIll({
     useState<Record<string, any>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
 
+
+  function getWorkingYear() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+  
+    let startYear, endYear;
+  
+    if (month >= 4) {
+      // If April or later → current year - next year
+      startYear = year % 100;
+      endYear = (year + 1) % 100;
+    } else {
+      // If Jan - Mar → previous year - current year
+      startYear = (year - 1) % 100;
+      endYear = year % 100;
+    }
+  
+    return `${startYear.toString().padStart(2, '0')}-${endYear.toString().padStart(2, '0')}`;
+  }
+  
+
+
   const {
     handleSubmit,
     register,
@@ -138,7 +161,7 @@ export default function GenerateBIll({
         cgstRate,
         sgstRate,
         total,
-        totalInWords: convertToINRWords(total),
+        totalInWords: convertToINRWords(subTotal),
       }));
     } else if (totalAmounts.billedin === "OutsideKarnataka") {
       const igstRate = subTotal * 0.05;
@@ -149,7 +172,7 @@ export default function GenerateBIll({
         subtotal: subTotal,
         igstRate,
         total,
-        totalInWords: convertToINRWords(total),
+        totalInWords: convertToINRWords(subTotal),
       }));
     }
   }, [
@@ -415,6 +438,16 @@ export default function GenerateBIll({
     }
   };
 
+  async function fetchBillId(){
+    const response = await getBillIdApi();
+    if(response?.status === 200){
+      const year = getWorkingYear()
+      const billId = response.data.data.billId
+      const generateBill = `BNG/${billId}/${year}`
+      setValue('billNumber', generateBill)
+    }
+  }
+
   async function fetchData(branchId?: string) {
     const responseLR = await getLRApi();
     const clientResponse = await getAllClientsApi();
@@ -440,6 +473,7 @@ export default function GenerateBIll({
   }
 
   useEffect(() => {
+    fetchBillId()
     const isAdmin = localStorage.getItem("isAdmin");
     const branchDetailsRaw = localStorage.getItem("branchDetails");
 
@@ -510,11 +544,8 @@ export default function GenerateBIll({
               <input
                 type="date"
                 className="border-primary rounded-md border p-2"
-                {...register("dueDate", { required: true })}
+                {...register("dueDate")}
               />
-              {errors.dueDate && (
-                <p className="text-red-500">Due date is required</p>
-              )}
             </div>
           </div>
           <div className="w-[23%]">
@@ -1278,14 +1309,14 @@ export default function GenerateBIll({
           <div className="border-primary flex w-full justify-between rounded-md border p-3 font-medium">
             <div>
               <p>Bank Details</p>
-              <p>SHREE LN LOGISTICS, {companyBankDetails?.name}</p>
+              <p>Name SHREE LN LOGISTICS</p>
+              <p>Bank {companyBankDetails?.name}</p>
               <p>A/C NO. {companyBankDetails?.accountNumber}</p>
               <p>IFSC - {companyBankDetails?.ifscCode}</p>
             </div>
             <div className="flex flex-col gap-3 text-end">
               <div>
-                <p>Sub Total INR {totalAmounts.subtotal.toFixed(2)}</p>
-                <p>Total (Incl. Taxes) INR {totalAmounts.total.toFixed(2)}</p>
+                <p>Total INR {totalAmounts.subtotal.toFixed(2)}</p>
                 <p className="capitalize">
                   Total in words - {totalAmounts.totalInWords} rupees only
                 </p>

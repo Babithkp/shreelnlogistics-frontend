@@ -97,24 +97,21 @@ export default function FMCreate({
   useEffect(() => {
     let tds = 0;
     const hire = parseFloat(fmData.hire) || 0;
-    const advance = parseFloat(fmData.advance) || 0;
     const otherCharges = parseFloat(fmData.otherCharges) || 0;
     const detentionCharges = parseFloat(fmData.detentionCharges) || 0;
     const rtoCharges = parseFloat(fmData.rtoCharges) || 0;
-
-    const balance = hire - advance;
 
     if (lrDataToFM?.TDS === "Not-declared") {
       tds = (hire + otherCharges + detentionCharges + rtoCharges) * 0.01;
     }
 
     const netBalance =
-      (hire + otherCharges + detentionCharges + rtoCharges) - tds;
+      hire + otherCharges + detentionCharges + rtoCharges - tds;
 
     setFMData((prev) => ({
       ...prev,
       tds: tds.toFixed(2), // optional: format to 2 decimals
-      balance: balance.toFixed(2),
+      balance: hire.toFixed(2),
       netBalance: netBalance.toFixed(2),
       amountInwords: convertToINRWords(netBalance),
     }));
@@ -542,7 +539,7 @@ export default function FMCreate({
             />
           </div>
           <div className="flex w-full items-center justify-between gap-2">
-            <label className="font-medium">Advance</label>
+            <label className="font-medium">Advance (To be Paid)</label>
             <input
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"

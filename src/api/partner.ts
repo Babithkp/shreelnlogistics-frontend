@@ -1,6 +1,6 @@
 import axios from "axios";
 // const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const getAllVendorsApi = async () => {
   try {
@@ -99,6 +99,18 @@ export const filterBillByClientApi = async (data: any) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/filterBillByClient`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterFMByVendorApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/filterFMByVendor`,
       data,
     );
     return response;

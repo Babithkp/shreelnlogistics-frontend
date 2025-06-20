@@ -48,8 +48,9 @@ import { FaChevronDown } from "react-icons/fa6";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { TbCopy } from "react-icons/tb";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { BranchInputs } from "@/types";
+import { BranchInputs, ExpensesInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
+import { getAllExpensesApi } from "@/api/expense";
 
 type EditBranchPassword = {
   adminPassword: string;
@@ -62,6 +63,7 @@ type SortOrder = "asc" | "desc" | "";
 export default function Branch() {
   const [filteredBranches, setFilteredBranches] = useState<BranchInputs[]>([]);
   const [branches, setBranches] = useState<BranchInputs[]>([]);
+  const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
 
   const [sortState, setSortState] = useState<{
     employeeCount: SortOrder;
@@ -110,12 +112,12 @@ export default function Branch() {
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
-  
+
       if (!text) {
         setFilteredBranches(branches);
         return;
       }
-  
+
       const filtered = branches.filter((branch) => {
         const fieldsToSearch: (string | number | undefined | null)[] = [
           branch.branchName,
@@ -129,7 +131,7 @@ export default function Branch() {
           branch.totalBillingValue,
           branch.email,
         ];
-  
+
         return fieldsToSearch.some((field) => {
           if (typeof field === "string") {
             return field.toLowerCase().includes(text);
@@ -140,13 +142,12 @@ export default function Branch() {
           return false;
         });
       });
-  
+
       setFilteredBranches(filtered);
     }, 300);
-  
+
     return () => clearTimeout(delay);
   }, [search, branches]);
-  
 
   const handleSort = (key: keyof typeof sortState) => {
     const toggleOrder = (current: SortOrder): SortOrder =>
@@ -251,14 +252,21 @@ export default function Branch() {
     setIsloading(false);
   };
 
-  useEffect(()=>{
+  async function getExpenses() {
+    const response = await getAllExpensesApi();
+    if (response?.status === 200) {
+      setExpenses(response.data.data);
+    }
+  }
+  useEffect(() => {
     getBranchDetails();
-  },[])
+    getExpenses();
+  }, []);
 
   return (
     <>
       <div className="relative flex gap-10">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+        <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <LuSearch size={18} />
           <input
             placeholder="Search"
@@ -286,7 +294,12 @@ export default function Branch() {
             </div>
             <div className="font-medium">
               <p className="text-sm text-[#A3AED0]">Total Branch expenses</p>
-              <p className="text-xl">INR 25,000</p>
+              <p className="text-xl">
+                INR{" "}
+                {expenses
+                  .reduce((acc, expense) => acc + parseFloat(expense.amount), 0)
+                  .toFixed(2)}
+              </p>
             </div>
           </div>
         </div>

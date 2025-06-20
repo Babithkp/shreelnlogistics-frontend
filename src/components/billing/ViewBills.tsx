@@ -54,7 +54,7 @@ import { MdOutlineAdd } from "react-icons/md";
 import { getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
 import { BranchDetails } from "../shipment/FM/FMPage";
-import { Controller,  useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { PiRecord } from "react-icons/pi";
 import {
   convertToINRWords,
@@ -105,10 +105,9 @@ export default function ViewBills({
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-
   const getPdfFile = async () => {
     const pdfFile = await pdf(
-      <BillTemplate billInputs={selectedBill} bankDetails={bankDetails}/>,
+      <BillTemplate billInputs={selectedBill} bankDetails={bankDetails} />,
     ).toBlob();
     setAttachment(pdfFile);
   };
@@ -122,9 +121,9 @@ export default function ViewBills({
     setValue,
     formState: { errors },
   } = useForm<PaymentRecord>({
-    defaultValues:{
-      date:new Date().toISOString().split("T")[0]
-    }
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+    },
   });
 
   const amount = watch("amount");
@@ -145,12 +144,12 @@ export default function ViewBills({
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
-  
+
       if (!text) {
         setFilteredBills(billData);
         return;
       }
-  
+
       const filtered = billData.filter((bill) => {
         const fieldsToSearch = [
           bill.billNumber,
@@ -176,18 +175,17 @@ export default function ViewBills({
           bill.branchId,
           bill.branchesId,
         ];
-  
+
         return fieldsToSearch
           .filter((field): field is string => typeof field === "string")
           .some((field) => field.toLowerCase().includes(text));
       });
-  
+
       setFilteredBills(filtered);
     }, 300);
-  
+
     return () => clearTimeout(delay);
   }, [search, billData]);
-  
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
@@ -435,8 +433,8 @@ export default function ViewBills({
 
   return (
     <>
-      <section className="flex gap-5 relative">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+      <section className="relative flex gap-5">
+        <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <LuSearch size={18} />
           <input
             placeholder="Search"
@@ -460,7 +458,7 @@ export default function ViewBills({
               Create new
             </Button>
           </div>
-          <table className={`w-full ${showPreview ? "text-xs" :""}`}>
+          <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
             <thead>
               <tr>
                 <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
@@ -482,12 +480,14 @@ export default function ViewBills({
                   Bill Amount
                 </th>
                 <th className="font-[400] text-[#797979]">Pending Amount</th>
-                {!showPreview &&<>
-                <th className="font-[400] text-[#797979]">Tax</th>
-                <th className="font-[400] text-[#797979]">0-30</th>
-                <th className="font-[400] text-[#797979]">30-60</th>
-                <th className="font-[400] text-[#797979]">&gt;60</th>
-                </>}
+                {!showPreview && (
+                  <>
+                    <th className="font-[400] text-[#797979]">Tax</th>
+                    <th className="font-[400] text-[#797979]">0-30</th>
+                    <th className="font-[400] text-[#797979]">30-60</th>
+                    <th className="font-[400] text-[#797979]">&gt;60</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -507,12 +507,20 @@ export default function ViewBills({
                   <td className="py-2 text-center">
                     {data.pendingAmount.toFixed(2)}
                   </td>
-                 {!showPreview && <>
-                  <td className="py-2 text-center">{(data.igstRate + data.cgstRate + data.sgstRate).toFixed(2)}</td>
-                  <td className="py-2 text-center">{data.zeroToThirty}</td>
-                  <td className="py-2 text-center">{data.thirtyToSixty}</td>
-                  <td className="py-2 text-center">{data.sixtyPlus}</td>
-                  </>}
+                  {!showPreview && (
+                    <>
+                      <td className="py-2 text-center">
+                        {(
+                          data.igstRate +
+                          data.cgstRate +
+                          data.sgstRate
+                        ).toFixed(2)}
+                      </td>
+                      <td className="py-2 text-center">{data.zeroToThirty}</td>
+                      <td className="py-2 text-center">{data.thirtyToSixty}</td>
+                      <td className="py-2 text-center">{data.sixtyPlus}</td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

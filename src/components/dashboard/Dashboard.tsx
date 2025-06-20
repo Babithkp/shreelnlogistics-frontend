@@ -116,17 +116,16 @@ export default function Dashboard({
       MonthKey,
       { date: string; totalBill: number; totalFM: number; totalPayment: number }
     > = {};
-
-    // Helper to get month key like "2025-01"
+  
     const getMonthKey = (date: string) => {
       const [year, month] = date.slice(0, 10).split("-");
       return `${year}-${month}`;
     };
-
+  
     bills.forEach((bill) => {
       const date = bill.date.slice(0, 10);
       const key = getMonthKey(date);
-
+  
       if (!monthlyData[key]) {
         monthlyData[key] = {
           date: `${key}`,
@@ -135,8 +134,9 @@ export default function Dashboard({
           totalPayment: 0,
         };
       }
+  
       monthlyData[key].totalBill += bill.total;
-      // Sum payments from PaymentRecords
+  
       if (bill.PaymentRecords) {
         const paymentSum = bill.PaymentRecords.reduce((sum, record) => {
           return sum + parseFloat(record.amount || "0");
@@ -144,11 +144,11 @@ export default function Dashboard({
         monthlyData[key].totalPayment += paymentSum;
       }
     });
-
+  
     fms.forEach((fm) => {
       const date = fm.date.slice(0, 10);
       const key = getMonthKey(date);
-
+  
       if (!monthlyData[key]) {
         monthlyData[key] = {
           date: `${key}`,
@@ -157,25 +157,33 @@ export default function Dashboard({
           totalPayment: 0,
         };
       }
-
+  
       monthlyData[key].totalFM += parseFloat(fm.netBalance);
     });
-
-    // Convert to sorted array
-    const result: GraphPoint[] = Object.values(monthlyData).sort((a, b) =>
-      a.date.localeCompare(b.date),
-    );
-
+  
+    // Convert to array and round to 2 decimals
+    const result: GraphPoint[] = Object.values(monthlyData)
+      .map((item) => ({
+        date: item.date,
+        totalBill: parseFloat(item.totalBill.toFixed(2)),
+        totalFM: parseFloat(item.totalFM.toFixed(2)),
+        totalPayment: parseFloat(item.totalPayment.toFixed(2)),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  
     return result;
   };
+  
 
   const getRecordPayments = (bill: billInputs[]) => {
-    return bill.reduce((total, bill) => {
-      const billTotal = (bill.PaymentRecords || []).reduce((sum, record) => {
-        return sum + parseFloat(record.amount || "0");
-      }, 0);
-      return total + billTotal;
-    }, 0).toFixed(2);
+    return bill
+      .reduce((total, bill) => {
+        const billTotal = (bill.PaymentRecords || []).reduce((sum, record) => {
+          return sum + parseFloat(record.amount || "0");
+        }, 0);
+        return total + billTotal;
+      }, 0)
+      .toFixed(2);
   };
 
   const getClientTotalBill = (clients: any[]) => {
@@ -222,9 +230,13 @@ export default function Dashboard({
         (sum, bill) => sum + (bill.total || 0),
         0,
       );
+      const totalFMAmount = branch.FM?.reduce(
+        (sum, FM) => sum + (parseFloat(FM.netBalance) || 0),
+        0,
+      );
       return {
         name: branch.branchName,
-        value: totalBillAmount,
+        value: totalBillAmount + totalFMAmount,
       };
     });
     return chartData;
@@ -504,7 +516,9 @@ export default function Dashboard({
                 getClientTotalBill(clients).map((client, i) => (
                   <tr key={i}>
                     <td className="py-2">{client.name}</td>
-                    <td className="py-2 text-end">₹ {client.totalBill.toFixed(2)}</td>
+                    <td className="py-2 text-end">
+                      ₹ {client.totalBill.toFixed(2)}
+                    </td>
                   </tr>
                 ))}
             </tbody>
@@ -526,8 +540,12 @@ export default function Dashboard({
                   getTop10Branches(admin).map((client) => (
                     <tr key={client.name}>
                       <td className="py-2">{client.name}</td>
-                      <td className="py-2 text-end">₹ {client.totalInvoice.toFixed(2)}</td>
-                      <td className="py-2 text-end">₹ {client.totalFreight.toFixed(2)}</td>
+                      <td className="py-2 text-end">
+                        ₹ {client.totalInvoice.toFixed(2)}
+                      </td>
+                      <td className="py-2 text-end">
+                        ₹ {client.totalFreight.toFixed(2)}
+                      </td>
                     </tr>
                   ))}
               </tbody>

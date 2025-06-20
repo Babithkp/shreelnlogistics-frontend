@@ -29,7 +29,7 @@ export const FMTemplate = ({
           }}
         >
           <Image
-            src="https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png"
+            src="https://shreeln-bucket.s3.ap-south-1.amazonaws.com/logo.png"
             style={{
               width: 200,
               height: 50,
@@ -346,7 +346,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.hire}
+                {parseFloat(FmData?.hire || '0') - parseFloat(FmData?.advance || '0')}
               </Text>
             </View>
             <View

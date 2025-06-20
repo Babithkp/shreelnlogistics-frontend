@@ -74,6 +74,7 @@ export interface LrInputs {
   emails: String[];
   vehicleId: string;
   branch: BranchInputs;
+  client: string;
   Vehicle: {
     id: string;
     vehicleNumber: string;
@@ -126,6 +127,7 @@ export interface FMInputs {
   sixtyToNinety: string;
   ninetyPlus: string;
   outStandingBalance: string;
+  outStandingAdvance: number;
   emails: string[];
   PaymentRecords: PaymentRecord[];
   vendorsId: string;
@@ -180,6 +182,7 @@ export type VehicleInputs = {
   driverName: string;
   driverPhone: string;
   insurance: string;
+  panNumber: string;
   RC: string;
   LR: LrInputs[];
 };
@@ -300,6 +303,7 @@ export type BranchInputs = {
   email: string;
   PaymentRecords: PaymentRecord[];
   bill: billInputs[];
+  FM: FMInputs[];
 };
 
 export interface ExpensesInputs {

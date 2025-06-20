@@ -113,7 +113,7 @@ const LRTemplate = ({
         </View>
         <View style={[styles.headerRight, { gap: 5 }]}>
           <Image
-            src="https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png"
+            src="https://shreeln-bucket.s3.ap-south-1.amazonaws.com/logo.png"
             style={{
               width: 200,
               height: 50,

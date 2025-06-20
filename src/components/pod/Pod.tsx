@@ -84,12 +84,11 @@ export default function Pod() {
   const [search, setSearch] = useState("");
   const [LRList, setLRList] = useState<LrInputs[]>([]);
 
-
-  useEffect(()=>{
-    if(branch.branchName){
+  useEffect(() => {
+    if (branch.branchName) {
       setValue("receivingBranch", branch.branchName);
     }
-  },[branch])
+  }, [branch]);
 
   function extractClientOptions(vendors: ClientInputs[]): Option[] {
     return vendors.map((vendor) => ({
@@ -112,12 +111,12 @@ export default function Pod() {
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
-  
+
       if (!text) {
         setFilteredPods(pods);
         return;
       }
-  
+
       const filtered = pods.filter((pod) => {
         const fieldsToSearch: (string | number | undefined | null)[] = [
           pod.lrNumber,
@@ -130,7 +129,7 @@ export default function Pod() {
           pod.receivingBranch,
           pod.documentLink,
         ];
-  
+
         return fieldsToSearch.some((field) => {
           if (typeof field === "string") {
             return field.toLowerCase().includes(text);
@@ -145,6 +144,14 @@ export default function Pod() {
     }, 300);
     return () => clearTimeout(delay);
   }, [search, pods]);
+
+  const setPODDetails = (data: string) => {
+    const lr = LRList.find((lr) => lr.lrNumber === data);
+    if (lr) {
+      setValue("from", lr.from);
+      setValue("to", lr.to);
+    }
+  };
 
   const {
     handleSubmit,
@@ -314,10 +321,14 @@ export default function Pod() {
     }
   }
 
-  async function fetchLRs(){
+  async function fetchLRs() {
     const response = await getLRApi();
     if (response?.status === 200) {
-      setLRList(response.data.data.filter((lr: any) => !Array.isArray(lr.pod) || lr.pod.length === 0));
+      setLRList(
+        response.data.data.filter(
+          (lr: any) => !Array.isArray(lr.pod) || lr.pod.length === 0,
+        ),
+      );
     }
   }
 
@@ -342,7 +353,7 @@ export default function Pod() {
 
   useEffect(() => {
     fetchClients();
-    fetchLRs()
+    fetchLRs();
     const isAdmin = localStorage.getItem("isAdmin");
     const branchDetailsRaw = localStorage.getItem("branchDetails");
 
@@ -370,15 +381,15 @@ export default function Pod() {
   return (
     <div className="relative">
       <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5 relative">
+        <LuSearch size={18} />
+        <input
+          placeholder="Search"
+          className="outline-none placeholder:font-medium"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+      <section className="relative flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">POD</p>
           <Button
@@ -427,8 +438,15 @@ export default function Pod() {
                 <td className="py-2">{pod.lrNumber}</td>
                 <td className="py-2">{pod.clientName}</td>
                 <td className="py-2">{pod.receivingDate}</td>
-                <td className="py-2">{pod.date}</td>
-                <td className="py-2 text-center">{pod.receivingDate}</td>
+                <td className="py-2 ">{pod.date}</td>
+                <td className="py-2 text-center">
+
+                {Math.floor(
+                  (new Date(pod.receivingDate).getTime() -
+                  new Date(pod.date).getTime()) /
+                  (1000 * 60 * 60 * 24),
+                )} days
+                </td>
               </tr>
             ))}
           </tbody>
@@ -463,9 +481,13 @@ export default function Pod() {
                     placeholder="Select LR"
                     onChange={(value) => {
                       field.onChange(value);
+                      setPODDetails(value);
                     }}
                     showSearch
-                    options={LRList.map((lr)=>({value:lr.lrNumber,label:lr.lrNumber}))}
+                    options={LRList.map((lr) => ({
+                      value: lr.lrNumber,
+                      label: lr.lrNumber,
+                    }))}
                     style={{
                       border: "1px solid #64BAFF",
                       borderRadius: "10px",
@@ -518,7 +540,6 @@ export default function Pod() {
                 name="clientName"
                 control={control}
                 defaultValue={""}
-
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select
@@ -578,7 +599,7 @@ export default function Pod() {
             <div className="flex flex-col gap-2">
               <label>Receiving Branch</label>
               <input
-                className="border-primary rounded-md border p-2 cursor-not-allowed"
+                className="border-primary cursor-not-allowed rounded-md border p-2"
                 {...register("receivingBranch", { required: true })}
                 value={branch.branchName}
                 disabled

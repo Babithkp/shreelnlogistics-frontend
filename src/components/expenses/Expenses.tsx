@@ -7,7 +7,11 @@ import { Controller, useForm } from "react-hook-form";
 import { Modal, Select } from "antd";
 import { VscLoading } from "react-icons/vsc";
 import { getAllVendorsApi } from "@/api/partner";
-import { createNotificationApi, getAllClientsApi } from "@/api/admin";
+import {
+  createNotificationApi,
+  getAllClientsApi,
+  getExpenseIdApi,
+} from "@/api/admin";
 import {
   convertToINRWords,
   filterOnlyCompletePrimitiveDiffs,
@@ -152,7 +156,12 @@ export default function Expenses() {
         toast.success("Expense Created");
         reset();
         setIsOpen(false);
-        fetchExpenses(branch.id);
+
+        if (branch.isAdmin) {
+          fetchExpenses();
+        } else {
+          fetchExpenses(branch.id);
+        }
       } else if (response?.status === 201) {
         toast.warning("Expense Id already exists, please try another one");
       } else {
@@ -175,7 +184,11 @@ export default function Expenses() {
         toast.success("Expense Updated");
         reset();
         setIsOpen(false);
-        fetchExpenses();
+        if (branch.isAdmin) {
+          fetchExpenses();
+        } else {
+          fetchExpenses(branch.id);
+        }
       }
     }
     setIsLoading(false);
@@ -218,6 +231,11 @@ export default function Expenses() {
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
+      if (branch.isAdmin) {
+        fetchExpenses();
+      } else {
+        fetchExpenses(branch.id);
+      }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
@@ -261,7 +279,6 @@ export default function Expenses() {
         ? allExpenses.filter((expense) => expense.branchesId === branchId)
         : allExpenses;
       setExpenses(filteredExpenses);
-      console.log(filteredExpenses);
       setFilteredExpenses(filteredExpenses);
     }
   }
@@ -273,10 +290,21 @@ export default function Expenses() {
     const response = await deleteExpenseApi(selectedExpense?.id);
     if (response?.status === 200) {
       toast.success("Expense Deleted");
-      fetchExpenses(branch.id);
       setIsDetailsModalOpen(false);
+      if (branch.isAdmin) {
+        fetchExpenses();
+      } else {
+        fetchExpenses(branch.id);
+      }
     } else {
       toast.error("Failed to Delete Expense");
+    }
+  }
+
+  async function getExpenseId() {
+    const response = await getExpenseIdApi();
+    if (response?.status === 200) {
+      setValue("expenseId", response.data.data.expenseId);
     }
   }
 
@@ -331,7 +359,10 @@ export default function Expenses() {
               <p className="text-xl">
                 INR{" "}
                 {expenses
-                  .reduce((acc, data) => acc + parseFloat(data.amount), 0)
+                  .reduce(
+                    (acc, data) => acc + (parseFloat(data.amount) || 0),
+                    0,
+                  )
                   .toFixed(2)}
               </p>
             </div>
@@ -359,6 +390,7 @@ export default function Expenses() {
               reset(),
               setSelectedExpense(null),
               setFormStatus("New"),
+              getExpenseId(),
             ]}
           >
             <MdOutlineAdd size={34} />
@@ -436,11 +468,10 @@ export default function Expenses() {
               <input
                 type="text"
                 className={
-                  "border-primary rounded-md border p-2 " +
-                  (formStatus === "editing" && "cursor-not-allowed")
+                  "border-primary cursor-not-allowed rounded-md border p-2"
                 }
                 {...register("expenseId", { required: true })}
-                disabled={formStatus === "editing"}
+                readOnly
               />
               {errors.expenseId && (
                 <p className="text-red-500">Expense ID is required</p>
@@ -793,8 +824,12 @@ export default function Expenses() {
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Recording Branch</label>
-              <p>{selectedExpense?.Branches?.branchName}</p>
-              <p>{selectedExpense?.Admin.branchName}</p>
+              {selectedExpense?.Branches && (
+                <p>{selectedExpense?.Branches?.branchName}</p>
+              )}
+              {selectedExpense?.Admin && (
+                <p>{selectedExpense?.Admin.branchName}</p>
+              )}
             </div>
             {selectedExpense?.linkTo && (
               <div className="flex items-center gap-5">

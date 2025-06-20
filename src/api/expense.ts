@@ -1,6 +1,6 @@
 import axios from "axios";
 // const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreelnlogistics-backend.vercel.app";
+const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createExpenseApi = async (data: any) => {
   try {
