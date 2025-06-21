@@ -437,7 +437,9 @@ export default function Statements() {
                     className="hover:bg-accent cursor-pointer"
                     key={record.id}
                   >
-                    <td className="py-2">{new Date(record.date).toLocaleDateString()}</td>
+                    <td className="py-2">
+                      {new Date(record.date).toLocaleDateString()}
+                    </td>
                     <td className="py-2">{record.IDNumber}</td>
                     <td className="py-2">
                       {record.Admin?.branchName || record.Branches?.branchName}
@@ -532,8 +534,12 @@ export default function Statements() {
                     <td className="max-w-[20rem] overflow-y-auto py-2">
                       {bill.lrData.map((lr) => lr.lrNumber)}
                     </td>
-                    <td className="py-2">{bill.lrData.length === 0 ? "-" : bill.lrData[0].from}</td>
-                    <td className="py-2">{bill.lrData.length === 0 ? "-" : bill.lrData[0].to}</td>
+                    <td className="py-2">
+                      {bill.lrData.length === 0 ? "-" : bill.lrData[0].from}
+                    </td>
+                    <td className="py-2">
+                      {bill.lrData.length === 0 ? "-" : bill.lrData[0].to}
+                    </td>
                     <td className="py-2">{bill.total}</td>
                     <td className="py-2">{bill.total - bill.pendingAmount}</td>
                     <td className="py-2">
