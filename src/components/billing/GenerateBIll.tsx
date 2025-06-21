@@ -11,7 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { getLRApi } from "@/api/shipment";
-import { createNotificationApi, getAllClientsApi, getBillIdApi } from "@/api/admin";
+import {
+  createNotificationApi,
+  getAllClientsApi,
+  getBillIdApi,
+} from "@/api/admin";
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import {
@@ -82,14 +86,13 @@ export default function GenerateBIll({
     useState<Record<string, any>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
 
-
   function getWorkingYear() {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
-  
+
     let startYear, endYear;
-  
+
     if (month >= 4) {
       // If April or later → current year - next year
       startYear = year % 100;
@@ -99,11 +102,9 @@ export default function GenerateBIll({
       startYear = (year - 1) % 100;
       endYear = year % 100;
     }
-  
-    return `${startYear.toString().padStart(2, '0')}-${endYear.toString().padStart(2, '0')}`;
-  }
-  
 
+    return `${startYear.toString().padStart(2, "0")}-${endYear.toString().padStart(2, "0")}`;
+  }
 
   const {
     handleSubmit,
@@ -158,6 +159,7 @@ export default function GenerateBIll({
       setTotalAmounts((prev) => ({
         ...prev,
         subtotal: subTotal,
+        igstRate: 0,
         cgstRate,
         sgstRate,
         total,
@@ -171,6 +173,8 @@ export default function GenerateBIll({
         ...prev,
         subtotal: subTotal,
         igstRate,
+        cgstRate: 0,
+        sgstRate: 0,
         total,
         totalInWords: convertToINRWords(subTotal),
       }));
@@ -438,13 +442,13 @@ export default function GenerateBIll({
     }
   };
 
-  async function fetchBillId(){
+  async function fetchBillId() {
     const response = await getBillIdApi();
-    if(response?.status === 200){
-      const year = getWorkingYear()
-      const billId = response.data.data.billId
-      const generateBill = `BNG/${billId}/${year}`
-      setValue('billNumber', generateBill)
+    if (response?.status === 200) {
+      const year = getWorkingYear();
+      const billId = response.data.data.billId;
+      const generateBill = `BNG/${billId}/${year}`;
+      setValue("billNumber", generateBill);
     }
   }
 
@@ -473,7 +477,7 @@ export default function GenerateBIll({
   }
 
   useEffect(() => {
-    fetchBillId()
+    fetchBillId();
     const isAdmin = localStorage.getItem("isAdmin");
     const branchDetailsRaw = localStorage.getItem("branchDetails");
 
@@ -512,7 +516,7 @@ export default function GenerateBIll({
               <label className="font-medium">Bill Number</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2 cursor-not-allowed"
+                className="border-primary cursor-not-allowed rounded-md border p-2"
                 {...register("billNumber", { required: true })}
                 readOnly
               />
@@ -813,10 +817,12 @@ export default function GenerateBIll({
                       {lrData.invoiceDate}
                     </td>
                     <td className="border-primary border p-2 text-center align-top">
-                      {lrData.Vehicle.vehicletypes}
+                      {lrData.Vehicle?.vehicletypes &&
+                        lrData.Vehicle?.vehicletypes}
                     </td>
                     <td className="border-primary border p-2 align-top">
-                      {lrData.Vehicle.vehicleNumber}
+                      {lrData.Vehicle?.vehicleNumber &&
+                        lrData.Vehicle?.vehicleNumber}
                     </td>
                     <td className="border-primary border p-2 text-center align-top">
                       {lrData.weight}

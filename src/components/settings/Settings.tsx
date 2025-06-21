@@ -694,8 +694,9 @@ export default function Settings({ data }: { data?: Setting }) {
         centered={true}
         footer={null}
         onCancel={() => setIsGeneralSettingsModalOpen(false)}
+        className="max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 ">
           <p className="w-full text-xl font-semibold">Expense types</p>
           <div className="flex items-start gap-10">
             <div className="grid grid-cols-3 gap-10">

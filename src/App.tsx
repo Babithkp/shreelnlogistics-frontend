@@ -3,31 +3,22 @@ import Login from "./components/Login";
 import Home from "./Home";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-// import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-
-// Add this at top or in a types.d.ts file:
-declare global {
-  interface Window {
-    __TAURI__?: any;
-  }
-}
+import { emit } from "@tauri-apps/api/event";
 
 async function autoUpdater() {
   const update = await check();
-  if (update?.available) {
+  if (update) {
+    emit("tauri://update-request");
     toast.success("Update available");
+    toast.info(update.body);
     await update.downloadAndInstall();
     await relaunch();
   } else {
     toast.info("No update available");
   }
 }
-
-// function isTauri() {
-//   return !!window.__TAURI__;
-// }
 
 function App() {
   useEffect(() => {

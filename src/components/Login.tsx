@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { adminLoginApi, getBranchesApi } from "@/api/admin";
 import { branchLoginApi } from "@/api/branch";
 import { VscLoading } from "react-icons/vsc";
+import { getVersion } from "@tauri-apps/api/app";
 
 interface BranchesType {
   id: string;
@@ -28,6 +29,7 @@ export default function Login() {
   const [branches, setBranches] = useState<BranchesType[]>([]);
   const [selectedValue, setSelectedValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [version, setVersion] = useState("");
 
   const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,6 +83,7 @@ export default function Login() {
 
   useEffect(() => {
     fetchBranches();
+    getVersion().then(setVersion);
   }, []);
 
   return (
@@ -134,16 +137,19 @@ export default function Login() {
             />
           </div>
         </div>
-        <Button
-          className="bg-primary w-full cursor-pointer"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <VscLoading size={24} className="animate-spin" />
-          ) : (
-            "Login"
-          )}
-        </Button>
+        <div className="flex w-full flex-col items-center justify-center">
+          <Button
+            className="bg-primary w-full cursor-pointer"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <VscLoading size={24} className="animate-spin" />
+            ) : (
+              "Login"
+            )}
+          </Button>
+          {version && <p>v{version}</p>}
+        </div>
       </form>
     </main>
   );

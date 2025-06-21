@@ -52,6 +52,7 @@ import {
   VendorInputs,
 } from "./types";
 import Header from "./components/Header";
+import { getVersion } from "@tauri-apps/api/app";
 
 type DropDowns = "shipment" | "partner" | "billing";
 
@@ -64,6 +65,7 @@ export interface Setting {
 }
 
 export default function Home() {
+  const [version, setVersion] = useState("");
   const [sections, setSections] = useState<SectionsState>({
     dashboard: true,
     LR: false,
@@ -202,6 +204,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    getVersion().then(setVersion);
     const isAdmin = localStorage.getItem("isAdmin") === "true";
     const branchData = localStorage.getItem("branchDetails");
     if (branchData) {
@@ -491,13 +494,14 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="flex w-full justify-center">
+        <div className="flex flex-col items-center w-full justify-center">
           <Button
             className="bg-primary rounded-2xl px-20 text-white"
             onClick={onLogoutHandler}
           >
             Logout
           </Button>
+        {version && <p>v{version}</p>}
         </div>
       </nav>
       <section className="flex h-full w-full flex-col gap-5 overflow-y-auto p-5">
