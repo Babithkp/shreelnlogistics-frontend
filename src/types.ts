@@ -170,6 +170,7 @@ export type VendorInputs = {
   currentOutStanding: number;
   vehicles: VehicleInputs[];
   FM: FMInputs[];
+  pan:string
 };
 
 export type VehicleInputs = {
@@ -285,6 +286,8 @@ export interface billInputs {
     lrnumber: string;
     amount: number;
   };
+  Branches: BranchInputs
+  Admin: BranchInputs
 }
 
 export type BranchInputs = {

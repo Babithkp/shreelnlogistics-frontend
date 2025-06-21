@@ -7,7 +7,6 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
-import { BranchDetails } from "../shipment/FM/FMPage";
 import { billInputs } from "@/types";
 // Define styles
 const styles = StyleSheet.create({
@@ -90,12 +89,10 @@ const styles = StyleSheet.create({
 const BillTemplate = ({
   billInputs,
   companyProfile,
-  branchDetails,
-  bankDetails
+  bankDetails,
 }: {
   billInputs: billInputs | undefined;
   companyProfile?: ProfileInputs;
-  branchDetails?: BranchDetails;
   bankDetails?: BankDetailsInputs;
 }) => (
   <Document>
@@ -143,12 +140,22 @@ const BillTemplate = ({
           </Text>
           <Text style={styles.subText}>Billing branch:</Text>
           <Text style={styles.subText}>
-            {branchDetails?.address}
+            {billInputs?.Admin
+              ? billInputs?.Admin?.address
+              : billInputs?.Branches?.address}
           </Text>
           <Text style={styles.subText}>
-            Email: {branchDetails?.email}
+            Email:{" "}
+            {billInputs?.Admin
+              ? billInputs?.Admin?.email
+              : billInputs?.Branches?.email}
           </Text>
-          <Text style={styles.subText}>Ph.: Mob: {branchDetails?.contactNumber}</Text>
+          <Text style={styles.subText}>
+            Ph.: Mob:{" "}
+            {billInputs?.Admin
+              ? billInputs?.Admin?.contactNumber
+              : billInputs?.Branches?.contactNumber}
+          </Text>
         </View>
       </View>
 
@@ -197,11 +204,15 @@ const BillTemplate = ({
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>Bill Date</Text>
-            <Text>: {billInputs?.date}</Text>
+            <Text>
+              : {new Date(billInputs?.date || "").toLocaleDateString()}
+            </Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>Due Date</Text>
-            <Text>: {billInputs?.dueDate}</Text>
+            <Text>
+              : {new Date(billInputs?.dueDate || "").toLocaleDateString()}
+            </Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>
@@ -235,7 +246,7 @@ const BillTemplate = ({
           <Text style={[styles.tableCol, { width: "10%" }]}>Vehicle Type</Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Vehicle No.</Text>
           <Text style={[styles.tableCol, { width: "8%" }]}>Weight</Text>
-          <Text style={[ { width: "10%",padding:5,fontSize:8 }]}>
+          <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
             Freight Amount
           </Text>
         </View>
@@ -247,7 +258,7 @@ const BillTemplate = ({
               {lrData.lrNumber}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
-              {lrData.date}
+              {new Date(lrData.date).toLocaleDateString()}
             </Text>
             <Text style={[styles.tableCol, { width: "15%" }]}>
               {lrData.from}
@@ -260,18 +271,20 @@ const BillTemplate = ({
               {lrData.invoiceNo}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
-              {lrData.invoiceDate}
+              {new Date(lrData.invoiceDate).toLocaleDateString()}
             </Text>
             <Text style={[styles.tableCol, { width: "10%" }]}>
               {lrData.Vehicle?.vehicletypes}
             </Text>
-            <Text style={[styles.tableCol, { width: "10%" }]}>
-              {lrData.Vehicle.vehicleNumber}
-            </Text>
+            {lrData.Vehicle.vehicleNumber && (
+              <Text style={[styles.tableCol, { width: "10%" }]}>
+                {lrData.Vehicle.vehicleNumber}
+              </Text>
+            )}
             <Text style={[styles.tableCol, { width: "8%" }]}>
               {lrData.weight}MT
             </Text>
-            <Text style={[ { width: "10%",padding:5,fontSize:8}]}>
+            <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
               {lrData.totalAmt.toFixed(2)}
             </Text>
           </View>
@@ -421,7 +434,7 @@ const BillTemplate = ({
             borderBottom: "1px solid black",
             borderRight: "1px solid black",
             borderLeft: "1px solid black",
-            textTransform:"capitalize"
+            textTransform: "capitalize",
           },
         ]}
       >
@@ -436,7 +449,7 @@ const BillTemplate = ({
         <View style={{ flexDirection: "row", gap: 3 }}>
           <Text style={{ fontWeight: 600 }}>Name</Text>
           <Text>:</Text>
-        <Text >SHREE LN LOGISTICS</Text>
+          <Text>SHREE LN LOGISTICS</Text>
         </View>
         <View style={{ flexDirection: "row", gap: 3 }}>
           <Text style={{ fontWeight: 600 }}>Bank Name</Text>
@@ -465,7 +478,7 @@ const BillTemplate = ({
       <View style={styles.signatureSection}>
         <View style={{ alignItems: "center", gap: 10 }}>
           <Text>For Shree LN Logistics</Text>
-          <Text>Authorized signater</Text>
+          <Text>Authorized Signature</Text>
         </View>
       </View>
 

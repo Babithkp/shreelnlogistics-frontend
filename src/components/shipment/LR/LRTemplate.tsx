@@ -196,7 +196,7 @@ const LRTemplate = ({
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>Date</Text>
-            <Text>: {LRData?.date}</Text>
+            <Text>: {new Date(LRData?.date || "").toLocaleDateString()}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: "8rem" }]}>From</Text>
@@ -248,7 +248,7 @@ const LRTemplate = ({
             <Text style={{ width: "90%" }}>{LRData?.description}</Text>
             <View style={{ textAlign: "center" }}>
               <Text>Invoice no.: {LRData?.invoiceNo}</Text>
-              <Text>Invoice date: {LRData?.invoiceDate}</Text>
+              <Text>Invoice date: {new Date(LRData?.invoiceDate || "").toLocaleDateString()}</Text>
             </View>
           </View>
           <View style={[styles.tableCol, { width: "10%" }]}>
@@ -380,7 +380,7 @@ const LRTemplate = ({
               <Text style={[styles.label, { width: "8rem" }]}>
                 EWB Exp Date
               </Text>
-              <Text>: {LRData?.ewbExpiryDate}</Text>
+              <Text>: {new Date(LRData?.ewbExpiryDate || "").toLocaleDateString()}</Text>
             </View>
           )}
         </View>

@@ -95,15 +95,15 @@ export default function Header({
 
   const reFreshHandler = async () => {
     setIsLoading(true);
-    onFresh && onFresh();
-    if (isAdmin) {
-      fetchAdminNotifications();
-    } else {
-      fetchBranchNotifications(branchDetails!.id);
-    }
     setTimeout(() => {
+      onFresh && onFresh();
+      if (isAdmin) {
+        fetchAdminNotifications();
+      } else {
+        fetchBranchNotifications(branchDetails!.id);
+      }
       setIsLoading(false);
-    }, 3000);
+    }, 2000);
   };
 
   const deleteNotificationHandler = async (id: string) => {
@@ -396,7 +396,7 @@ export default function Header({
   const onLRDeleteHandler = async (notification: Notification) => {
     const data = {
       id: notification.requestId,
-    }
+    };
     setIsLoading(true);
     const response = await deleteLRByNotificationApi(data);
     if (response?.status === 200) {

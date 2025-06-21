@@ -438,7 +438,7 @@ export default function Pod() {
                 <td className="py-2">{pod.lrNumber}</td>
                 <td className="py-2">{pod.clientName}</td>
                 <td className="py-2">{pod.receivingDate}</td>
-                <td className="py-2 ">{pod.date}</td>
+                <td className="py-2 ">{new Date(pod.date).toLocaleDateString()}</td>
                 <td className="py-2 text-center">
 
                 {Math.floor(

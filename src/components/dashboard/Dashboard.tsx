@@ -135,7 +135,7 @@ export default function Dashboard({
         };
       }
   
-      monthlyData[key].totalBill += bill.total;
+      monthlyData[key].totalBill += bill.subTotal;
   
       if (bill.PaymentRecords) {
         const paymentSum = bill.PaymentRecords.reduce((sum, record) => {
@@ -190,7 +190,7 @@ export default function Dashboard({
     return clients
       .map((client) => {
         const totalBill = client.bill?.reduce(
-          (sum: number, bill: any) => sum + (bill.total || 0),
+          (sum: number, bill: any) => sum + (bill.subTotal || 0),
           0,
         );
         return {
@@ -205,7 +205,7 @@ export default function Dashboard({
   const getTop10Branches = (branches: any[]) => {
     const result = branches.map((branch) => {
       const totalInvoice = branch.bill?.reduce(
-        (sum: number, b: any) => sum + (b.total || 0),
+        (sum: number, b: any) => sum + (b.subTotal || 0),
         0,
       );
 
@@ -227,7 +227,7 @@ export default function Dashboard({
   const getBillOfBranchTotalForPieChart = (data: BranchInputs[]) => {
     const chartData = data.map((branch) => {
       const totalBillAmount = branch.bill?.reduce(
-        (sum, bill) => sum + (bill.total || 0),
+        (sum, bill) => sum + (bill.subTotal || 0),
         0,
       );
       const totalFMAmount = branch.FM?.reduce(
@@ -390,7 +390,7 @@ export default function Dashboard({
                 <p className="text-2xl font-medium">
                   INR{" "}
                   {billData
-                    .reduce((acc, bill) => acc + bill.total, 0)
+                    .reduce((acc, bill) => acc + bill.subTotal, 0)
                     .toFixed(2)}
                 </p>
               </div>

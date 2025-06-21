@@ -66,7 +66,7 @@ export default function RecentTransaction() {
         <tbody>
           {transactions.map((transaction) => (
             <tr key={transaction.id}>
-              <td className="py-2">{transaction.date}</td>
+              <td className="py-2">{new Date(transaction.date).toLocaleDateString()}</td>
               <td className="py-2">{transaction.customerName}</td>
               <td className="py-2">{transaction.billId ? "Cr." : "Dr"} </td>
               <td className="py-2">INR {transaction.amount}</td>

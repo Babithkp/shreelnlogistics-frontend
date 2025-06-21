@@ -825,7 +825,6 @@ export default function LRCreate({
                         placeholder="Type here..."
                         className="p-1 outline-none"
                         type="text"
-                        pattern="[0-9]*.[0-9]*"
                         {...register("value")}
                       />
                     </div>
@@ -936,18 +935,13 @@ export default function LRCreate({
                         <p className="text-red-500">Vehicle type is required</p>
                       )}
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-medium">Driver Number</p>
+                        <p className="text-xs font-medium">Driver Name</p>
                         <input
                           className="p-2 outline-none"
                           placeholder="Type here..."
-                          {...register("Vehicle.driverName", {
-                            required: true,
-                          })}
+                          {...register("Vehicle.driverName")}
                         />
                       </div>
-                      {errors.Vehicle?.driverName && (
-                        <p className="text-red-500">Driver Name is required</p>
-                      )}
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-medium">Driver Phone</p>
                         <input
@@ -1137,7 +1131,7 @@ export default function LRCreate({
                 name="client"
                 control={control}
                 defaultValue={""}
-                rules={{ required: true}}
+                rules={{ required: true }}
                 render={({ field }) => (
                   <AntSelect
                     {...field}

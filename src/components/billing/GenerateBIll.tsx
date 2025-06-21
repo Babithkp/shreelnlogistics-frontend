@@ -512,8 +512,9 @@ export default function GenerateBIll({
               <label className="font-medium">Bill Number</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="border-primary rounded-md border p-2 cursor-not-allowed"
                 {...register("billNumber", { required: true })}
+                readOnly
               />
               {errors.billNumber && (
                 <p className="text-red-500">Please enter a vaild Bill Number</p>

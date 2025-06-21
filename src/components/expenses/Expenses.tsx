@@ -244,7 +244,7 @@ export default function Expenses() {
   const setExpenseDetails = (data: ExpensesInputs) => {
     setValue("expenseId", data.expenseId);
     setValue("description", data.description);
-    setValue("date", data.date);
+    setValue("date", new Date(data.date).toLocaleDateString());
     setValue("category", data.category);
     setValue("customerName", data.customerName);
     setValue("linkTo", data.linkTo);
@@ -430,7 +430,7 @@ export default function Expenses() {
               >
                 <td className="py-2">{expense.expenseId}</td>
                 <td className="py-2">{expense.title}</td>
-                <td className="py-2">{expense.date}</td>
+                <td className="py-2">{new Date(expense.date).toLocaleDateString()}</td>
                 <td className="py-2">{expense.category}</td>
                 {expense.Branches && (
                   <td className="py-2 text-center">

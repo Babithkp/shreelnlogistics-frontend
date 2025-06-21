@@ -115,7 +115,7 @@ export default function VendorOutstanding({goBackHandler}:{goBackHandler:()=>voi
               <td className="py-2">INR {transaction.totalInvoice}</td>
               <td className="py-2">INR {transaction.totalReceived}</td>
               <td className="py-2">INR {transaction.pendingAmount}</td>
-              <td className="py-2 text-center">{transaction.latestPaymentDate}</td>
+              <td className="py-2 text-center">{new Date(transaction.latestPaymentDate || "").toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

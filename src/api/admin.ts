@@ -134,3 +134,21 @@ export const getBillIdApi = async () => {
     console.log(error);
   }
 };
+
+export const getOtherSettingsApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getOtherSettings`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateOtherSettingsApi = async (data: any) => {
+  try {
+    const response = await axios.patch(`${BASE_URL}/api/v1/admin/updateOtherSettings`, data);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};

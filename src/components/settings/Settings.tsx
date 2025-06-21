@@ -19,6 +19,7 @@ import {
 } from "@/api/settings";
 import { toast } from "react-toastify";
 import { Setting } from "@/Home";
+import { getOtherSettingsApi, updateOtherSettingsApi } from "@/api/admin";
 
 export interface ProfileInputs {
   id: string;
@@ -71,6 +72,16 @@ export default function Settings({ data }: { data?: Setting }) {
   });
   const [bankDetailsData, setBankDetailsData] = useState<BankDetailsInputs>();
   const [isLoading, setIsLoading] = useState(false);
+  const [otherSettings, setOtherSettings] = useState({
+    billId: "",
+    expenseId: "",
+  });
+  const [isOtherSettingsModalOpen, setIsOtherSettingsModalOpen] =
+    useState(false);
+  const [othersError, setOthersError] = useState({
+    billId: false,
+    expenseId: false,
+  });
 
   const addExpenseType = () => {
     setGeneralData((prev) => ({
@@ -248,6 +259,42 @@ export default function Settings({ data }: { data?: Setting }) {
     }
   }
 
+  const onOtherSettingsSubmit = async () => {
+    setIsLoading(true);
+    setOthersError({
+      billId: false,
+      expenseId: false,
+    });
+    if (!otherSettings.billId) {
+      setOthersError({
+        billId: true,
+        expenseId: false,
+      });
+      setIsLoading(false);
+      return;
+    }
+    if (!otherSettings.expenseId) {
+      setOthersError({
+        billId: false,
+        expenseId: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+    if (otherSettings.billId && otherSettings.expenseId) {
+      const response = await updateOtherSettingsApi(otherSettings);
+      if (response?.status === 200) {
+        toast.success("Other Settings Updated");
+        setIsOtherSettingsModalOpen(false);
+        fetchOtherSettingsData();
+      } else {
+        toast.error("Something Went Wrong, Check All Fields");
+      }
+    }
+
+    setIsLoading(false);
+  };
+
   async function fetchProfileData() {
     const responseProfile = await getCompanyProfileApi();
     if (responseProfile?.status === 200) {
@@ -280,6 +327,17 @@ export default function Settings({ data }: { data?: Setting }) {
     }
   }
 
+  async function fetchOtherSettingsData() {
+    const responseOtherSettings = await getOtherSettingsApi();
+    if (responseOtherSettings?.status === 200) {
+      const data = responseOtherSettings.data.data;
+      setOtherSettings({
+        billId: data.billId,
+        expenseId: data.expenseId,
+      });
+    }
+  }
+
   useEffect(() => {
     if (!data) return;
     setBankDetailsData(data.bankDetails);
@@ -301,6 +359,7 @@ export default function Settings({ data }: { data?: Setting }) {
 
   useEffect(() => {
     fetchGeneralSettingsData();
+    fetchOtherSettingsData();
   }, []);
 
   return (
@@ -387,6 +446,27 @@ export default function Settings({ data }: { data?: Setting }) {
                     </p>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10">
+            <div className="flex items-center justify-between">
+              <p className="text-lg font-medium">Other Settings</p>
+              <TbEdit
+                size={24}
+                color="black"
+                onClick={() => setIsOtherSettingsModalOpen(true)}
+                className="cursor-pointer"
+              />
+            </div>
+            <div className="flex">
+              <div className="flex w-1/2 gap-3">
+                <label className="font-medium">Currect Bill Number:</label>
+                <p>{otherSettings.billId}</p>
+              </div>
+              <div className="flex gap-3">
+                <label className="font-medium">Current Expense ID:</label>
+                <p>{otherSettings.expenseId}</p>
               </div>
             </div>
           </div>
@@ -736,6 +816,72 @@ export default function Settings({ data }: { data?: Setting }) {
             )}
           </Button>
         </div>
+      </Modal>
+      <Modal
+        open={isOtherSettingsModalOpen}
+        width={1240}
+        centered={true}
+        footer={null}
+        onCancel={() => setIsOtherSettingsModalOpen(false)}
+      >
+        <form className="flex flex-wrap justify-between gap-5">
+          <p className="w-full text-xl font-semibold">Other settings</p>
+          <div className="w-[49%]">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Current Bill Number</label>
+              <input
+                type="text"
+                className="border-primary rounded-md border p-1 py-2 pl-2"
+                onChange={(e) =>
+                  setOtherSettings((prev) => ({
+                    ...prev,
+                    billId: e.target.value,
+                  }))
+                }
+                value={otherSettings.billId}
+              />
+            </div>
+            {othersError.billId && (
+              <p className="text-red-500">Bill ID is required</p>
+            )}
+          </div>
+          <div className="w-[49%]">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Current expense ID</label>
+              <input
+                type="text"
+                className="border-primary rounded-md border p-1 py-2 pl-2"
+                onChange={(e) =>
+                  setOtherSettings((prev) => ({
+                    ...prev,
+                    expenseId: e.target.value,
+                  }))
+                }
+                value={otherSettings.expenseId}
+              />
+            </div>
+            {othersError.expenseId && (
+              <p className="text-red-500">Expense ID is required</p>
+            )}
+          </div>
+
+          <div className="flex w-full justify-end">
+            <Button
+              className="rounded-xl px-7"
+              disabled={isLoading}
+              type="button"
+              onClick={onOtherSettingsSubmit}
+            >
+              {isLoading ? (
+                <VscLoading size={24} className="animate-spin" />
+              ) : bankDetailsData ? (
+                "Update"
+              ) : (
+                "Create"
+              )}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </>
   );

@@ -3,7 +3,6 @@ import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
 import { getAllClientsApi } from "@/api/admin";
 
-
 type ClientSummary = {
   clientName: string;
   totalInvoice: number;
@@ -21,39 +20,43 @@ export default function ClientPayments({
   function summarizeClients(data: any[]): ClientSummary[] {
     return data.map((client) => {
       const clientName = client.name;
-  
+
       const totalInvoice = client.bill?.reduce(
         (sum: number, bill: any) => sum + (bill.total || 0),
-        0
+        0,
       );
-  
+
       const pendingPayment = client.bill?.reduce(
         (sum: number, bill: any) => sum + (bill.pendingAmount || 0),
-        0
+        0,
       );
-  
+
       const totalReceived = client.PaymentRecord?.reduce(
         (sum: number, record: any) => sum + parseFloat(record.amount || "0"),
-        0
+        0,
       );
-  
-      const latestDate = client.PaymentRecord?.reduce((latest: string, record: any) => {
-        return new Date(record.date) > new Date(latest) ? record.date : latest;
-      }, "Waiting For Payment");
-  
+
+      const latestDate = client.PaymentRecord?.reduce(
+        (latest: string, record: any) => {
+          return new Date(record.date) > new Date(latest)
+            ? record.date
+            : latest;
+        },
+        "Waiting For Payment",
+      );
+
       return {
         clientName,
         totalInvoice,
         totalReceived,
         pendingPayment,
-        latestDate
+        latestDate,
       };
     });
   }
   async function fetchTransactions() {
     const response = await getAllClientsApi();
     if (response?.status === 200) {
-      
       setTransactions(summarizeClients(response.data.data));
     }
   }
@@ -100,14 +103,14 @@ export default function ClientPayments({
         </thead>
         <tbody>
           {transactions?.map((transaction) => (
-            <tr
-              key={transaction.clientName}
-            >
+            <tr key={transaction.clientName}>
               <td className="py-2">{transaction.clientName}</td>
               <td className="py-2">INR {transaction.totalInvoice}</td>
               <td className="py-2">INR {transaction.totalReceived}</td>
               <td className="py-2">INR {transaction.pendingPayment}</td>
-              <td className="py-2 text-center">{transaction.latestDate}</td>
+              <td className="py-2 text-center">
+                {new Date(transaction.latestDate).toLocaleDateString()}
+              </td>
             </tr>
           ))}
         </tbody>

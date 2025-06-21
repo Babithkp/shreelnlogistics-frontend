@@ -597,7 +597,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
                 <td className="py-2">INR {client.pendingPayment}</td>
-                <td className="py-2">{client.createdAt.substring(0, 10)}</td>
+                <td className="py-2">{new Date(client.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>
@@ -735,7 +735,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                           >
                             <td className="p-2">{index + 1}</td>
                             <td>INR {record.amount}</td>
-                            <td>{record.date}</td>
+                            <td>{new Date(record.date).toLocaleDateString()}</td>
                             <td>{record.paymentMode}</td>
                             <td>{record.transactionNumber}</td>
                           </tr>

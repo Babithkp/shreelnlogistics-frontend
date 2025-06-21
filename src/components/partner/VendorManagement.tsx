@@ -56,11 +56,7 @@ import {
   updateVendorDetailsApi,
 } from "@/api/partner";
 import { getGeneralSettingsApi } from "@/api/settings";
-import {
-  generalSettings,
-  VehicleInputs,
-  VendorInputs,
-} from "@/types";
+import { generalSettings, VehicleInputs, VendorInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
 
@@ -335,20 +331,6 @@ export default function VendorManagement({
     }
   }
 
-  const formatText = (value: string) => {
-    const clean = value.replace(/\s/g, "").toUpperCase();
-    const formatted = clean
-      .slice(0, 10) // limit to 8 chars (6 + 3 spaces)
-      .split("")
-      .map((char, i) => {
-        if (i === 2 || i === 4 || i === 6) return " " + char;
-        return char;
-      })
-      .join("");
-
-    return formatted;
-  };
-
   const setVendorDetails = (data: VendorInputs) => {
     setValue("name", data.name);
     setValue("GSTIN", data.GSTIN);
@@ -465,7 +447,7 @@ export default function VendorManagement({
           </div>
         </div>
       </div>
-      
+
       {
         <section className="flex flex-col gap-5 rounded-md bg-white p-5">
           <div className="flex items-center justify-between">
@@ -505,20 +487,13 @@ export default function VendorManagement({
                   </div>
                   <div className="w-[30%]">
                     <div className="flex flex-col gap-2">
-                      <label className="font-medium">Vendor’s GSTIN / Pan</label>
+                      <label className="font-medium">Vendor’s GSTIN</label>
                       <input
                         type="text"
                         className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("GSTIN", {
-                          required: true,
-                        })}
+                        {...register("GSTIN")}
                       />
                     </div>
-                    {errors.GSTIN && (
-                      <p className="text-red-500">
-                        Vendor GSTIN is required
-                      </p>
-                    )}
                   </div>
                   <div className="w-[30%]">
                     <div className="flex flex-col gap-2">
@@ -572,16 +547,9 @@ export default function VendorManagement({
                       <input
                         type="email"
                         className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("email", {
-                          required: true,
-                        })}
+                        {...register("email", {})}
                       />
                     </div>
-                    {errors.email && (
-                      <p className="text-red-500">
-                        Contact Number is required and should be 10 characters
-                      </p>
-                    )}
                   </div>
                   <div className="w-full">
                     <div className="flex flex-col gap-2">
@@ -640,8 +608,20 @@ export default function VendorManagement({
                       <p className="text-red-500">State is required</p>
                     )}
                   </div>
-
-                  <div className="w-[49%]">
+                  <div className="w-[30%]">
+                    <div className="flex flex-col gap-2">
+                      <label className="font-medium">PAN</label>
+                      <input
+                        type="text"
+                        className="border-primary rounded-md border p-1 py-2 pl-2"
+                        {...register("pan", { required: true })}
+                      />
+                    </div>
+                    {errors.pan && (
+                      <p className="text-red-500">PAN is required</p>
+                    )}
+                  </div>
+                  <div className="w-[30%]">
                     <div className="flex flex-col gap-2">
                       <label className="font-medium">TDS</label>
                       <Controller
@@ -667,7 +647,7 @@ export default function VendorManagement({
                       <p className="text-red-500">{errors.TDS.message}</p>
                     )}
                   </div>
-                  <div className="w-[49%]">
+                  <div className="w-[30%]">
                     <div className="flex flex-col gap-2">
                       <label className="font-medium">Outstanding Limit</label>
                       <div className="border-primary flex items-center rounded-md border pl-2">
@@ -777,9 +757,7 @@ export default function VendorManagement({
                             type="text"
                             className="border-primary rounded-md border p-1 py-2 pl-2"
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(formatText(e.target.value))
-                            }
+                            onChange={(e) => field.onChange(e.target.value)}
                           />
                         )}
                       />
@@ -858,19 +836,9 @@ export default function VendorManagement({
                       <input
                         type="text"
                         className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...VehicleRegister("driverName", {
-                          validate: (value) =>
-                            !VehicleWatch("vendorName")
-                              ? !!value || "Driver Name is required"
-                              : true,
-                        })}
+                        {...VehicleRegister("driverName")}
                       />
                     </div>
-                    {VehicleErrors.driverName && (
-                      <p className="text-red-500">
-                        {VehicleErrors.driverName.message}
-                      </p>
-                    )}
                   </div>
                   <div className="w-[23%]">
                     <div className="flex flex-col gap-2">
@@ -907,9 +875,7 @@ export default function VendorManagement({
                       />
                     </div>
                     {VehicleErrors.panNumber && (
-                      <p className="text-red-500">
-                        Pan Number is required
-                      </p>
+                      <p className="text-red-500">Pan Number is required</p>
                     )}
                   </div>
 
@@ -1181,23 +1147,27 @@ export default function VendorManagement({
                 <label className="font-medium">Contact Number</label>
                 <p>{selectedVendor?.contactNumber}</p>
               </div>
-              <div className="flex items-center gap-5">
-                <label className="font-medium">Email id</label>
-                <p>{selectedVendor?.email}</p>
-                <Popover>
-                  <PopoverTrigger className="cursor-pointer">
-                    <TbCopy
-                      size={20}
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          selectedVendor!.email.toString(),
-                        )
-                      }
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-fit p-2">Copied!</PopoverContent>
-                </Popover>
-              </div>
+              {selectedVendor?.email && (
+                <div className="flex items-center gap-5">
+                  <label className="font-medium">Email id</label>
+                  <p>{selectedVendor?.email}</p>
+                  <Popover>
+                    <PopoverTrigger className="cursor-pointer">
+                      <TbCopy
+                        size={20}
+                        onClick={() =>
+                          navigator.clipboard.writeText(
+                            selectedVendor!.email.toString(),
+                          )
+                        }
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-fit p-2">
+                      Copied!
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
               <div className="col-span-full flex flex-col items-start gap-2">
                 <label className="font-medium">Address</label>
                 <p>{selectedVendor?.address}</p>
@@ -1226,10 +1196,14 @@ export default function VendorManagement({
                 </div>
               </div>
               <div className="flex items-start gap-5">
+                <label className="font-medium">Pan</label>
+                <p>{selectedVendor?.pan}</p>
+              </div>
+              <div className="flex items-start gap-5">
                 <label className="font-medium">Current Outstanding</label>
                 <p>INR {selectedVendor?.currentOutStanding}</p>
               </div>
-              <div className="col-span-2 flex items-start justify-end gap-5">
+              <div className="flex items-start gap-5">
                 <label className="font-medium">Outstanding Limit</label>
                 <p>INR {selectedVendor?.outstandingLimit}</p>
               </div>

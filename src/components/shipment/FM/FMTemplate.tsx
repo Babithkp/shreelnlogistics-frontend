@@ -99,7 +99,7 @@ export const FMTemplate = ({
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>Date</Text>
-            <Text style={{ textAlign: "center" }}>{FmData?.date}</Text>
+            <Text style={{ textAlign: "center" }}>{new Date(FmData?.date || "").toLocaleDateString()}</Text>
           </View>
           <View
             style={{
@@ -243,7 +243,7 @@ export const FMTemplate = ({
               key={lrdata.lrNumber}
             >
               <Text>{lrdata.lrNumber}</Text>
-              <Text>{lrdata.date}</Text>
+              <Text>{new Date(lrdata.date).toLocaleDateString()}</Text>
             </View>
           ))}
         </View>
@@ -346,7 +346,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {parseFloat(FmData?.hire || '0') - parseFloat(FmData?.advance || '0')}
+                {parseFloat(FmData?.hire || '0')}
               </Text>
             </View>
             <View

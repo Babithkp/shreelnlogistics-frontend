@@ -97,21 +97,24 @@ export default function FMCreate({
   useEffect(() => {
     let tds = 0;
     const hire = parseFloat(fmData.hire) || 0;
+    const advance = parseFloat(fmData.advance) || 0;
     const otherCharges = parseFloat(fmData.otherCharges) || 0;
     const detentionCharges = parseFloat(fmData.detentionCharges) || 0;
     const rtoCharges = parseFloat(fmData.rtoCharges) || 0;
 
+    const balance = hire - advance;
+
     if (lrDataToFM?.TDS === "Not-declared") {
-      tds = (hire + otherCharges + detentionCharges + rtoCharges) * 0.01;
+      tds = (balance + otherCharges + detentionCharges + rtoCharges) * 0.01;
     }
 
     const netBalance =
-      hire + otherCharges + detentionCharges + rtoCharges - tds;
+      (balance + otherCharges + detentionCharges + rtoCharges) - tds;
 
     setFMData((prev) => ({
       ...prev,
       tds: tds.toFixed(2), // optional: format to 2 decimals
-      balance: hire.toFixed(2),
+      balance: balance.toFixed(2),
       netBalance: netBalance.toFixed(2),
       amountInwords: convertToINRWords(netBalance),
     }));

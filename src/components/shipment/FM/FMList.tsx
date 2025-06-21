@@ -223,7 +223,7 @@ export default function FMList({
   const formatFMData = (data: FMInputs[]) => {
     return data.map((FM) => ({
       "FM#": FM.fmNumber,
-      Date: FM.date,
+      Date: new Date(FM.date).toLocaleDateString(),
       "Hire Value": FM.hire,
       Advance: FM.advance ?? "0",
       "Advance Pending": FM.outStandingAdvance,
@@ -428,7 +428,7 @@ export default function FMList({
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
-    setValue("date", data.date);
+    setValue("date", new Date(data.date).toLocaleDateString());
     setValue("customerName", data.customerName);
     setValue("amount", data.amount);
     setValue("amountInWords", data.amountInWords);
@@ -822,7 +822,7 @@ export default function FMList({
                   >
                     <td className="py-2">{data.fmNumber}</td>
                     <td className="py-2">{data.vendorName}</td>
-                    <td className="py-2">{data.date}</td>
+                    <td className="py-2">{new Date(data.date).toLocaleDateString()}</td>
                     <td className="py-2">INR {data.hire}</td>
                     <td className="py-2 text-center">
                       INR {data.advance ? data.advance : 0}
@@ -1292,7 +1292,7 @@ export default function FMList({
                                     >
                                       <td className="p-2">{index + 1}</td>
                                       <td>{record.amount}</td>
-                                      <td>{record.date}</td>
+                                      <td>{new Date(record.date).toLocaleDateString()}</td>
                                       <td>{record.paymentMode}</td>
                                       <td>{record.transactionNumber}</td>
                                       <td className="flex justify-center gap-2">
@@ -1478,7 +1478,7 @@ export default function FMList({
                 <tr key={data.fmNumber}>
                   <td className="py-2">{data.fmNumber}</td>
                   <td className="py-2 text-center">{data.vendorName}</td>
-                  <td className="py-2 text-center">{data.date}</td>
+                  <td className="py-2 text-center">{new Date(data.date).toLocaleDateString()}</td>
                   <td className="py-2 text-center">INR {data.hire}</td>
                   <td className="py-2 text-center">
                     INR {data.advance ? data.advance : 0}

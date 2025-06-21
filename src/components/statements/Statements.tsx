@@ -160,7 +160,7 @@ export default function Statements() {
 
   const formatRecordData = (data: ExtendedPaymentRecord[]) => {
     return data.map((record) => ({
-      Date: record.date,
+      Date: new Date(record.date).toLocaleDateString(),
       Description: record.IDNumber,
       Branch: record.Admin?.branchName || record.Branches?.branchName,
       "Billed value": record.transactionNumber,
@@ -437,7 +437,7 @@ export default function Statements() {
                     className="hover:bg-accent cursor-pointer"
                     key={record.id}
                   >
-                    <td className="py-2">{record.date}</td>
+                    <td className="py-2">{new Date(record.date).toLocaleDateString()}</td>
                     <td className="py-2">{record.IDNumber}</td>
                     <td className="py-2">
                       {record.Admin?.branchName || record.Branches?.branchName}

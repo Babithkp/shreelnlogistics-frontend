@@ -186,16 +186,20 @@ export default function Home() {
       setFMData(data);
     }
   }
-  
+
   const onRefresh = async () => {
-    if(branch.isAdmin){
+    if (branch.isAdmin) {
       fetchFMs();
-      getBillDetails()
-    }else{
+      getBillDetails();
+    } else {
       fetchFMsByBranchId(branch.id);
       getBillByBranchIdApi(branch.id);
     }
-  }
+    fetchVendors();
+    fetchVehicles();
+    getBranchDetails();
+    getClientDetails();
+  };
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin") === "true";
@@ -208,7 +212,7 @@ export default function Home() {
           branchName: branch.branchName,
           isAdmin: true,
         });
-        getBillDetails()
+        getBillDetails();
         fetchFMs();
       } else {
         setBranch({
@@ -220,7 +224,6 @@ export default function Home() {
         fetchFMsByBranchId(branch.id);
       }
     }
-    
 
     getBranchDetails();
     getClientDetails();
@@ -265,7 +268,7 @@ export default function Home() {
   };
   return (
     <main className="flex h-screen bg-[#F0F8FF]">
-      <nav className="flex h-screen overflow-y-auto w-[20rem] flex-col justify-between gap-10 bg-white p-3">
+      <nav className="flex h-screen w-[20rem] flex-col justify-between gap-10 overflow-y-auto bg-white p-3">
         <div className="flex w-full justify-center">
           <img src={logo} alt="logo" className="w-[16rem]" />
         </div>
@@ -335,7 +338,7 @@ export default function Home() {
                 color={`${dropDown.billing ? "#2196F3" : "#A3AED0"}`}
               />
               <p className={`${dropDown.billing ? "text-black" : ""}`}>
-                Billing & Incoice
+                Billing & Invoices
               </p>
             </button>
             {dropDown.billing && (
@@ -498,7 +501,11 @@ export default function Home() {
         </div>
       </nav>
       <section className="flex h-full w-full flex-col gap-5 overflow-y-auto p-5">
-        <Header title={sections} setSections={setSections} onFresh={onRefresh} />
+        <Header
+          title={sections}
+          setSections={setSections}
+          onFresh={onRefresh}
+        />
         {sections.dashboard && (
           <Dashboard
             branchLength={branches.length}
@@ -509,7 +516,7 @@ export default function Home() {
             branchData={branches}
           />
         )}
-        {sections.branch && <Branch  />}
+        {sections.branch && <Branch />}
         {sections.LR && <LRPage />}
         {sections.FM && <FMPage />}
         {sections.client && <ClientManagement data={clients} />}

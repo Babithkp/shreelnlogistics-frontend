@@ -53,7 +53,6 @@ import { toast } from "react-toastify";
 import { MdOutlineAdd } from "react-icons/md";
 import { getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
-import { BranchDetails } from "../shipment/FM/FMPage";
 import { Controller, useForm } from "react-hook-form";
 import { PiRecord } from "react-icons/pi";
 import {
@@ -88,7 +87,6 @@ export default function ViewBills({
   const [attachment, setAttachment] = useState<Blob>();
   const [isLoading, setIsLoading] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<ProfileInputs>();
-  const [branchDetails, setBranchDetails] = useState<BranchDetails>();
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [branch, setBranch] = useState({
     branchId: "",
@@ -189,7 +187,7 @@ export default function ViewBills({
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
-    setValue("date", data.date);
+    setValue("date", new Date(data.date).toLocaleDateString());
     setValue("customerName", data.customerName);
     setValue("amount", data.amount);
     setValue("amountInWords", data.amountInWords);
@@ -411,7 +409,6 @@ export default function ViewBills({
 
     if (branchDetailsRaw) {
       const branchDetails = JSON.parse(branchDetailsRaw);
-      setBranchDetails(branchDetails);
       if (isAdmin === "true") {
         setIsAdmin(true);
         setBranch({
@@ -466,7 +463,7 @@ export default function ViewBills({
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
                   <div className="flex items-center gap-2">
-                    <p>Client Name</p>
+                    <p>Client</p>
                     <FaChevronDown size={15} className="cursor-pointer" />
                   </div>
                 </th>
@@ -479,7 +476,7 @@ export default function ViewBills({
                 <th className="text-start font-[400] text-[#797979]">
                   Bill Amount
                 </th>
-                <th className="font-[400] text-[#797979]">Pending Amount</th>
+                <th className="font-[400] text-[#797979]">Pending Amt</th>
                 {!showPreview && (
                   <>
                     <th className="font-[400] text-[#797979]">Tax</th>
@@ -502,8 +499,8 @@ export default function ViewBills({
                 >
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2">{data.Client?.name}</td>
-                  <td className="py-2">{data.date}</td>
-                  <td className="py-2">{data.total.toFixed(2)}</td>
+                  <td className="py-2">{new Date(data.date).toLocaleDateString()}</td>
+                  <td className="py-2">{data.subTotal.toFixed(2)}</td>
                   <td className="py-2 text-center">
                     {data.pendingAmount.toFixed(2)}
                   </td>
@@ -615,7 +612,7 @@ export default function ViewBills({
                         </div>
                         <div className="flex">
                           <label>Billing Date</label>
-                          <p>: {selectedBill?.date}</p>
+                          <p>: {new Date(selectedBill?.date || "").toLocaleDateString()}</p>
                         </div>
                         <div className="flex">
                           <label>LR Numbers</label>
@@ -650,7 +647,7 @@ export default function ViewBills({
                         </div>
                         <div className="flex">
                           <label>Payment Due Date</label>
-                          <p>: {selectedBill?.dueDate}</p>
+                          <p>: {new Date(selectedBill?.dueDate || "").toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div>
@@ -762,7 +759,6 @@ export default function ViewBills({
             <BillTemplate
               billInputs={selectedBill}
               companyProfile={companyProfile}
-              branchDetails={branchDetails}
               bankDetails={bankDetails}
             />
           </PDFViewer>
@@ -945,7 +941,7 @@ export default function ViewBills({
                                 >
                                   <td className="p-2">{index + 1}</td>
                                   <td>{record.amount}</td>
-                                  <td>{record.date}</td>
+                                  <td>{new Date(record.date).toLocaleDateString()}</td>
                                   <td>{record.paymentMode}</td>
                                   <td>{record.transactionNumber}</td>
                                   <td className="flex justify-center gap-2">
@@ -1072,7 +1068,7 @@ export default function ViewBills({
                 {isLoading ? (
                   <VscLoading size={24} className="animate-spin" />
                 ) : formstate === "create" ? (
-                  "Record Expenses"
+                  "Record Payment"
                 ) : (
                   "Update"
                 )}
