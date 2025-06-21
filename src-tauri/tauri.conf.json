@@ -46,7 +46,7 @@
         "https://shreeln-backend.vercel.app/tauri-update/{{target}}/{{currentVersion}}"
       ],
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBNUMzRUMwNTJEQ0I1OEQKUldTTnRkeFN3RDVjNm5wd3NqU3o2aHJ2N090TkNkSFpmaEYzQ0pZaFR0bVRyL2Y5Y0dRWi9FbkIK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc4QjI5QzExQjhBNzI0NUYKUldSZkpLZTRFWnl5ZUJlODRoUWhMMXFicStIUU9VUDNMN1Y0TFVGeFk5cGRCNnlYODFDcXhBamIK"
     }
   }
 }
