@@ -274,7 +274,7 @@ export default function LRList({
             </Button>
           </div>
         </div>
-        <table className={`w-full ${showPreview ? "text-xs":""}`}>
+        <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
           <thead>
             <tr>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
@@ -310,7 +310,9 @@ export default function LRList({
                     ? data.consigneeName
                     : data.consignorName}
                 </td>
-                <td className="py-2">{new Date(data.date).toLocaleDateString()}</td>
+                <td className="py-2">
+                  {new Date(data.date).toLocaleDateString()}
+                </td>
                 <td className="py-2">{data.from}</td>
                 <td className="py-2">{data.to}</td>
                 <td className="py-2">
