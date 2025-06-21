@@ -226,7 +226,7 @@ const LRTemplate = ({
           </Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Size</Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Weight</Text>
-          <Text style={[ { width: "30%",padding:5 }]}>Rate</Text>
+          <Text style={[{ width: "30%", padding: 5 }]}>Rate</Text>
         </View>
 
         <View style={styles.tableRow}>
@@ -248,7 +248,10 @@ const LRTemplate = ({
             <Text style={{ width: "90%" }}>{LRData?.description}</Text>
             <View style={{ textAlign: "center" }}>
               <Text>Invoice no.: {LRData?.invoiceNo}</Text>
-              <Text>Invoice date: {new Date(LRData?.invoiceDate || "").toLocaleDateString()}</Text>
+              <Text>
+                Invoice date:{" "}
+                {new Date(LRData?.invoiceDate || "").toLocaleDateString()}
+              </Text>
             </View>
           </View>
           <View style={[styles.tableCol, { width: "10%" }]}>
@@ -264,7 +267,7 @@ const LRTemplate = ({
           <Text style={[styles.tableCol, { width: "10%" }]}>
             {LRData?.weight}
           </Text>
-          <View style={[ { width: "30%", gap: 3,padding:5 }]}>
+          <View style={[{ width: "30%", gap: 3, padding: 5 }]}>
             {LRData?.freightCharges && (
               <View style={{ flexDirection: "row", gap: 5 }}>
                 <Text>Freight Charges</Text>
@@ -338,7 +341,7 @@ const LRTemplate = ({
             alignItems: "center",
           }}
         >
-          <Text style={{ width: "50%",textTransform:"capitalize" }}>
+          <Text style={{ width: "50%", textTransform: "capitalize" }}>
             Amount in words{" "}
             {LRData?.totalAmt && convertToINRWords(LRData?.totalAmt)}
           </Text>
@@ -380,7 +383,9 @@ const LRTemplate = ({
               <Text style={[styles.label, { width: "8rem" }]}>
                 EWB Exp Date
               </Text>
-              <Text>: {new Date(LRData?.ewbExpiryDate || "").toLocaleDateString()}</Text>
+              <Text>
+                : {new Date(LRData?.ewbExpiryDate || "").toLocaleDateString()}
+              </Text>
             </View>
           )}
         </View>
