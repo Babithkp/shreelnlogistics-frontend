@@ -1,4 +1,5 @@
-import logo from "../assets/logisticsLogo.svg";import { Button } from "./ui/button";
+import logo from "../assets/logisticsLogo.svg";
+import { Button } from "./ui/button";
 import { IoIosGitBranch } from "react-icons/io";
 import { FaRegUser } from "react-icons/fa6";
 import {
@@ -45,7 +46,10 @@ export default function Login() {
         toast.success("Login Successful");
         localStorage.setItem("isAdmin", "true");
         localStorage.setItem("id", response.data.data.id);
-        localStorage.setItem("branchDetails", JSON.stringify(response.data.data));
+        localStorage.setItem(
+          "branchDetails",
+          JSON.stringify(response.data.data),
+        );
         router("/home");
       } else {
         toast.error("Invalid Credentials or Server Error");
@@ -56,7 +60,10 @@ export default function Login() {
         toast.success("Login Successful");
         localStorage.setItem("isAdmin", "false");
         localStorage.setItem("id", response.data.data.id);
-        localStorage.setItem("branchDetails", JSON.stringify(response.data.data));
+        localStorage.setItem(
+          "branchDetails",
+          JSON.stringify(response.data.data),
+        );
         router("/home");
       } else {
         toast.error("Invalid Credentials or Server Error");
@@ -77,17 +84,17 @@ export default function Login() {
   }, []);
 
   return (
-    <main className="grid place-content-center h-screen ">
+    <main className="grid h-screen place-content-center">
       <form
-        className="flex flex-col items-center gap-10 w-[20rem]"
+        className="flex w-[20rem] flex-col items-center gap-10"
         onSubmit={onFormSubmit}
       >
         <img src={logo} alt="logo" />
-        <h3 className="font-medium text-xl">Welcome Back!</h3>
+        <h3 className="text-xl font-medium">Welcome Back!</h3>
         <div className="w-full">
           <Select onValueChange={setSelectedValue} value={selectedValue}>
             <SelectTrigger className="w-full border-black">
-              <p className="flex text-black items-center gap-2">
+              <p className="flex items-center gap-2 text-black">
                 <IoIosGitBranch size={24} color="black" />
                 {selectedValue ? (
                   <span className="capitalize">{selectedValue}</span>
@@ -106,21 +113,21 @@ export default function Login() {
             </SelectContent>
           </Select>
         </div>
-        <div className="w-full text-sm gap-5 flex flex-col">
-          <div className="flex border border-black w-full items-center px-3 p-2 rounded-md gap-2">
+        <div className="flex w-full flex-col gap-5 text-sm">
+          <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
             <FaRegUser size={14} />
             <input
               placeholder="Username"
-              className="placeholder:text-black outline-none w-full"
+              className="w-full outline-none placeholder:text-black"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
             />
           </div>
-          <div className="flex border border-black w-full items-center px-3 p-2 rounded-md gap-2">
+          <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
             <MdOutlineLock size={17} />
             <input
               placeholder="Password"
-              className="placeholder:text-black outline-none w-full"
+              className="w-full outline-none placeholder:text-black"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
@@ -128,7 +135,7 @@ export default function Login() {
           </div>
         </div>
         <Button
-          className="bg-primary w-full cursor-pointer "
+          className="bg-primary w-full cursor-pointer"
           disabled={isLoading}
         >
           {isLoading ? (
