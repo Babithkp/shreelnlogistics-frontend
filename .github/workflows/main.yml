@@ -19,7 +19,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -30,8 +34,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Install dependencies
-        run: |
-          npm install
+        run: bun install
 
       - name: Build Tauri App (NSIS + MSI - Windows 64-bit)
         uses: tauri-apps/tauri-action@v0
