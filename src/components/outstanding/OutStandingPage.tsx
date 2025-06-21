@@ -12,7 +12,6 @@ export default function OutStandingPage() {
   const [vendor, setVendor] = useState<VendorInputs[]>();
   const [client, setClient] = useState<ClientInputs[]>();
 
-
   const [sections, setSections] = useState({
     recentTransactions: true,
     vendorOutstanding: false,
@@ -44,7 +43,7 @@ export default function OutStandingPage() {
   useEffect(() => {
     fetchVendors();
     fetchClients();
-  },[])
+  }, []);
 
   return (
     <>
@@ -65,7 +64,12 @@ export default function OutStandingPage() {
             </div>
             <div className="text-start font-medium">
               <p className="text-muted text-sm">Vendor Outstanding</p>
-              <p className="text-xl">INR {vendor?.reduce((acc, data) => acc + data.currentOutStanding, 0).toFixed(2)}</p>
+              <p className="text-xl">
+                INR{" "}
+                {vendor
+                  ?.reduce((acc, data) => acc + data.currentOutStanding, 0)
+                  .toFixed(2)}
+              </p>
             </div>
           </div>
         </button>
@@ -85,7 +89,15 @@ export default function OutStandingPage() {
             </div>
             <div className="text-start font-medium">
               <p className="text-muted text-sm">Pending payment (Client)</p>
-              <p className="text-xl">INR {client?.reduce((acc, data) => acc + parseFloat(data.pendingPayment), 0).toFixed(2)}</p>
+              <p className="text-xl">
+                INR{" "}
+                {client
+                  ?.reduce(
+                    (acc, data) => acc + parseFloat(data.pendingPayment),
+                    0,
+                  )
+                  .toFixed(2)}
+              </p>
             </div>
           </div>
         </button>
