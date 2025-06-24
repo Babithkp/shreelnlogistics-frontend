@@ -677,12 +677,9 @@ export default function LRCreate({
             <label className="font-medium">Consignee’s GSTIN</label>
             <input
               className="border-primary rounded-md border p-2"
-              {...register("consigneeGSTIN", { required: true })}
+              {...register("consigneeGSTIN")}
               disabled={formStatus === "supplementary"}
             />
-            {errors.consigneeGSTIN && (
-              <p className="text-red-500">Please enter a vaild GSTIN</p>
-            )}
           </div>
         </div>
         <div className="w-[32%]">

@@ -48,7 +48,7 @@ import { TbCopy } from "react-icons/tb";
 import {
   createVehicleApi,
   createVendorApi,
-  deleteVehicleApi,
+  // deleteVehicleApi,
   deleteVendorApi,
   getAllVehiclesApi,
   getAllVendorsApi,
@@ -270,28 +270,28 @@ export default function VendorManagement({
     }
   };
 
-  const onVehicleDeleteHandler = async (id: string) => {
-    const response = await deleteVehicleApi(id);
-    if (response?.status === 200) {
-      toast.success("Vehicle Deleted");
-      fetchVehicles();
-      setIsDetailsModalOpen(false);
-      fetchVehicles();
-      fetchVendors();
-      if (!branch.isAdmin) {
-        const notificationData = {
-          requestId: selectedVendor?.id,
-          title: "Vehicle delete",
-          message: branch.branchName,
-          description: selectedVendor?.name,
-          status: "editable",
-        };
-        await createNotificationApi(notificationData);
-      }
-    } else {
-      toast.error("Failed to Delete Vehicle");
-    }
-  };
+  // const onVehicleDeleteHandler = async (id: string) => {
+  //   const response = await deleteVehicleApi(id);
+  //   if (response?.status === 200) {
+  //     toast.success("Vehicle Deleted");
+  //     fetchVehicles();
+  //     setIsDetailsModalOpen(false);
+  //     fetchVehicles();
+  //     fetchVendors();
+  //     if (!branch.isAdmin) {
+  //       const notificationData = {
+  //         requestId: selectedVendor?.id,
+  //         title: "Vehicle delete",
+  //         message: branch.branchName,
+  //         description: selectedVendor?.name,
+  //         status: "editable",
+  //       };
+  //       await createNotificationApi(notificationData);
+  //     }
+  //   } else {
+  //     toast.error("Failed to Delete Vehicle");
+  //   }
+  // };
 
   const sortVendorsByName = () => {
     const newOrder: SortOrder = vendorSortOrder === "asc" ? "desc" : "asc";
@@ -847,19 +847,13 @@ export default function VendorManagement({
                         type="number"
                         className="border-primary rounded-md border p-1 py-2 pl-2"
                         {...VehicleRegister("driverPhone", {
-                          minLength: 10,
-                          maxLength: 10,
-                          validate: (value) =>
-                            !VehicleWatch("vendorName")
-                              ? !!value ||
-                                "Driver Number is required and should be 10 characters"
-                              : true,
+                          required: true,
                         })}
                       />
                     </div>
                     {VehicleErrors.driverPhone && (
                       <p className="text-red-500">
-                        {VehicleErrors.driverPhone.message}
+                        Driver Number is required and should be 10 characters
                       </p>
                     )}
                   </div>
@@ -936,6 +930,7 @@ export default function VendorManagement({
                   </div>
                   <div className="flex w-full justify-end gap-5">
                     <Button
+                      type="button"
                       onClick={() => VehicleReset()}
                       className="rounded-xl px-7"
                       disabled={isLoading}
@@ -964,8 +959,8 @@ export default function VendorManagement({
               <Button
                 variant={"outline"}
                 onClick={() => [
-                  setIsCreateVehicleOpen(true),
                   VehicleReset(),
+                  setIsCreateVehicleOpen(true),
                   setFormStatus("New"),
                 ]}
                 className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
@@ -1310,7 +1305,7 @@ export default function VendorManagement({
                           >
                             <RiEditBoxLine size={20} />
                           </button>
-                          <AlertDialog>
+                          {/* <AlertDialog>
                             <AlertDialogTrigger className="cursor-pointer">
                               <RiDeleteBin6Line size={20} color="red" />
                             </AlertDialogTrigger>
@@ -1334,7 +1329,7 @@ export default function VendorManagement({
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
-                          </AlertDialog>
+                          </AlertDialog> */}
                         </div>
                       </td>
                     </tr>
