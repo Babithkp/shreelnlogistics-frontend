@@ -185,7 +185,7 @@ export const FMTemplate = ({
             <Text style={{ textAlign: "center", fontWeight: 500 }}>
               Payable at
             </Text>
-            <Text style={{ textAlign: "center" }}>{FmData?.to}</Text>
+            <Text style={{ textAlign: "center" }}>{FmData?.payableAt}</Text>
           </View>
           <View
             style={{
@@ -346,7 +346,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {parseFloat(FmData?.hire || '0')}
+                {parseFloat(FmData?.hire || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -374,7 +374,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.advance}
+                {parseFloat(FmData?.advance || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -402,7 +402,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.balance}
+                { parseFloat(FmData?.balance || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -430,7 +430,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.otherCharges}
+                { parseFloat(FmData?.otherCharges || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -458,7 +458,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.detentionCharges}
+                { parseFloat(FmData?.detentionCharges || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -486,7 +486,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.rtoCharges}
+                { parseFloat(FmData?.rtoCharges || '0').toFixed(2)}
               </Text>
             </View>
             <View
@@ -514,7 +514,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {FmData?.netBalance}
+                { parseFloat(FmData?.netBalance || '0').toFixed(2)}
               </Text>
             </View>
             <View style={{ gap: 5 }}>

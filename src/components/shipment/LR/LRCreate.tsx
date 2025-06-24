@@ -234,7 +234,7 @@ export default function LRCreate({
     return vendors.flatMap(
       (vendor) =>
         vendor.vehicles?.map((vehicle) => ({
-          value: vehicle.id,
+          value: vehicle.vehicleNumber,
           label: vehicle.vehicleNumber,
         })) || [],
     );
@@ -904,7 +904,7 @@ export default function LRCreate({
                                 field.onChange(value);
                                 const selectedVehicle = members
                                   .flatMap((v) => v.vehicles)
-                                  .find((veh) => veh.id === value);
+                                  .find((veh) => veh.vehicleNumber === value);
                                 if (selectedVehicle) {
                                   setVechicleData(selectedVehicle);
                                 }
@@ -1123,7 +1123,7 @@ export default function LRCreate({
               />
             </div>
             <div className="flex w-[30%] flex-col gap-2">
-              <label className="font-medium">Client</label>
+              <label className="font-medium">Billing party</label>
               <Controller
                 name="client"
                 control={control}

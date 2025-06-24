@@ -92,6 +92,7 @@ export default function FMCreate({
     TDS: "-",
     insturance: "-",
     Rc: "-",
+    currentOutStanding: 0,
   });
 
   useEffect(() => {
@@ -129,8 +130,6 @@ export default function FMCreate({
 
   useEffect(() => {
     if (formStatus === "edit") {
-      console.log(selectedFMDataToEdit);
-
       const lrList = selectedFMDataToEdit?.LRDetails;
 
       const fmData = {
@@ -158,7 +157,7 @@ export default function FMCreate({
         vehicleType: selectedFMDataToEdit?.vehicleType || "",
         weight: selectedFMDataToEdit?.weight || "",
         packages: selectedFMDataToEdit?.package || "",
-        payableAt: selectedFMDataToEdit?.to || "",
+        payableAt: selectedFMDataToEdit?.payableAt || "",
         vendorName: selectedFMDataToEdit?.vendorName || "",
         vendorEmail: selectedFMDataToEdit?.vendorEmail || "",
         ContactPerson: selectedFMDataToEdit?.ContactPerson || "",
@@ -169,6 +168,7 @@ export default function FMCreate({
         insturance: selectedFMDataToEdit?.insturance || "",
         Rc: selectedFMDataToEdit?.Rc || "",
         emails: selectedFMDataToEdit?.emails || [],
+        currentOutStanding: selectedFMDataToEdit?.currentOutStanding || 0,
       };
       if (lrList) {
         setLRList(lrList);
@@ -215,11 +215,10 @@ export default function FMCreate({
           parseFloat(prev.packages || "0") +
           parseFloat(data.noOfPackages || "0")
         ).toFixed(2),
-        payableAt: data.to,
         emails: data.emails,
         contactNumber: vehicleData.vendor.contactNumber,
         ContactPerson: vehicleData.vendor.contactPerson,
-        driverName: vehicleData.driverName ?? "-",
+        driverName: vehicleData.driverName,
         ownerName: vehicleData.ownerName,
         TDS: vehicleData.vendor.TDS,
         insturance: vehicleData.insurance,
@@ -227,7 +226,7 @@ export default function FMCreate({
         vehicleNo: vehicleData.vehicleNumber,
         vehicleType: vehicleData.vehicletypes,
         driverPhone: vehicleData.driverPhone,
-        DriverName: vehicleData.driverName ?? "-",
+        DriverName: vehicleData.driverName,
         vendorName: vehicleData.vendor.name,
         vendorEmail: vehicleData.vendor.email,
       }));
@@ -259,6 +258,7 @@ export default function FMCreate({
       branchId: branchId.branchId,
       adminId: branchId.adminId,
     };
+    
     if (formStatus === "create") {
       const response = await createFMApi(data);
       if (response?.status === 200) {
@@ -428,12 +428,14 @@ export default function FMCreate({
             showSearch
             placeholder="Select Vendor... "
             className="border-primary rounded-md border outline"
+            value={lrDataToFM?.vendorName}
             options={vendors.map((vendor) => ({
-              value: vendor.id,
+              value: vendor.name,
               label: vendor.name,
             }))}
             onChange={(value) => {
-              const selectedVendor = vendors.find((v) => v.id === value);
+              setLRDataToFM((prev) => ({...prev, vendorName: value}));
+              const selectedVendor = vendors.find((v) => v.name === value);
               if (selectedVendor) {
                 const allLRs: LrInputs[] = selectedVendor.vehicles.flatMap(
                   (vehicle) => vehicle.LR || [],
@@ -465,7 +467,7 @@ export default function FMCreate({
         <div className="flex w-[49%] flex-col gap-2">
           <label className="font-medium">Driver Name</label>
           <p className="border-primary rounded-md border p-2">
-            {lrDataToFM.DriverName}
+            {lrDataToFM.DriverName === "" ? "-" : lrDataToFM.DriverName}
           </p>
         </div>
         <div className="flex w-[49%] flex-col gap-2">
