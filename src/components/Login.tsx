@@ -16,6 +16,7 @@ import { adminLoginApi, getBranchesApi } from "@/api/admin";
 import { branchLoginApi } from "@/api/branch";
 import { VscLoading } from "react-icons/vsc";
 import { getVersion } from "@tauri-apps/api/app";
+import tikonaLogo from "../assets/trikona.png";
 
 interface BranchesType {
   id: string;
@@ -87,70 +88,82 @@ export default function Login() {
   }, []);
 
   return (
-    <main className="grid h-screen place-content-center">
-      <form
-        className="flex w-[20rem] flex-col items-center gap-10"
-        onSubmit={onFormSubmit}
-      >
-        <img src={logo} alt="logo" />
-        <h3 className="text-xl font-medium">Welcome Back!</h3>
-        <div className="w-full">
-          <Select onValueChange={setSelectedValue} value={selectedValue}>
-            <SelectTrigger className="w-full border-black">
-              <p className="flex items-center gap-2 text-black">
-                <IoIosGitBranch size={24} color="black" />
-                {selectedValue ? (
-                  <span className="capitalize">{selectedValue}</span>
-                ) : (
-                  <span>Select Branch</span>
-                )}
-              </p>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              {branches.map((branch) => (
-                <SelectItem value={branch.branchName} key={branch.id}>
-                  {branch.branchName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex w-full flex-col gap-5 text-sm">
-          <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
-            <FaRegUser size={14} />
-            <input
-              placeholder="Username"
-              className="w-full outline-none placeholder:text-black"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-            />
+    <main className="flex h-screen flex-col items-center justify-between">
+      <section className="grid h-full place-content-center">
+        <form
+          className="flex w-[20rem] flex-col items-center gap-10"
+          onSubmit={onFormSubmit}
+        >
+          <img src={logo} alt="logo" />
+          <h3 className="text-xl font-medium">Welcome Back!</h3>
+          <div className="w-full">
+            <Select onValueChange={setSelectedValue} value={selectedValue}>
+              <SelectTrigger className="w-full border-black">
+                <p className="flex items-center gap-2 text-black">
+                  <IoIosGitBranch size={24} color="black" />
+                  {selectedValue ? (
+                    <span className="capitalize">{selectedValue}</span>
+                  ) : (
+                    <span>Select Branch</span>
+                  )}
+                </p>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                {branches.map((branch) => (
+                  <SelectItem value={branch.branchName} key={branch.id}>
+                    {branch.branchName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
-            <MdOutlineLock size={17} />
-            <input
-              placeholder="Password"
-              className="w-full outline-none placeholder:text-black"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-            />
+          <div className="flex w-full flex-col gap-5 text-sm">
+            <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
+              <FaRegUser size={14} />
+              <input
+                placeholder="Username"
+                className="w-full outline-none placeholder:text-black"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+              />
+            </div>
+            <div className="flex w-full items-center gap-2 rounded-md border border-black p-2 px-3">
+              <MdOutlineLock size={17} />
+              <input
+                placeholder="Password"
+                className="w-full outline-none placeholder:text-black"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+              />
+            </div>
           </div>
+          <div className="flex w-full flex-col items-center justify-center">
+            <Button
+              className="bg-primary w-full cursor-pointer"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <VscLoading size={24} className="animate-spin" />
+              ) : (
+                "Login"
+              )}
+            </Button>
+            {version && <p>v{version}</p>}
+          </div>
+        </form>
+      </section>
+      <footer className="bg-primary flex h-[4rem] w-full flex-col items-end justify-center px-10 text-sm text-white">
+        <div>{version && <p>v{version}</p>}</div>
+        <div className="flex items-center gap-2 ">
+          <p>A Product of</p>
+          <a href="https://www.trikonatech.com" target="_blank">
+            <img src={tikonaLogo} alt="tikona" className="w-8" />
+          </a>
+          <p>Trikona</p>
         </div>
-        <div className="flex w-full flex-col items-center justify-center">
-          <Button
-            className="bg-primary w-full cursor-pointer"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <VscLoading size={24} className="animate-spin" />
-            ) : (
-              "Login"
-            )}
-          </Button>
-          {version && <p>v{version}</p>}
-        </div>
-      </form>
+      </footer>
     </main>
   );
 }

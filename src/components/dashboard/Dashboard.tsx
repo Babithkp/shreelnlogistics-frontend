@@ -230,13 +230,9 @@ export default function Dashboard({
         (sum, bill) => sum + (bill.subTotal || 0),
         0,
       );
-      const totalFMAmount = branch.FM?.reduce(
-        (sum, FM) => sum + (parseFloat(FM.netBalance) || 0),
-        0,
-      );
       return {
         name: branch.branchName,
-        value: totalBillAmount + totalFMAmount,
+        value: totalBillAmount,
       };
     });
     return chartData;

@@ -80,9 +80,9 @@ export default function FMCreate({
     to: "-",
     vehicleNo: "-",
     vehicleType: "-",
-    weight: "-",
-    packages: "-",
-    payableAt: "-",
+    weight: "0",
+    packages: "0",
+    payableAt: "",
     vendorName: "-",
     vendorEmail: "-",
     ContactPerson: "-",
@@ -109,7 +109,7 @@ export default function FMCreate({
     }
 
     const netBalance =
-      (balance + otherCharges + detentionCharges + rtoCharges) - tds;
+      balance + otherCharges + detentionCharges + rtoCharges - tds;
 
     setFMData((prev) => ({
       ...prev,
@@ -208,8 +208,13 @@ export default function FMCreate({
         date: data.date,
         from: data.from,
         to: data.to,
-        weight: data.weight,
-        packages: data.noOfPackages,
+        weight: (
+          parseFloat(prev.weight || "0") + parseFloat(data.weight || "0")
+        ).toFixed(2),
+        packages: (
+          parseFloat(prev.packages || "0") +
+          parseFloat(data.noOfPackages || "0")
+        ).toFixed(2),
         payableAt: data.to,
         emails: data.emails,
         contactNumber: vehicleData.vendor.contactNumber,
@@ -235,7 +240,14 @@ export default function FMCreate({
 
   const onSubmit = async () => {
     setIsloading(true);
-    if (!fmData.fmNumber || lrList.length === 0 || fmData.netBalance === "") {
+    if (
+      !fmData.fmNumber ||
+      lrList.length === 0 ||
+      fmData.netBalance === "" ||
+      lrDataToFM.payableAt === "" ||
+      lrDataToFM.weight === "" ||
+      lrDataToFM.packages === ""
+    ) {
       toast.error("Please fill all the fields");
       setIsloading(false);
       return;
@@ -402,9 +414,13 @@ export default function FMCreate({
         </div>
         <div className="flex w-[18%] flex-col gap-2">
           <label className="font-medium">Payable at</label>
-          <p className="border-primary rounded-md border p-2">
-            {lrDataToFM.payableAt}
-          </p>
+          <input
+            value={lrDataToFM.payableAt}
+            onChange={(e) =>
+              setLRDataToFM({ ...lrDataToFM, payableAt: e.target.value })
+            }
+            className="border-primary rounded-md border p-2"
+          />
         </div>
         <div className="flex w-[49%] flex-col gap-2">
           <label className="font-medium">Vendor Name</label>
