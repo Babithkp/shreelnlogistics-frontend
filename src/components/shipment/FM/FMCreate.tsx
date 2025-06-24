@@ -219,7 +219,7 @@ export default function FMCreate({
         emails: data.emails,
         contactNumber: vehicleData.vendor.contactNumber,
         ContactPerson: vehicleData.vendor.contactPerson,
-        driverName: vehicleData.driverName,
+        driverName: vehicleData.driverName ?? "-",
         ownerName: vehicleData.ownerName,
         TDS: vehicleData.vendor.TDS,
         insturance: vehicleData.insurance,
@@ -227,7 +227,7 @@ export default function FMCreate({
         vehicleNo: vehicleData.vehicleNumber,
         vehicleType: vehicleData.vehicletypes,
         driverPhone: vehicleData.driverPhone,
-        DriverName: vehicleData.driverName,
+        DriverName: vehicleData.driverName ?? "-",
         vendorName: vehicleData.vendor.name,
         vendorEmail: vehicleData.vendor.email,
       }));
