@@ -235,16 +235,16 @@ const BillTemplate = ({
 
       <View style={styles.table}>
         <View style={[styles.tableRow, styles.tableHeader]}>
-          <Text style={[styles.tableCol, { width: "7%" }]}>Sl no.</Text>
-          <Text style={[styles.tableCol, { width: "10%" }]}>LR#</Text>
+          <Text style={[styles.tableCol, { width: "6%" }]}>Sl no.</Text>
+          <Text style={[styles.tableCol, { width: "8%" }]}>LR#</Text>
           <Text style={[styles.tableCol, { width: "13%" }]}>LR Date</Text>
           <Text style={[styles.tableCol, { width: "15%" }]}>Origin</Text>
           <Text style={[styles.tableCol, { width: "15%" }]}>Dest.</Text>
           <Text style={[styles.tableCol, { width: "17%" }]}>Desc.</Text>
-          <Text style={[styles.tableCol, { width: "10%" }]}>Inv. no.</Text>
+          <Text style={[styles.tableCol, { width: "11%" }]}>Inv. no.</Text>
           <Text style={[styles.tableCol, { width: "13%" }]}>Inv. Date</Text>
           <Text style={[styles.tableCol, { width: "10%" }]}>Vehicle Type</Text>
-          <Text style={[styles.tableCol, { width: "10%" }]}>Vehicle No.</Text>
+          <Text style={[styles.tableCol, { width: "13%" }]}>Vehicle No.</Text>
           <Text style={[styles.tableCol, { width: "8%" }]}>Weight</Text>
           <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
             Freight Amount
@@ -253,8 +253,8 @@ const BillTemplate = ({
 
         {billInputs?.lrData?.map((lrData, index) => (
           <View style={styles.tableRow} key={lrData.lrNumber}>
-            <Text style={[styles.tableCol, { width: "7%" }]}>{index + 1}</Text>
-            <Text style={[styles.tableCol, { width: "10%" }]}>
+            <Text style={[styles.tableCol, { width: "6%" }]}>{index + 1}</Text>
+            <Text style={[styles.tableCol, { width: "8%" }]}>
               {lrData.lrNumber}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
@@ -264,10 +264,10 @@ const BillTemplate = ({
               {lrData.from}
             </Text>
             <Text style={[styles.tableCol, { width: "15%" }]}>{lrData.to}</Text>
-            <Text style={[styles.tableCol, { width: "17%" }]}>
+            <Text style={[styles.tableCol, { width: "17%",fontSize:6 }]}>
               {lrData.description}
             </Text>
-            <Text style={[styles.tableCol, { width: "10%" }]}>
+            <Text style={[styles.tableCol, { width: "11%" }]}>
               {lrData.invoiceNo}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
@@ -277,12 +277,12 @@ const BillTemplate = ({
               {lrData.Vehicle?.vehicletypes}
             </Text>
             {lrData.Vehicle.vehicleNumber && (
-              <Text style={[styles.tableCol, { width: "10%" }]}>
+              <Text style={[styles.tableCol, { width: "13%" }]}>
                 {lrData.Vehicle.vehicleNumber}
               </Text>
             )}
             <Text style={[styles.tableCol, { width: "8%" }]}>
-              {lrData.weight}MT
+              {lrData.weight}
             </Text>
             <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
               {lrData.totalAmt.toFixed(2)}
@@ -302,7 +302,7 @@ const BillTemplate = ({
           },
         ]}
       >
-        <View style={[styles.detailsColumn, { gap: 5 }]}>
+        <View style={[styles.detailsColumn, { gap: 5,paddingLeft:5 }]}>
           <View style={{ flexDirection: "row", gap: 5 }}>
             <Text>Add: IGST Rate</Text>
             <Text>5.00%</Text>
@@ -319,7 +319,7 @@ const BillTemplate = ({
             <Text>{billInputs?.sgstRate.toFixed(2)}</Text>
           </View>
         </View>
-        <View style={{ gap: 5 }}>
+        <View style={{ gap: 5 ,paddingRight:5}}>
           {billInputs?.unloading && (
             <View
               style={{
@@ -435,6 +435,7 @@ const BillTemplate = ({
             borderRight: "1px solid black",
             borderLeft: "1px solid black",
             textTransform: "capitalize",
+            paddingHorizontal:5
           },
         ]}
       >

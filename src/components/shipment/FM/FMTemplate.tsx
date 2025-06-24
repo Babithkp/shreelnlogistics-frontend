@@ -10,7 +10,7 @@ interface ExtendedFmInputs extends FMInputs {
 export const FMTemplate = ({
   FmData,
   branchDetails,
-  companyProfile
+  companyProfile,
 }: {
   FmData?: ExtendedFmInputs;
   branchDetails: BranchDetails;
@@ -45,14 +45,13 @@ export const FMTemplate = ({
               (Fleet owners & Transport Contractors)
             </Text>
             <Text style={{ fontWeight: 500 }}>An ISO 9001 : 2015 Company</Text>
-            <Text style={{ fontWeight: 500 }}>
-              {companyProfile?.address}
-            </Text>
+            <Text style={{ fontWeight: 500 }}>{companyProfile?.address}</Text>
             <Text style={{ fontWeight: 500 }}>
               Email: {companyProfile?.email}
             </Text>
             <Text style={{ fontWeight: 500 }}>
-              Ph.: Mob: {companyProfile?.contactNumber}, {companyProfile?.alternateContactNumber}
+              Ph.: Mob: {companyProfile?.contactNumber},{" "}
+              {companyProfile?.alternateContactNumber}
             </Text>
           </View>
           <View
@@ -99,7 +98,9 @@ export const FMTemplate = ({
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>Date</Text>
-            <Text style={{ textAlign: "center" }}>{new Date(FmData?.date || "").toLocaleDateString()}</Text>
+            <Text style={{ textAlign: "center" }}>
+              {new Date(FmData?.date || "").toLocaleDateString()}
+            </Text>
           </View>
           <View
             style={{
@@ -125,7 +126,13 @@ export const FMTemplate = ({
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>Size</Text>
-            <Text style={{ textAlign: "center" }}>{FmData?.ftl ? FmData?.ftl + "FTL" : FmData?.sizeL + "x" + FmData?.sizeW + "x" + FmData?.sizeH}</Text>
+            <Text style={{ textAlign: "center" }}>
+              {FmData?.ftl
+                ? FmData?.ftl + " FTL"
+                : FmData?.sizeL
+                  ? FmData?.sizeL + "x" + FmData?.sizeW + "x" + FmData?.sizeH
+                  : "-"}
+            </Text>
           </View>
           <View
             style={{
@@ -346,7 +353,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {parseFloat(FmData?.hire || '0').toFixed(2)}
+                {parseFloat(FmData?.hire || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -374,7 +381,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                {parseFloat(FmData?.advance || '0').toFixed(2)}
+                {parseFloat(FmData?.advance || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -402,7 +409,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                { parseFloat(FmData?.balance || '0').toFixed(2)}
+                {parseFloat(FmData?.balance || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -430,7 +437,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                { parseFloat(FmData?.otherCharges || '0').toFixed(2)}
+                {parseFloat(FmData?.otherCharges || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -458,7 +465,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                { parseFloat(FmData?.detentionCharges || '0').toFixed(2)}
+                {parseFloat(FmData?.detentionCharges || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -486,7 +493,7 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                { parseFloat(FmData?.rtoCharges || '0').toFixed(2)}
+                {parseFloat(FmData?.rtoCharges || "0").toFixed(2)}
               </Text>
             </View>
             <View
@@ -514,14 +521,20 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
-                { parseFloat(FmData?.netBalance || '0').toFixed(2)}
+                {parseFloat(FmData?.netBalance || "0").toFixed(2)}
               </Text>
             </View>
             <View style={{ gap: 5 }}>
               <Text style={{ paddingLeft: 20, padding: 5 }}>
                 Amount in words
               </Text>
-              <Text style={{ paddingRight: 20, padding: 5,textTransform:"capitalize" }}>
+              <Text
+                style={{
+                  paddingRight: 20,
+                  padding: 5,
+                  textTransform: "capitalize",
+                }}
+              >
                 {FmData?.amountInwords} rupees only
               </Text>
             </View>

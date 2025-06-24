@@ -139,24 +139,21 @@ export default function Login() {
               />
             </div>
           </div>
-          <div className="flex w-full flex-col items-center justify-center">
-            <Button
-              className="bg-primary w-full cursor-pointer"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <VscLoading size={24} className="animate-spin" />
-              ) : (
-                "Login"
-              )}
-            </Button>
-            {version && <p>v{version}</p>}
-          </div>
+          <Button
+            className="bg-primary w-full cursor-pointer"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <VscLoading size={24} className="animate-spin" />
+            ) : (
+              "Login"
+            )}
+          </Button>
         </form>
       </section>
       <footer className="bg-primary flex h-[4rem] w-full flex-col items-end justify-center px-10 text-sm text-white">
         <div>{version && <p>v{version}</p>}</div>
-        <div className="flex items-center gap-2 ">
+        <div className="flex items-center gap-2">
           <p>A Product of</p>
           <a href="https://www.trikonatech.com" target="_blank">
             <img src={tikonaLogo} alt="tikona" className="w-8" />

@@ -178,7 +178,7 @@ export default function Statements() {
       formatBillData(billData),
       "Outstanding",
       filterInputs.name,
-      billData.reduce((acc, bill) => acc + bill.total, 0),
+      billData.reduce((acc, bill) => acc + bill.subTotal, 0),
       billData.reduce((acc, bill) => acc + bill.pendingAmount, 0),
     );
   };
