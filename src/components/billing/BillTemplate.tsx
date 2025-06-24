@@ -264,14 +264,16 @@ const BillTemplate = ({
               {lrData.from}
             </Text>
             <Text style={[styles.tableCol, { width: "15%" }]}>{lrData.to}</Text>
-            <Text style={[styles.tableCol, { width: "17%",fontSize:6 }]}>
+            <Text style={[styles.tableCol, { width: "17%", fontSize: 6 }]}>
               {lrData.description}
             </Text>
             <Text style={[styles.tableCol, { width: "11%" }]}>
               {lrData.invoiceNo}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
-              {new Date(lrData.invoiceDate).toLocaleDateString()}
+              {lrData.invoiceDate
+                ? new Date(lrData.invoiceDate).toLocaleDateString()
+                : ""}
             </Text>
             <Text style={[styles.tableCol, { width: "10%" }]}>
               {lrData.Vehicle?.vehicletypes}
@@ -302,7 +304,7 @@ const BillTemplate = ({
           },
         ]}
       >
-        <View style={[styles.detailsColumn, { gap: 5,paddingLeft:5 }]}>
+        <View style={[styles.detailsColumn, { gap: 5, paddingLeft: 5 }]}>
           <View style={{ flexDirection: "row", gap: 5 }}>
             <Text>Add: IGST Rate</Text>
             <Text>5.00%</Text>
@@ -319,7 +321,7 @@ const BillTemplate = ({
             <Text>{billInputs?.sgstRate.toFixed(2)}</Text>
           </View>
         </View>
-        <View style={{ gap: 5 ,paddingRight:5}}>
+        <View style={{ gap: 5, paddingRight: 5 }}>
           {billInputs?.unloading && (
             <View
               style={{
@@ -435,7 +437,7 @@ const BillTemplate = ({
             borderRight: "1px solid black",
             borderLeft: "1px solid black",
             textTransform: "capitalize",
-            paddingHorizontal:5
+            paddingHorizontal: 5,
           },
         ]}
       >

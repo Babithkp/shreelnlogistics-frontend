@@ -148,8 +148,8 @@ export default function Statements() {
       "LR#": bill.lrData.map((lr) => lr.lrNumber).toString(),
       From: bill.lrData[0].from,
       To: bill.lrData[0].to,
-      Amount: bill.total,
-      Received: bill.total - bill.pendingAmount,
+      Amount: bill.subTotal,
+      Received: bill.subTotal - bill.pendingAmount,
       Tax: bill.cgstRate + bill.sgstRate + bill.igstRate,
       Pending: bill.pendingAmount,
       "0-30": bill.zeroToThirty,
@@ -540,8 +540,8 @@ export default function Statements() {
                     <td className="py-2">
                       {bill.lrData.length === 0 ? "-" : bill.lrData[0].to}
                     </td>
-                    <td className="py-2">{bill.total}</td>
-                    <td className="py-2">{bill.total - bill.pendingAmount}</td>
+                    <td className="py-2">{bill.subTotal}</td>
+                    <td className="py-2">{bill.subTotal - bill.pendingAmount}</td>
                     <td className="py-2">
                       {(bill.cgstRate + bill.sgstRate + bill.igstRate).toFixed(
                         2,
