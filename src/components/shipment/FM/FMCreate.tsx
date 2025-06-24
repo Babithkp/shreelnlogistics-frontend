@@ -93,6 +93,10 @@ export default function FMCreate({
     insturance: "-",
     Rc: "-",
     currentOutStanding: 0,
+    sizeL: "",
+    sizeW: "",
+    sizeH: "",
+    ftl: "",
   });
 
   useEffect(() => {
@@ -169,6 +173,10 @@ export default function FMCreate({
         Rc: selectedFMDataToEdit?.Rc || "",
         emails: selectedFMDataToEdit?.emails || [],
         currentOutStanding: selectedFMDataToEdit?.currentOutStanding || 0,
+        sizeL: selectedFMDataToEdit?.sizeL || "",
+        sizeW: selectedFMDataToEdit?.sizeW || "",
+        sizeH: selectedFMDataToEdit?.sizeH || "",
+        ftl: selectedFMDataToEdit?.ftl || "",
       };
       if (lrList) {
         setLRList(lrList);
@@ -208,6 +216,10 @@ export default function FMCreate({
         date: data.date,
         from: data.from,
         to: data.to,
+        sizeH: data.sizeH,
+        sizeW: data.sizeW,
+        sizeL: data.sizeL,
+        ftl: data.ftl,
         weight: (
           parseFloat(prev.weight || "0") + parseFloat(data.weight || "0")
         ).toFixed(2),
@@ -258,7 +270,7 @@ export default function FMCreate({
       branchId: branchId.branchId,
       adminId: branchId.adminId,
     };
-    
+
     if (formStatus === "create") {
       const response = await createFMApi(data);
       if (response?.status === 200) {
@@ -434,7 +446,7 @@ export default function FMCreate({
               label: vendor.name,
             }))}
             onChange={(value) => {
-              setLRDataToFM((prev) => ({...prev, vendorName: value}));
+              setLRDataToFM((prev) => ({ ...prev, vendorName: value }));
               const selectedVendor = vendors.find((v) => v.name === value);
               if (selectedVendor) {
                 const allLRs: LrInputs[] = selectedVendor.vehicles.flatMap(

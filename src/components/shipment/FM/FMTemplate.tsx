@@ -125,7 +125,7 @@ export const FMTemplate = ({
             }}
           >
             <Text style={{ textAlign: "center", fontWeight: 500 }}>Size</Text>
-            <Text style={{ textAlign: "center" }}>{FmData?.sixtyToNinety}</Text>
+            <Text style={{ textAlign: "center" }}>{FmData?.ftl ? FmData?.ftl + "FTL" : FmData?.sizeL + "x" + FmData?.sizeW + "x" + FmData?.sizeH}</Text>
           </View>
           <View
             style={{

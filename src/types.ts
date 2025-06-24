@@ -134,8 +134,11 @@ export interface FMInputs {
   branchId: string;
   adminId: string;
   branch: BranchInputs;
-  currentOutStanding:number
-
+  currentOutStanding: number;
+  sizeL: string;
+  sizeW: string;
+  sizeH: string;
+  ftl: string;
 }
 
 export interface PaymentRecord {
