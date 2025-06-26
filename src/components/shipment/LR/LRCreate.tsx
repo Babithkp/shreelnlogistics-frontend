@@ -231,18 +231,6 @@ export default function LRCreate({
     );
   };
 
-  function extractVehicleNumberOptions(vehicle: VehicleInputs[]): Option[] {
-    return vehicle.flatMap((vehicle) =>
-      vehicle.vehicleNumber && vehicle.vehicleNumber !== ""
-        ? [
-            {
-              value: vehicle.vehicleNumber,
-              label: vehicle.vehicleNumber,
-            },
-          ]
-        : [],
-    );
-  }
 
   function extractMemberOptions(vendors: VendorInputs[]): Option[] {
     return vendors.map((vendor) => ({
@@ -278,6 +266,7 @@ export default function LRCreate({
     if (responseVechicles?.status === 200 && responseClients?.status === 200) {
       setMembers(responseClients.data.data);
       setVehicles(responseVechicles.data.data);
+      console.log(responseVechicles.data.data);
     }
   }
   async function fetchLRData(branchId?: string) {
@@ -901,7 +890,10 @@ export default function LRCreate({
                             <AntSelect
                               showSearch
                               placeholder="Select vehicle... "
-                              options={extractVehicleNumberOptions(vehicles)}
+                              options={vehicles.map((vehicle)=>({
+                                value: vehicle.vehicleNumber,
+                                label: vehicle.vehicleNumber,
+                              }))}
                               className="w-[50%]"
                               size="middle"
                               value={field.value}

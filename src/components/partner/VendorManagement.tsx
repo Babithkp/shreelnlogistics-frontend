@@ -94,6 +94,7 @@ export default function VendorManagement({
     isAdmin: false,
   });
   const [search, setSearch] = useState("");
+  const [isVehicleNameMatched, setIsVehicleNameMatched] = useState(false);
 
   async function fetchVehicleType() {
     const response = await getGeneralSettingsApi();
@@ -171,6 +172,11 @@ export default function VendorManagement({
         setIsCreateVehicleOpen(false);
         fetchVendors();
         fetchVehicles();
+      } else if (response?.status === 201) {
+        setIsVehicleNameMatched(true);
+        setTimeout(() => {
+          setIsVehicleNameMatched(false);
+        }, 2000);
       } else {
         toast.error("Something Went Wrong");
       }
@@ -191,6 +197,11 @@ export default function VendorManagement({
           };
           await createNotificationApi(notificationData);
         }
+      } else if (response?.status === 201) {
+        setIsVehicleNameMatched(true);
+        setTimeout(() => {
+          setIsVehicleNameMatched(false);
+        }, 2000);
       } else {
         toast.error("Something Went Wrong");
       }
@@ -765,6 +776,11 @@ export default function VendorManagement({
                     </div>
                     {VehicleErrors.vehicleNumber && (
                       <p className="text-red-500">Vehicle Number is required</p>
+                    )}
+                    {isVehicleNameMatched && (
+                      <p className="text-red-500">
+                        Vehicle Number already exists, please try another one
+                      </p>
                     )}
                   </div>
                   <div className="w-[23%]">
