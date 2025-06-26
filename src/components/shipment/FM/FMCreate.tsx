@@ -110,7 +110,7 @@ export default function FMCreate({
     const balance = hire - advance;
 
     if (lrDataToFM?.TDS === "Not-declared") {
-      tds = (balance + otherCharges + detentionCharges + rtoCharges) * 0.01;
+      tds = hire * 0.01;
     }
 
     const netBalance =

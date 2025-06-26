@@ -302,7 +302,7 @@ export default function GenerateBIll({
   }
   function extractClientOptions(vendors: ClientInputs[]): Option[] {
     return vendors.map((vendor) => ({
-      value: vendor.id,
+      value: vendor.name,
       label: vendor.name,
     }));
   }
@@ -556,7 +556,7 @@ export default function GenerateBIll({
                     size="large"
                     onChange={(value) => {
                       field.onChange(value);
-                      const selectedClient = client.find((v) => v.id === value);
+                      const selectedClient = client.find((v) => v.name === value);
                       if (selectedClient) {
                         setClientData(selectedClient);
                         setLRData(selectedClient.LR);
