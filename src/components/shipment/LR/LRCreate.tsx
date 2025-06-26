@@ -1132,7 +1132,6 @@ export default function LRCreate({
               <Controller
                 name="client"
                 control={control}
-                defaultValue={""}
                 rules={{ required: true }}
                 render={({ field }) => (
                   <AntSelect
