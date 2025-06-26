@@ -479,7 +479,11 @@ export default function FMCreate({
         <div className="flex w-[49%] flex-col gap-2">
           <label className="font-medium">Driver Name</label>
           <p className="border-primary rounded-md border p-2">
-            {lrDataToFM.DriverName === "" ? "-" : lrDataToFM.DriverName}
+            {lrDataToFM.DriverName === ""
+              ? "-"
+              : lrDataToFM.DriverName
+                ? lrDataToFM.DriverName
+                : "-"}
           </p>
         </div>
         <div className="flex w-[49%] flex-col gap-2">

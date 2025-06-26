@@ -153,7 +153,7 @@ export default function Login() {
       </section>
       <footer className="bg-primary flex h-[4rem] w-full flex-col items-end justify-center px-10 text-sm text-white">
         <div>{version && <p>v{version}</p>}</div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 font-medium">
           <p>A Product of</p>
           <a href="https://www.trikonatech.com" target="_blank">
             <img src={tikonaLogo} alt="tikona" className="w-8" />

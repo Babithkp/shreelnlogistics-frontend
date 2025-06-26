@@ -74,7 +74,7 @@ export interface LrInputs {
   emails: String[];
   vehicleId: string;
   branch: BranchInputs;
-  client: string;
+  client: ClientInputs;
   Vehicle: {
     id: string;
     vehicleNumber: string;
@@ -216,6 +216,7 @@ export type ClientInputs = {
   createdAt: string;
   pendingPayment: string;
   PaymentRecord: PaymentRecord[];
+  LR: LrInputs[];
 };
 
 export interface billInputs {

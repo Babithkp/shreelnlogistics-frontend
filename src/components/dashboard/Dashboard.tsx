@@ -93,9 +93,9 @@ export default function Dashboard({
 
       if (billYear === thisYear) {
         if (billMonth === thisMonth) {
-          thisMonthRevenue += bill.total;
+          thisMonthRevenue += bill.subTotal;
         } else if (billMonth === lastMonth) {
-          lastMonthRevenue += bill.total;
+          lastMonthRevenue += bill.subTotal;
         }
       }
     }
@@ -116,16 +116,16 @@ export default function Dashboard({
       MonthKey,
       { date: string; totalBill: number; totalFM: number; totalPayment: number }
     > = {};
-  
+
     const getMonthKey = (date: string) => {
       const [year, month] = date.slice(0, 10).split("-");
       return `${year}-${month}`;
     };
-  
+
     bills.forEach((bill) => {
       const date = bill.date.slice(0, 10);
       const key = getMonthKey(date);
-  
+
       if (!monthlyData[key]) {
         monthlyData[key] = {
           date: `${key}`,
@@ -134,9 +134,9 @@ export default function Dashboard({
           totalPayment: 0,
         };
       }
-  
+
       monthlyData[key].totalBill += bill.subTotal;
-  
+
       if (bill.PaymentRecords) {
         const paymentSum = bill.PaymentRecords.reduce((sum, record) => {
           return sum + parseFloat(record.amount || "0");
@@ -144,11 +144,11 @@ export default function Dashboard({
         monthlyData[key].totalPayment += paymentSum;
       }
     });
-  
+
     fms.forEach((fm) => {
       const date = fm.date.slice(0, 10);
       const key = getMonthKey(date);
-  
+
       if (!monthlyData[key]) {
         monthlyData[key] = {
           date: `${key}`,
@@ -157,10 +157,15 @@ export default function Dashboard({
           totalPayment: 0,
         };
       }
-  
-      monthlyData[key].totalFM += parseFloat(fm.netBalance);
+      const val =
+        parseFloat(fm.hire || "0") +
+        parseFloat(fm.otherCharges || "0") +
+        parseFloat(fm.detentionCharges || "0") +
+        parseFloat(fm.rtoCharges || "0");
+      const tds = parseFloat(fm.tds || "0");
+      monthlyData[key].totalFM += val - tds;
     });
-  
+
     // Convert to array and round to 2 decimals
     const result: GraphPoint[] = Object.values(monthlyData)
       .map((item) => ({
@@ -170,10 +175,9 @@ export default function Dashboard({
         totalPayment: parseFloat(item.totalPayment.toFixed(2)),
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
-  
+
     return result;
   };
-  
 
   const getRecordPayments = (bill: billInputs[]) => {
     return bill
@@ -202,17 +206,24 @@ export default function Dashboard({
       .slice(0, 10);
   };
 
-  const getTop10Branches = (branches: any[]) => {
+  const getTop10Branches = (branches: BranchInputs[]) => {
     const result = branches.map((branch) => {
       const totalInvoice = branch.bill?.reduce(
         (sum: number, b: any) => sum + (b.subTotal || 0),
         0,
       );
 
-      const totalFreight = branch.FM?.reduce(
-        (sum: number, r: any) => sum + parseFloat(r.netBalance || "0"),
-        0,
-      );
+      const totalFreight = branch.FM?.reduce((sum: number, r: any) => {
+        const val =
+          parseFloat(r.hire || "0") +
+          parseFloat(r.otherCharges || "0") +
+          parseFloat(r.detentionCharges || "0") +
+          parseFloat(r.rtoCharges || "0");
+
+        const tds = parseFloat(r.tds || "0");
+
+        return sum + (val - tds);
+      }, 0);
 
       return {
         name: branch.branchName,
@@ -318,7 +329,7 @@ export default function Dashboard({
               <p className="text-muted text-xs">Total Invoicing value</p>
               <p className="text-xl">
                 INR{" "}
-                {billData.reduce((acc, bill) => acc + bill.total, 0).toFixed(2)}
+                {billData.reduce((acc, bill) => acc + bill.subTotal, 0).toFixed(2)}
               </p>
               <p
                 className={`${getMonthlyRevenueChange(billData) > 0 ? "text-[#05CD99]" : "text-red-500"}`}
@@ -423,7 +434,7 @@ export default function Dashboard({
               <Line
                 type="natural"
                 dataKey="totalFM"
-                name="FM Net Balance"
+                name="FM Total"
                 stroke="#4DB0FF"
                 strokeWidth={3}
               />

@@ -427,6 +427,34 @@ export const FMTemplate = ({
                   padding: 5,
                 }}
               >
+                TDS
+              </Text>
+              <Text
+                style={{
+                  width: "100%",
+                  textAlign: "right",
+                  paddingRight: 20,
+                  padding: 5,
+                }}
+              >
+                {parseFloat(FmData?.tds || "0").toFixed(2)}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                borderBottom: "1px solid black",
+              }}
+            >
+              <Text
+                style={{
+                  borderRight: "1px solid black",
+                  width: "100%",
+                  paddingLeft: 20,
+                  padding: 5,
+                }}
+              >
                 Other Charges
               </Text>
               <Text

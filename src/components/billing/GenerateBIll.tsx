@@ -10,7 +10,6 @@ import { Select as AntSelect } from "antd";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { getLRApi } from "@/api/shipment";
 import {
   createNotificationApi,
   getAllClientsApi,
@@ -52,7 +51,7 @@ export default function GenerateBIll({
   sectionChangeHandler: (section: Section) => void;
   setSelectedBillToEdit: (data: billInputs | null) => void;
 }) {
-  const [exictingLRData, setExictingLRData] = useState<LrInputs[]>([]);
+  const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [client, setClient] = useState<ClientInputs[]>([]);
   const [selectLrData, setSelectLrData] = useState<LrInputs[]>([]);
   const [loading, setLoading] = useState(false);
@@ -452,25 +451,16 @@ export default function GenerateBIll({
     }
   }
 
-  async function fetchData(branchId?: string) {
-    const responseLR = await getLRApi();
+  async function fetchData() {
     const clientResponse = await getAllClientsApi();
     const companyProfileResponse = await getCompanyProfileApi();
     const bankDetailsResponse = await getBankDetailsApi();
     if (
       clientResponse?.status === 200 &&
-      responseLR?.status === 200 &&
       companyProfileResponse?.status === 200 &&
       bankDetailsResponse?.status === 200
     ) {
       setClient(clientResponse.data.data);
-      const AllLrData = responseLR.data.data.filter(
-        (data: any) => data.billId === null,
-      );
-      const lrData = branchId
-        ? AllLrData.filter((data: any) => data.branchId === branchId)
-        : AllLrData;
-      setExictingLRData(lrData);
       setValue("hsnSacCode", companyProfileResponse.data.data.HSN);
       setCompanyBankDetails(bankDetailsResponse.data.data);
     }
@@ -491,15 +481,14 @@ export default function GenerateBIll({
           adminId: branchDetails.id,
           branchName: branchDetails.branchName,
         });
-        fetchData();
       } else {
         setBranchId({
           branchId: branchDetails.id,
           adminId: "",
           branchName: branchDetails.branchName,
         });
-        fetchData(branchDetails.id);
       }
+      fetchData();
     }
   }, []);
 
@@ -570,6 +559,7 @@ export default function GenerateBIll({
                       const selectedClient = client.find((v) => v.id === value);
                       if (selectedClient) {
                         setClientData(selectedClient);
+                        setLRData(selectedClient.LR);
                       }
                     }}
                     showSearch
@@ -740,17 +730,9 @@ export default function GenerateBIll({
                       allowClear
                       placeholder="Type here..."
                       onChange={(value: any) => {
-                        const selectedLR = exictingLRData.find(
+                        const selectedLR = LRData.find(
                           (lr) => lr.lrNumber === value,
                         );
-
-                        const alreadySelected = selectLrData.find(
-                          (lr) => lr.lrNumber === selectedLR?.lrNumber,
-                        );
-
-                        if (alreadySelected) {
-                          selectLrData.filter((lr) => lr.lrNumber !== value);
-                        }
 
                         if (selectLrData.length >= 8) {
                           toast.warning("Only 8 LR can be added");
@@ -769,7 +751,7 @@ export default function GenerateBIll({
                         }
                       }}
                       showSearch
-                      options={extractLRNumberOptions(exictingLRData)}
+                      options={extractLRNumberOptions(LRData)}
                       style={{
                         border: "none",
                         borderRadius: "0px",

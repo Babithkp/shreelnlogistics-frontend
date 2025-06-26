@@ -306,9 +306,7 @@ export default function LRList({
               >
                 <td className="py-2">{data.lrNumber}</td>
                 <td className="py-2">
-                  {data.client === "consignee"
-                    ? data.consigneeName
-                    : data.consignorName}
+                  {data.client.name}
                 </td>
                 <td className="py-2">
                   {new Date(data.date).toLocaleDateString()}

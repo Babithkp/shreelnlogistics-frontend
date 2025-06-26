@@ -232,6 +232,7 @@ export default function FMList({
       "30-60": FM.thirtyToSixty,
       "60-90": FM.sixtyToNinety,
       ">90": FM.ninetyPlus,
+      TDS: FM.tds,
     }));
   };
 
@@ -1471,6 +1472,7 @@ export default function FMList({
                 <th className="font-[500] text-slate-500">30-60</th>
                 <th className="font-[500] text-slate-500">60-90</th>
                 <th className="text-end font-[500] text-slate-500">&gt;90</th>
+                <th className="text-end font-[500] text-slate-500">TDS</th>
               </tr>
             </thead>
             <tbody>
@@ -1493,6 +1495,7 @@ export default function FMList({
                   <td className="py-2 text-center">INR {data.thirtyToSixty}</td>
                   <td className="py-2 text-center">INR {data.sixtyToNinety}</td>
                   <td className="py-2 text-end">INR {data.ninetyPlus}</td>
+                  <td className="py-2 text-end">INR {data.tds}</td>
                 </tr>
               ))}
             </tbody>

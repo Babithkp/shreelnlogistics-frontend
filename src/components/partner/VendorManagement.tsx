@@ -705,6 +705,7 @@ export default function VendorManagement({
                         render={({ field }) => (
                           <AntSelect
                             {...field}
+                            showSearch
                             options={extractVendorNameOptions(vendors)}
                             placeholder="Select Vendor Name"
                             className="outline-primary w-full rounded-md outline"

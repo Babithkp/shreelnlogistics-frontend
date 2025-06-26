@@ -29,7 +29,7 @@ import {
 import { createNotificationApi, getAllClientsApi } from "../../../api/admin";
 import { toast } from "react-toastify";
 import { VscLoading } from "react-icons/vsc";
-import { getAllVendorsApi } from "@/api/partner";
+import { getAllVehiclesApi } from "@/api/partner";
 import { LrInputs, VehicleInputs, VendorInputs } from "@/types";
 import {
   filterOnlyCompletePrimitiveDiffs,
@@ -77,6 +77,7 @@ export default function LRCreate({
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
+  const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
 
   const {
     handleSubmit,
@@ -230,13 +231,16 @@ export default function LRCreate({
     );
   };
 
-  function extractVehicleNumberOptions(vendors: VendorInputs[]): Option[] {
-    return vendors.flatMap(
-      (vendor) =>
-        vendor.vehicles?.map((vehicle) => ({
-          value: vehicle.vehicleNumber,
-          label: vehicle.vehicleNumber,
-        })) || [],
+  function extractVehicleNumberOptions(vehicle: VehicleInputs[]): Option[] {
+    return vehicle.flatMap((vehicle) =>
+      vehicle.vehicleNumber && vehicle.vehicleNumber !== ""
+        ? [
+            {
+              value: vehicle.vehicleNumber,
+              label: vehicle.vehicleNumber,
+            },
+          ]
+        : [],
     );
   }
 
@@ -269,10 +273,11 @@ export default function LRCreate({
   }
 
   async function fetchVendors() {
-    const responseVendors = await getAllVendorsApi();
+    const responseVechicles = await getAllVehiclesApi();
     const responseClients = await getAllClientsApi();
-    if (responseVendors?.status === 200 && responseClients?.status === 200) {
-      setMembers(responseVendors.data.data.concat(responseClients.data.data));
+    if (responseVechicles?.status === 200 && responseClients?.status === 200) {
+      setMembers(responseClients.data.data);
+      setVehicles(responseVechicles.data.data);
     }
   }
   async function fetchLRData(branchId?: string) {
@@ -896,15 +901,15 @@ export default function LRCreate({
                             <AntSelect
                               showSearch
                               placeholder="Select vehicle... "
-                              options={extractVehicleNumberOptions(members)}
+                              options={extractVehicleNumberOptions(vehicles)}
                               className="w-[50%]"
                               size="middle"
                               value={field.value}
                               onChange={(value) => {
                                 field.onChange(value);
-                                const selectedVehicle = members
-                                  .flatMap((v) => v.vehicles)
-                                  .find((veh) => veh.vehicleNumber === value);
+                                const selectedVehicle = vehicles.find(
+                                  (veh) => veh.vehicleNumber === value,
+                                );
                                 if (selectedVehicle) {
                                   setVechicleData(selectedVehicle);
                                 }
@@ -1136,19 +1141,18 @@ export default function LRCreate({
                     onChange={(value) => {
                       field.onChange(value);
                     }}
-                    options={[
-                      { value: "consignee", label: "Consignee" },
-                      { value: "consignor", label: "Consignor" },
-                    ]}
+                    showSearch
+                    options={extractMemberOptions(members)}
                     style={{
                       border: "1px solid #64BAFF",
                       borderRadius: "10px",
                     }}
+                    disabled={formStatus === "supplementary"}
                   />
                 )}
               />
               {errors.client && (
-                <p className="text-red-500">Select consignee or consignor </p>
+                <p className="text-red-500">Client is required</p>
               )}
             </div>
           </div>
