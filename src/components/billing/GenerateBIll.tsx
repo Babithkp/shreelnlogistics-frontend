@@ -46,13 +46,15 @@ export default function GenerateBIll({
   selectedBillToEdit,
   sectionChangeHandler,
   setSelectedBillToEdit,
+  clientData
 }: {
   selectedBillToEdit?: billInputs | null;
   sectionChangeHandler: (section: Section) => void;
   setSelectedBillToEdit: (data: billInputs | null) => void;
+  clientData: ClientInputs[]
 }) {
   const [LRData, setLRData] = useState<LrInputs[]>([]);
-  const [client, setClient] = useState<ClientInputs[]>([]);
+  const [client, setClient] = useState<ClientInputs[]>(clientData);
   const [selectLrData, setSelectLrData] = useState<LrInputs[]>([]);
   const [loading, setLoading] = useState(false);
   const [formStatus, setFormStatus] = useState<"edit" | "create">("create");
@@ -84,6 +86,7 @@ export default function GenerateBIll({
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
+  
 
   function getWorkingYear() {
     const now = new Date();
@@ -409,7 +412,7 @@ export default function GenerateBIll({
         setLoading(false);
         return;
       }
-      data.clientId = data.Client.name;
+      data.clientName = data.Client.name;
       const response = await createBillApi(data);
       if (response?.status === 200) {
         toast.success("Bill has been created");
@@ -461,6 +464,7 @@ export default function GenerateBIll({
       bankDetailsResponse?.status === 200
     ) {
       setClient(clientResponse.data.data);
+      console.log(clientResponse.data.data);
       setValue("hsnSacCode", companyProfileResponse.data.data.HSN);
       setCompanyBankDetails(bankDetailsResponse.data.data);
     }

@@ -90,14 +90,16 @@ export default function FMList({
   setSelectedFMDataToEdit,
   setFormStatus,
   branchDetails,
+  data,
 }: {
   sectionChangeHandler: (section: FMSection) => void;
   setSelectedFMDataToEdit: (data: FMInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
   branchDetails?: BranchDetails;
+  data: FMInputs[];
 }) {
-  const [FMData, setFMData] = useState<FMInputs[]>([]);
-  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>([]);
+  const [FMData, setFMData] = useState<FMInputs[]>(data);
+  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>(data);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFM, setSelectedFM] = useState<ExtendedFmInputs>();
   const [isOpen, setIsOpen] = useState(false);
@@ -289,13 +291,24 @@ export default function FMList({
   const amount = watch("amount");
 
   useEffect(() => {
+    let totalPending;
+    if (formstate === "edit") {
+      totalPending = selectedFM?.PaymentRecords?.reduce(
+        (acc, data) => acc + parseFloat(data.amount),
+        0,
+      );
+    }
     if (amount && selectedFM) {
       const totalAmount = Number(amount);
       const amountInWords = convertToINRWords(totalAmount);
       const pendingAmount =
         parseFloat(selectedFM?.outStandingBalance) - totalAmount;
+
       setValue("amountInWords", amountInWords);
-      setValue("pendingAmount", parseFloat(pendingAmount.toFixed(2)));
+      setValue(
+        "pendingAmount",
+        (totalPending || 0) + parseFloat(pendingAmount.toFixed(2)),
+      );
     } else {
       setValue("amountInWords", convertToINRWords(0));
       setValue("pendingAmount", 0);
@@ -315,15 +328,13 @@ export default function FMList({
         [
           fm.fmNumber,
           fm.vendorName,
-          fm.ContactPerson,
           fm.from,
           fm.to,
-          fm.DriverName,
-          fm.ownerName,
           fm.hire,
           fm.advance,
           fm.balance,
           fm.outStandingBalance,
+          fm.status,
         ]
           .filter(Boolean)
           .some((field) => field?.toLowerCase().includes(text)),
@@ -336,10 +347,10 @@ export default function FMList({
   }, [search, FMData]);
 
   const onSubmit = async (data: PaymentRecord) => {
-    if (data.pendingAmount < 0) {
-      toast.error("Pending Amount cannot be negative");
-      return;
-    }
+    // if (data.pendingAmount < 0) {
+    //   toast.error("Pending Amount cannot be negative");
+    //   return;
+    // }
 
     if (!isAdmin && formstate === "edit") {
       setSelectedFM((prev) => {
@@ -429,7 +440,7 @@ export default function FMList({
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
-    setValue("date", new Date(data.date).toLocaleDateString());
+    setValue("date", data.date);
     setValue("customerName", data.customerName);
     setValue("amount", data.amount);
     setValue("amountInWords", data.amountInWords);
@@ -823,7 +834,9 @@ export default function FMList({
                   >
                     <td className="py-2">{data.fmNumber}</td>
                     <td className="py-2">{data.vendorName}</td>
-                    <td className="py-2">{new Date(data.date).toLocaleDateString()}</td>
+                    <td className="py-2">
+                      {new Date(data.date).toLocaleDateString()}
+                    </td>
                     <td className="py-2">INR {data.hire}</td>
                     <td className="py-2 text-center">
                       INR {data.advance ? data.advance : 0}
@@ -1293,7 +1306,11 @@ export default function FMList({
                                     >
                                       <td className="p-2">{index + 1}</td>
                                       <td>{record.amount}</td>
-                                      <td>{new Date(record.date).toLocaleDateString()}</td>
+                                      <td>
+                                        {new Date(
+                                          record.date,
+                                        ).toLocaleDateString()}
+                                      </td>
                                       <td>{record.paymentMode}</td>
                                       <td>{record.transactionNumber}</td>
                                       <td className="flex justify-center gap-2">
@@ -1480,7 +1497,9 @@ export default function FMList({
                 <tr key={data.fmNumber}>
                   <td className="py-2">{data.fmNumber}</td>
                   <td className="py-2 text-center">{data.vendorName}</td>
-                  <td className="py-2 text-center">{new Date(data.date).toLocaleDateString()}</td>
+                  <td className="py-2 text-center">
+                    {new Date(data.date).toLocaleDateString()}
+                  </td>
                   <td className="py-2 text-center">INR {data.hire}</td>
                   <td className="py-2 text-center">
                     INR {data.advance ? data.advance : 0}

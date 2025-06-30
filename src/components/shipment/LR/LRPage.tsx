@@ -6,7 +6,7 @@ import { LrInputs } from "@/types";
 type Sections = "LRList" | "createNew";
 type SectionState = Record<Sections, boolean>;
 
-export default function LRPage() {
+export default function LRPage({lrData}:{lrData:LrInputs[]}) {
   const [selectedForm, setSelectedForm] = useState({
     LRList: true,
     createNew: false,
@@ -51,6 +51,7 @@ export default function LRPage() {
           sectionChangeHandler={sectionChangeHandler}
           setSelectedLRDataToEdit={setSelectedLRDataToEdit}
           setFormStatus={setFormStatus}
+          data={lrData}
         />
       )}
       {selectedForm.createNew && (

@@ -12,7 +12,6 @@ async function autoUpdater() {
   if (update) {
     emit("tauri://update-request");
     toast.success("Update available");
-    toast.info(update.body);
     await update.downloadAndInstall();
     await relaunch();
   } else {

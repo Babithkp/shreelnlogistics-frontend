@@ -127,12 +127,22 @@ export default function ViewBills({
   const amount = watch("amount");
 
   useEffect(() => {
+    let totalPending;
+    if (formstate === "edit") {
+      totalPending = selectedBill?.PaymentRecords?.reduce(
+        (acc, data) => acc + parseFloat(data.amount),
+        0,
+      );
+    }
     if (amount && selectedBill) {
       const totalAmount = Number(amount);
       const amountInWords = convertToINRWords(totalAmount);
       const pendingAmount = selectedBill?.pendingAmount - totalAmount;
       setValue("amountInWords", amountInWords);
-      setValue("pendingAmount", parseFloat(pendingAmount.toFixed(2)));
+      setValue(
+        "pendingAmount",
+        (totalPending || 0) + parseFloat(pendingAmount.toFixed(2)),
+      );
     } else {
       setValue("amountInWords", convertToINRWords(0));
       setValue("pendingAmount", 0);
@@ -187,7 +197,7 @@ export default function ViewBills({
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
-    setValue("date", new Date(data.date).toLocaleDateString());
+    setValue("date", data.date);
     setValue("customerName", data.customerName);
     setValue("amount", data.amount);
     setValue("amountInWords", data.amountInWords);
@@ -226,7 +236,7 @@ export default function ViewBills({
       } else {
         data.branchId = branch.branchId;
       }
-      data.clientId = selectedBill?.clientId;
+      data.clientId = selectedBill?.clientName;
       data.IDNumber = selectedBill?.billNumber;
       const response = await addPaymentRecordToBillApi(data);
       if (response?.status === 200) {
@@ -297,6 +307,7 @@ export default function ViewBills({
     const response = await deletePaymentRecordFromBillApi(id);
     if (response?.status === 200) {
       toast.success("Payment Record Deleted");
+      setShowPreview(false);
       setIsRecordModalOpen(false);
       if (isAdmin) {
         getBillDetails();
@@ -499,7 +510,9 @@ export default function ViewBills({
                 >
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2">{data.Client?.name}</td>
-                  <td className="py-2">{new Date(data.date).toLocaleDateString()}</td>
+                  <td className="py-2">
+                    {new Date(data.date).toLocaleDateString()}
+                  </td>
                   <td className="py-2">{data.subTotal.toFixed(2)}</td>
                   <td className="py-2 text-center">
                     {data.pendingAmount.toFixed(2)}
@@ -540,7 +553,11 @@ export default function ViewBills({
               <Button
                 variant={"outline"}
                 className="border-primary text-primary cursor-pointer rounded-3xl"
-                onClick={() => [setIsRecordModalOpen(true), reset()]}
+                onClick={() => [
+                  setIsRecordModalOpen(true),
+                  reset(),
+                  setFormstate("create"),
+                ]}
               >
                 <PiRecord className="size-5" />
                 Record Payment
@@ -612,7 +629,12 @@ export default function ViewBills({
                         </div>
                         <div className="flex">
                           <label>Billing Date</label>
-                          <p>: {new Date(selectedBill?.date || "").toLocaleDateString()}</p>
+                          <p>
+                            :{" "}
+                            {new Date(
+                              selectedBill?.date || "",
+                            ).toLocaleDateString()}
+                          </p>
                         </div>
                         <div className="flex">
                           <label>LR Numbers</label>
@@ -647,7 +669,12 @@ export default function ViewBills({
                         </div>
                         <div className="flex">
                           <label>Payment Due Date</label>
-                          <p>: {new Date(selectedBill?.dueDate || "").toLocaleDateString()}</p>
+                          <p>
+                            :{" "}
+                            {new Date(
+                              selectedBill?.dueDate || "",
+                            ).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div>
@@ -941,7 +968,9 @@ export default function ViewBills({
                                 >
                                   <td className="p-2">{index + 1}</td>
                                   <td>{record.amount}</td>
-                                  <td>{new Date(record.date).toLocaleDateString()}</td>
+                                  <td>
+                                    {new Date(record.date).toLocaleDateString()}
+                                  </td>
                                   <td>{record.paymentMode}</td>
                                   <td>{record.transactionNumber}</td>
                                   <td className="flex justify-center gap-2">

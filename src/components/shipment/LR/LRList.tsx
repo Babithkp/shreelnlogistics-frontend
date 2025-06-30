@@ -45,10 +45,12 @@ export default function LRList({
   sectionChangeHandler,
   setSelectedLRDataToEdit,
   setFormStatus,
+  data
 }: {
   sectionChangeHandler: (section: Sections) => void;
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create" | "supplementary") => void;
+  data: LrInputs[]
 }) {
   interface ExtendedLRInputs extends LrInputs {
     admin?: {
@@ -57,8 +59,8 @@ export default function LRList({
     };
     mailBody?: string;
   }
-  const [LRData, setLRData] = useState<ExtendedLRInputs[]>([]);
-  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>([]);
+  const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data);
+  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedLR, setSelectedLR] = useState<ExtendedLRInputs>();
   const [isOpen, setIsOpen] = useState(false);
@@ -89,11 +91,10 @@ export default function LRList({
       const filtered = LRData.filter((lr) =>
         [
           lr.lrNumber,
-          lr.consigneeName,
-          lr.consignorName,
+          lr.client.name,
           lr.from,
           lr.to,
-          lr.description,
+          lr.branch.branchName,
         ]
           .filter(Boolean)
           .some((field) => field?.toLowerCase().includes(text)),

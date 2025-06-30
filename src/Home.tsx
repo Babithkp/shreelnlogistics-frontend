@@ -39,13 +39,14 @@ import {
 import OutStandingPage from "./components/outstanding/OutStandingPage";
 import Statements from "./components/statements/Statements";
 import { getBillByBranchIdApi, getBillDetailsApi } from "./api/billing";
-import { getFMApi, getFmByBranchId } from "./api/shipment";
+import { getFMApi, getFmByBranchId, getLRApi } from "./api/shipment";
 import {
   billInputs,
   BranchInputs,
   ClientInputs,
   FMInputs,
   generalSettings,
+  LrInputs,
   Section,
   SectionsState,
   VehicleInputs,
@@ -92,6 +93,7 @@ export default function Home() {
   const [clients, setClients] = useState<ClientInputs[]>([]);
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
+  const [lrData, setLRData] = useState<LrInputs[]>([]);
   const [selectedBillToEdit, setSelectedBillToEdit] =
     useState<billInputs | null>();
   const [settings, setSettings] = useState<Setting>();
@@ -189,13 +191,35 @@ export default function Home() {
     }
   }
 
+  async function fetchLRs() {
+    const response = await getLRApi();
+    if (response?.status === 200) {
+      const data = response.data.data;
+      setLRData(data);
+    }
+  }
+
+  async function fetchLRsByBranchId(branchId: string) {
+    const response = await getLRApi();
+    if (response?.status === 200) {
+      const data = response.data.data;
+      data.map((lr:LrInputs) => {
+        if (lr.branchId === branchId) {
+          setLRData((prev) => [...prev, lr]);
+        }
+      });
+    }
+  }
+
   const onRefresh = async () => {
     if (branch.isAdmin) {
       fetchFMs();
       getBillDetails();
+      fetchLRs()
     } else {
       fetchFMsByBranchId(branch.id);
       getBillByBranchIdApi(branch.id);
+      fetchLRsByBranchId(branch.id);
     }
     fetchVendors();
     fetchVehicles();
@@ -521,8 +545,8 @@ export default function Home() {
           />
         )}
         {sections.branch && <Branch />}
-        {sections.LR && <LRPage />}
-        {sections.FM && <FMPage />}
+        {sections.LR && <LRPage lrData={lrData} />}
+        {sections.FM && <FMPage fmData={fmData}/>}
         {sections.client && <ClientManagement data={clients} />}
         {sections.vendor && (
           <VendorManagement vendorsData={vendors} vehiclesData={vehicles} />
@@ -532,6 +556,7 @@ export default function Home() {
             selectedBillToEdit={selectedBillToEdit}
             sectionChangeHandler={sectionChangeHandler}
             setSelectedBillToEdit={setSelectedBillToEdit}
+            clientData={clients}
           />
         )}
         {sections.viewBill && (

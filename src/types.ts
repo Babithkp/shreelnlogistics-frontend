@@ -237,7 +237,7 @@ export interface billInputs {
   total: number;
   totalInWords: string;
   billedIn: string;
-  clientId: string;
+  clientName: string;
   PaymentRecords: PaymentRecord[];
   pendingAmount: number;
   zeroToThirty: string;
