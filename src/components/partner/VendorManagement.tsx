@@ -354,6 +354,7 @@ export default function VendorManagement({
     setValue("city", data.city);
     setValue("state", data.state);
     setValue("outstandingLimit", data.outstandingLimit);
+    setValue("pan", data.pan);
   };
 
   const setVechicleDetails = (data: VehicleInputs) => {
