@@ -414,8 +414,8 @@ export default function Dashboard({
                 <p className="font-medium text-[#008EFF]">Invoice Amount</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="size-3 rounded-full bg-[#4DB0FF]"></div>
-                <p className="font-medium text-[#4DB0FF]">Freight Amount</p>
+                <div className="size-3 rounded-full bg-[#FF9090]"></div>
+                <p className="font-medium text-[#FF9090]">Freight Amount</p>
               </div>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function Dashboard({
                 type="natural"
                 dataKey="totalFM"
                 name="FM Total"
-                stroke="#4DB0FF"
+                stroke="#FF9090"
                 strokeWidth={3}
               />
             </LineChart>

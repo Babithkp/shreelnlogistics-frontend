@@ -27,7 +27,7 @@ import { getBankDetailsApi, getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs } from "../settings/Settings";
 import { convertToINRWords } from "@/lib/utils";
 import { MdDeleteOutline } from "react-icons/md";
-import { billInputs, ClientInputs, LrInputs, Section } from "@/types";
+import { billInputs, ClientInputs, LrInputs } from "@/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,12 +46,12 @@ export default function GenerateBIll({
   selectedBillToEdit,
   sectionChangeHandler,
   setSelectedBillToEdit,
-  clientData
+  clientData,
 }: {
   selectedBillToEdit?: billInputs | null;
-  sectionChangeHandler: (section: Section) => void;
+  sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs | null) => void;
-  clientData: ClientInputs[]
+  clientData: ClientInputs[];
 }) {
   const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [client, setClient] = useState<ClientInputs[]>(clientData);
@@ -86,7 +86,6 @@ export default function GenerateBIll({
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
-  
 
   function getWorkingYear() {
     const now = new Date();
@@ -390,7 +389,10 @@ export default function GenerateBIll({
         toast.success("Bill has been updated");
         setSelectLrData([]);
         reset();
-        sectionChangeHandler("viewBill");
+        sectionChangeHandler({
+          billList: true,
+          createNew: false,
+        });
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
@@ -418,7 +420,10 @@ export default function GenerateBIll({
         toast.success("Bill has been created");
         setSelectLrData([]);
         reset();
-        sectionChangeHandler("viewBill");
+        sectionChangeHandler({
+          billList: true,
+          createNew: false,
+        });
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
@@ -440,7 +445,10 @@ export default function GenerateBIll({
     if (response?.status === 200) {
       toast.success("Notification Sent");
       reset();
-      sectionChangeHandler("viewBill");
+      sectionChangeHandler({
+        billList: true,
+        createNew: false,
+      });
     }
   };
 
@@ -464,14 +472,12 @@ export default function GenerateBIll({
       bankDetailsResponse?.status === 200
     ) {
       setClient(clientResponse.data.data);
-      console.log(clientResponse.data.data);
       setValue("hsnSacCode", companyProfileResponse.data.data.HSN);
       setCompanyBankDetails(bankDetailsResponse.data.data);
     }
   }
 
   useEffect(() => {
-    fetchBillId();
     const isAdmin = localStorage.getItem("isAdmin");
     const branchDetailsRaw = localStorage.getItem("branchDetails");
 
@@ -493,6 +499,9 @@ export default function GenerateBIll({
         });
       }
       fetchData();
+      if (!selectedBillToEdit) {
+        fetchBillId();
+      }
     }
   }, []);
 
@@ -560,7 +569,9 @@ export default function GenerateBIll({
                     size="large"
                     onChange={(value) => {
                       field.onChange(value);
-                      const selectedClient = client.find((v) => v.name === value);
+                      const selectedClient = client.find(
+                        (v) => v.name === value,
+                      );
                       if (selectedClient) {
                         setClientData(selectedClient);
                         setLRData(selectedClient.LR);
@@ -1322,14 +1333,20 @@ export default function GenerateBIll({
           </div>
           <div className="flex w-full justify-end gap-2">
             <Button
-              onClick={resetInputs}
+              onClick={() => [
+                sectionChangeHandler({
+                  billList: true,
+                  createNew: false,
+                }),
+                resetInputs(),
+              ]}
               disabled={loading}
-              className="rounded-xl px-10"
+              className="rounded-xl px-10 cursor-pointer"
               type="button"
             >
-              Reset
+              Back
             </Button>
-            <Button className="rounded-xl px-10" disabled={loading}>
+            <Button className="rounded-xl px-10 cursor-pointer" disabled={loading}>
               {loading ? (
                 <VscLoading size={24} className="animate-spin" />
               ) : formStatus === "create" ? (

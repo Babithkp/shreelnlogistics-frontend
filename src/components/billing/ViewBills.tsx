@@ -2,7 +2,6 @@ import logo from "../../assets/logisticsLogo.svg";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
-import { FaChevronDown } from "react-icons/fa6";
 import {
   addPaymentRecordToBillApi,
   deleteBillApi,
@@ -60,7 +59,7 @@ import {
   filterOnlyCompletePrimitiveDiffs,
   getUnmatchingFields,
 } from "@/lib/utils";
-import { billInputs, PaymentRecord, Section } from "@/types";
+import { billInputs, PaymentRecord } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
 
@@ -72,14 +71,16 @@ export default function ViewBills({
   sectionChangeHandler,
   setSelectedBillToEdit,
   bankDetails,
+  data
 }: {
-  sectionChangeHandler: (section: Section) => void;
+  sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs) => void;
   bankDetails?: BankDetailsInputs;
+  data?: billInputs[];
 }) {
   const [showPreview, setShowPreview] = useState(false);
-  const [billData, setBillData] = useState<billInputs[]>([]);
-  const [filteredBills, setFilteredBills] = useState<billInputs[]>([]);
+  const [billData, setBillData] = useState<billInputs[]>(data || []);
+  const [filteredBills, setFilteredBills] = useState<billInputs[]>(data || []);
   const [selectedBill, setSelectedBill] = useState<billInputs>();
   const [isOpen, setIsOpen] = useState(false);
   const [mailGreeting, setMailGreeting] = useState(defaultMailGreeting);
@@ -460,7 +461,10 @@ export default function ViewBills({
             <p className="text-xl font-medium">Bills</p>
             <Button
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
-              onClick={() => [sectionChangeHandler("generateBill")]}
+              onClick={() => [sectionChangeHandler({
+                billList: false,
+                createNew: true,
+              })]}
             >
               <MdOutlineAdd size={34} />
               Create new
@@ -475,13 +479,11 @@ export default function ViewBills({
                 <th className="text-start font-[400] text-[#797979]">
                   <div className="flex items-center gap-2">
                     <p>Client</p>
-                    <FaChevronDown size={15} className="cursor-pointer" />
                   </div>
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
                   <div className="flex items-center gap-2">
                     <p>Date</p>
-                    <FaChevronDown size={15} className="cursor-pointer" />
                   </div>
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
@@ -502,7 +504,7 @@ export default function ViewBills({
               {filteredBills.map((data) => (
                 <tr
                   className="hover:bg-accent cursor-pointer"
-                  key={data.billNumber}
+                  key={data.id}
                   onClick={() => [
                     selectBillForPreview(data),
                     setEmailIds(data.Client.email),
@@ -577,7 +579,10 @@ export default function ViewBills({
               <Button
                 className="rounded-2xl"
                 onClick={() => [
-                  sectionChangeHandler("generateBill"),
+                  sectionChangeHandler({
+                    billList: false,
+                    createNew: true,
+                  }),
                   setSelectedBillToEdit(selectedBill!),
                 ]}
               >

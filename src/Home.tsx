@@ -23,8 +23,6 @@ import { Button } from "./components/ui/button";
 import Dashboard from "./components/dashboard/Dashboard";
 import LRPage from "./components/shipment/LR/LRPage";
 import FMPage from "./components/shipment/FM/FMPage";
-import GenerateBIll from "./components/billing/GenerateBIll";
-import ViewBills from "./components/billing/ViewBills";
 import Pod from "./components/pod/Pod";
 import Settings, {
   BankDetailsInputs,
@@ -54,6 +52,7 @@ import {
 } from "./types";
 import Header from "./components/Header";
 import { getVersion } from "@tauri-apps/api/app";
+import BillPage from "./components/billing/BillPage";
 
 type DropDowns = "shipment" | "partner" | "billing";
 
@@ -71,8 +70,7 @@ export default function Home() {
     dashboard: true,
     LR: false,
     FM: false,
-    generateBill: false,
-    viewBill: false,
+    Bill: false,
     vendor: false,
     client: false,
     outstanding: false,
@@ -94,8 +92,6 @@ export default function Home() {
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
   const [lrData, setLRData] = useState<LrInputs[]>([]);
-  const [selectedBillToEdit, setSelectedBillToEdit] =
-    useState<billInputs | null>();
   const [settings, setSettings] = useState<Setting>();
   const [billData, setBillData] = useState<billInputs[]>([]);
   const [fmData, setFMData] = useState<FMInputs[]>([]);
@@ -203,7 +199,7 @@ export default function Home() {
     const response = await getLRApi();
     if (response?.status === 200) {
       const data = response.data.data;
-      data.map((lr:LrInputs) => {
+      data.map((lr: LrInputs) => {
         if (lr.branchId === branchId) {
           setLRData((prev) => [...prev, lr]);
         }
@@ -215,7 +211,7 @@ export default function Home() {
     if (branch.isAdmin) {
       fetchFMs();
       getBillDetails();
-      fetchLRs()
+      fetchLRs();
     } else {
       fetchFMsByBranchId(branch.id);
       getBillByBranchIdApi(branch.id);
@@ -277,8 +273,7 @@ export default function Home() {
       section !== "FM" &&
       section !== "vendor" &&
       section !== "client" &&
-      section !== "generateBill" &&
-      section !== "viewBill"
+      section !== "Bill"
     ) {
       setDropDown({ shipment: false, partner: false, billing: false });
     }
@@ -358,47 +353,16 @@ export default function Home() {
           <div className="w-full">
             <button
               className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
-              onClick={() => sectionDropChangeHandler("billing")}
+              onClick={() => sectionChangeHandler("Bill")}
             >
               <TbInvoice
                 size={24}
-                color={`${dropDown.billing ? "#2196F3" : "#A3AED0"}`}
+                color={`${sections.Bill ? "#2196F3" : "#A3AED0"}`}
               />
-              <p className={`${dropDown.billing ? "text-black" : ""}`}>
-                Billing & Invoices
+              <p className={`${sections.Bill ? "text-black" : ""}`}>
+                Billing
               </p>
             </button>
-            {dropDown.billing && (
-              <AnimatePresence>
-                <motion.div
-                  key="lr-section"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  <button
-                    className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
-                    onClick={() => sectionChangeHandler("generateBill")}
-                  >
-                    <p
-                      className={`${sections.generateBill ? "text-black" : ""}`}
-                    >
-                      Generate Bill
-                    </p>
-                  </button>
-                  <button
-                    className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
-                    onClick={() => sectionChangeHandler("viewBill")}
-                  >
-                    <p className={`${sections.viewBill ? "text-black" : ""}`}>
-                      View Bill
-                    </p>
-                  </button>
-                </motion.div>
-              </AnimatePresence>
-            )}
           </div>
           <div
             className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
@@ -518,14 +482,14 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="flex flex-col items-center w-full justify-center">
+        <div className="flex w-full flex-col items-center justify-center">
           <Button
             className="bg-primary rounded-2xl px-20 text-white"
             onClick={onLogoutHandler}
           >
             Logout
           </Button>
-        {version && <p>v{version}</p>}
+          {version && <p>v{version}</p>}
         </div>
       </nav>
       <section className="flex h-full w-full flex-col gap-5 overflow-y-auto p-5">
@@ -546,26 +510,19 @@ export default function Home() {
         )}
         {sections.branch && <Branch />}
         {sections.LR && <LRPage lrData={lrData} />}
-        {sections.FM && <FMPage fmData={fmData}/>}
+        {sections.FM && <FMPage fmData={fmData} />}
         {sections.client && <ClientManagement data={clients} />}
         {sections.vendor && (
           <VendorManagement vendorsData={vendors} vehiclesData={vehicles} />
         )}
-        {sections.generateBill && (
-          <GenerateBIll
-            selectedBillToEdit={selectedBillToEdit}
-            sectionChangeHandler={sectionChangeHandler}
-            setSelectedBillToEdit={setSelectedBillToEdit}
-            clientData={clients}
-          />
-        )}
-        {sections.viewBill && (
-          <ViewBills
-            sectionChangeHandler={sectionChangeHandler}
-            setSelectedBillToEdit={setSelectedBillToEdit}
+        {sections.Bill && (
+          <BillPage
             bankDetails={settings?.bankDetails}
+            clientData={clients}
+            billData={billData}
           />
         )}
+
         {sections.pod && <Pod />}
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses />}

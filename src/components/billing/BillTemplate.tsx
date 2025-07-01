@@ -144,13 +144,13 @@ const BillTemplate = ({
               ? billInputs?.Admin?.address
               : billInputs?.Branches?.address}
           </Text>
-          <Text style={styles.subText}>
+          <Text style={[styles.subText, { fontSize: 9 }]}>
             Email:{" "}
             {billInputs?.Admin
               ? billInputs?.Admin?.email
               : billInputs?.Branches?.email}
           </Text>
-          <Text style={styles.subText}>
+          <Text style={[styles.subText, { fontSize: 9 }]}>
             Ph.: Mob:{" "}
             {billInputs?.Admin
               ? billInputs?.Admin?.contactNumber
@@ -241,11 +241,11 @@ const BillTemplate = ({
           <Text style={[styles.tableCol, { width: "15%" }]}>Origin</Text>
           <Text style={[styles.tableCol, { width: "15%" }]}>Dest.</Text>
           <Text style={[styles.tableCol, { width: "17%" }]}>Desc.</Text>
-          <Text style={[styles.tableCol, { width: "11%" }]}>Inv. no.</Text>
+          <Text style={[styles.tableCol, { width: "10%" }]}>Inv. no.</Text>
           <Text style={[styles.tableCol, { width: "13%" }]}>Inv. Date</Text>
-          <Text style={[styles.tableCol, { width: "10%" }]}>Vehicle Type</Text>
+          <Text style={[styles.tableCol, { width: "11%" }]}>Vehicle Type</Text>
           <Text style={[styles.tableCol, { width: "13%" }]}>Vehicle No.</Text>
-          <Text style={[styles.tableCol, { width: "8%" }]}>Weight</Text>
+          <Text style={[styles.tableCol, { width: "9%" }]}>Weight</Text>
           <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
             Freight Amount
           </Text>
@@ -267,7 +267,7 @@ const BillTemplate = ({
             <Text style={[styles.tableCol, { width: "17%", fontSize: 6 }]}>
               {lrData.description}
             </Text>
-            <Text style={[styles.tableCol, { width: "11%" }]}>
+            <Text style={[styles.tableCol, { width: "10%" }]}>
               {lrData.invoiceNo}
             </Text>
             <Text style={[styles.tableCol, { width: "13%" }]}>
@@ -275,18 +275,18 @@ const BillTemplate = ({
                 ? new Date(lrData.invoiceDate).toLocaleDateString()
                 : ""}
             </Text>
-            <Text style={[styles.tableCol, { width: "10%" }]}>
+            <Text style={[styles.tableCol, { width: "11%", fontSize: 7 }]}>
               {lrData.Vehicle?.vehicletypes}
             </Text>
             {lrData.Vehicle.vehicleNumber && (
-              <Text style={[styles.tableCol, { width: "13%" }]}>
+              <Text style={[styles.tableCol, { width: "13%", fontSize: 7 }]}>
                 {lrData.Vehicle.vehicleNumber}
               </Text>
             )}
-            <Text style={[styles.tableCol, { width: "8%" }]}>
+            <Text style={[styles.tableCol, { width: "9%" , fontSize: 7}]}>
               {lrData.weight}
             </Text>
-            <Text style={[{ width: "10%", padding: 5, fontSize: 8 }]}>
+            <Text style={[{ width: "10%", padding: 5, fontSize: 7 }]}>
               {lrData.totalAmt.toFixed(2)}
             </Text>
           </View>
