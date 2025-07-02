@@ -25,7 +25,6 @@ import {
 import { VscLoading } from "react-icons/vsc";
 import { getBankDetailsApi, getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs } from "../settings/Settings";
-import { convertToINRWords } from "@/lib/utils";
 import { MdDeleteOutline } from "react-icons/md";
 import { billInputs, ClientInputs, LrInputs } from "@/types";
 import {
@@ -164,7 +163,6 @@ export default function GenerateBIll({
         cgstRate,
         sgstRate,
         total,
-        totalInWords: convertToINRWords(subTotal),
       }));
     } else if (totalAmounts.billedin === "OutsideKarnataka") {
       const igstRate = subTotal * 0.05;
@@ -177,7 +175,6 @@ export default function GenerateBIll({
         cgstRate: 0,
         sgstRate: 0,
         total,
-        totalInWords: convertToINRWords(subTotal),
       }));
     }
   }, [
@@ -1321,9 +1318,20 @@ export default function GenerateBIll({
             <div className="flex flex-col gap-3 text-end">
               <div>
                 <p>Total INR {totalAmounts.subtotal.toFixed(2)}</p>
-                <p className="capitalize">
-                  Total in words - {totalAmounts.totalInWords} rupees only
-                </p>
+                <div className="capitalize flex gap-2 items-center">
+                  Total in words -
+                  <input
+                    type="text"
+                    className="border-primary rounded-md border px-2 p-1 w-100"
+                    value={totalAmounts.totalInWords}
+                    onChange={(e) =>
+                      setTotalAmounts({
+                        ...totalAmounts,
+                        totalInWords: e.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div>
                 <p>GST Payable on reverse charge basis Yes/No : Yes</p>
@@ -1341,12 +1349,15 @@ export default function GenerateBIll({
                 resetInputs(),
               ]}
               disabled={loading}
-              className="rounded-xl px-10 cursor-pointer"
+              className="cursor-pointer rounded-xl px-10"
               type="button"
             >
               Back
             </Button>
-            <Button className="rounded-xl px-10 cursor-pointer" disabled={loading}>
+            <Button
+              className="cursor-pointer rounded-xl px-10"
+              disabled={loading}
+            >
               {loading ? (
                 <VscLoading size={24} className="animate-spin" />
               ) : formStatus === "create" ? (

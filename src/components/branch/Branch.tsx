@@ -44,7 +44,6 @@ import {
   updateBranchDetailsApi,
 } from "@/api/branch";
 import { RiEditBoxLine } from "react-icons/ri";
-import { FaChevronDown } from "react-icons/fa6";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { TbCopy } from "react-icons/tb";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
@@ -58,20 +57,11 @@ type EditBranchPassword = {
   confirmNewPassword: string;
 };
 
-type SortOrder = "asc" | "desc" | "";
 
 export default function Branch() {
   const [filteredBranches, setFilteredBranches] = useState<BranchInputs[]>([]);
   const [branches, setBranches] = useState<BranchInputs[]>([]);
   const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
-
-  const [sortState, setSortState] = useState<{
-    employeeCount: SortOrder;
-    totalBillingValue: SortOrder;
-  }>({
-    employeeCount: "",
-    totalBillingValue: "",
-  });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
@@ -149,26 +139,7 @@ export default function Branch() {
     return () => clearTimeout(delay);
   }, [search, branches]);
 
-  const handleSort = (key: keyof typeof sortState) => {
-    const toggleOrder = (current: SortOrder): SortOrder =>
-      current === "asc" ? "desc" : "asc";
-    const newOrder = toggleOrder(sortState[key]);
-    setSortState({
-      employeeCount: "",
-      totalBillingValue: "",
-      [key]: newOrder,
-    });
-    const sorted = [...branches].sort((a, b) => {
-      if (key === "employeeCount" || key === "totalBillingValue") {
-        const aNum = Number(a[key as keyof BranchInputs]);
-        const bNum = Number(b[key as keyof BranchInputs]);
-        return newOrder === "asc" ? aNum - bNum : bNum - aNum;
-      }
-      return 0;
-    });
 
-    setFilteredBranches(sorted);
-  };
 
   const {
     register,
@@ -542,21 +513,12 @@ export default function Branch() {
               <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Employee count</p>
-                  <FaChevronDown
-                    size={15}
-                    onClick={() => handleSort("employeeCount")}
-                    className="cursor-pointer"
-                  />
+
                 </div>
               </th>
               <th className="text-start font-medium">
                 <div className="flex items-center gap-3">
                   <p>Total Billing value</p>
-                  <FaChevronDown
-                    size={15}
-                    onClick={() => handleSort("totalBillingValue")}
-                    className="cursor-pointer"
-                  />
                 </div>
               </th>
               <th className="text-start font-medium">Username</th>
@@ -600,7 +562,7 @@ export default function Branch() {
                     setBranchDetails(branch),
                   ]}
                 >
-                  {0}
+                  {branch?.bill?.reduce((acc, data) => acc + data.total, 0).toFixed(2)}
                 </td>
                 <td
                   className="py-3"
@@ -858,7 +820,7 @@ export default function Branch() {
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Total Billing value</label>
-              <p>{branchDetails?.username}</p>
+              <p>{branchDetails?.bill?.reduce((acc, data) => acc + data.total, 0).toFixed(2)}</p>
             </div>
             {branchDetails?.PaymentRecords &&
               branchDetails?.PaymentRecords?.length > 0 && (

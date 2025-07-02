@@ -7,7 +7,6 @@ import { VscLoading } from "react-icons/vsc";
 import { getAllVendorsApi, getVehicleByIdApi } from "@/api/partner";
 import { BranchDetails } from "./FMPage";
 import {
-  convertToINRWords,
   getUnmatchingFields,
   filterOnlyCompletePrimitiveDiffs,
 } from "@/lib/utils";
@@ -121,7 +120,6 @@ export default function FMCreate({
       tds: tds.toFixed(2), // optional: format to 2 decimals
       balance: balance.toFixed(2),
       netBalance: netBalance.toFixed(2),
-      amountInwords: convertToINRWords(netBalance),
     }));
   }, [
     fmData.hire,
@@ -257,7 +255,8 @@ export default function FMCreate({
       fmData.netBalance === "" ||
       lrDataToFM.payableAt === "" ||
       lrDataToFM.weight === "" ||
-      lrDataToFM.packages === ""
+      lrDataToFM.packages === "" ||
+      fmData.amountInwords === ""
     ) {
       toast.error("Please fill all the fields");
       setIsloading(false);
@@ -656,9 +655,15 @@ export default function FMCreate({
           </div>
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Amount in words</label>
-            <p className="border-primary w-1/2 rounded-md border p-2">
-              {fmData?.amountInwords}
-            </p>
+            <input
+              type="text"
+              placeholder="Type here..."
+              className="border-primary w-1/2 rounded-md border px-2 py-1"
+              value={fmData?.amountInwords}
+              onChange={(e) =>
+                setFMData({ ...fmData, amountInwords: e.target.value })
+              }
+            />
           </div>
         </div>
         <div className="flex w-[42%] flex-col gap-2">

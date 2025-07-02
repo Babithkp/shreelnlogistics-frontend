@@ -442,7 +442,7 @@ const BillTemplate = ({
         ]}
       >
         <Text style={{ width: "70%" }}>
-          Amount in words {billInputs?.totalInWords} rupees only
+          Amount in words {billInputs?.totalInWords}
         </Text>
         <Text>Total INR {billInputs?.subTotal.toFixed(2)}</Text>
       </View>
