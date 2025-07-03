@@ -342,7 +342,6 @@ export default function ViewBills({
           const formData = new FormData();
           formData.append("file", attachment!, "billingSummary.pdf");
           formData.append("billData", JSON.stringify(selectedBill));
-
           const response = await sendBillEmailApi(email, formData);
           if (response?.status === 200) {
             toast.success(`Email Sent to ${email}`);

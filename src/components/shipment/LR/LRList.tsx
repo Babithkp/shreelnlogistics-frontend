@@ -59,8 +59,8 @@ export default function LRList({
     };
     mailBody?: string;
   }
-  const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data);
-  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data);
+  const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data || []);
+  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data || []);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedLR, setSelectedLR] = useState<ExtendedLRInputs>();
   const [isOpen, setIsOpen] = useState(false);

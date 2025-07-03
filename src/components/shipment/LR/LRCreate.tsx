@@ -151,7 +151,7 @@ export default function LRCreate({
       setValue("adminId", data.adminId);
       setValue("branchId", data.branchId);
       setValue("emails", data.emails);
-      setValue("client", data.client);
+      setValue("client", data.client.name as any);
 
       const filledFields = allOptions
         .filter(
@@ -215,6 +215,7 @@ export default function LRCreate({
     setEditAbleData(selectedLRDataToEdit);
     if (formStatus === "edit" && editAbleData) {
       setAllDataTOEdit(editAbleData);
+      console.log(editAbleData);
     }
   }, [selectedLRDataToEdit]);
 
@@ -230,7 +231,6 @@ export default function LRCreate({
       ),
     );
   };
-
 
   function extractMemberOptions(vendors: VendorInputs[]): Option[] {
     return vendors.map((vendor) => ({
@@ -266,7 +266,6 @@ export default function LRCreate({
     if (responseVechicles?.status === 200 && responseClients?.status === 200) {
       setMembers(responseClients.data.data);
       setVehicles(responseVechicles.data.data);
-      console.log(responseVechicles.data.data);
     }
   }
   async function fetchLRData(branchId?: string) {
@@ -350,9 +349,12 @@ export default function LRCreate({
       }
     } else {
       if (!isAdmin) {
+        if (editAbleData?.client && typeof editAbleData.client === "object") {
+          editAbleData.client = editAbleData.client.name as any;
+        }
         setNotificationData(
           filterOnlyCompletePrimitiveDiffs(
-            getUnmatchingFields(data, selectedLRDataToEdit!),
+            getUnmatchingFields(data, editAbleData!),
           ),
         );
         setIsloading(false);
@@ -372,12 +374,14 @@ export default function LRCreate({
   };
 
   const onNotificationSubmit = async () => {
-    if (!selectedLRDataToEdit) return;
+    if (!editAbleData) return;
+    console.log(editAbleData);
+
     const data = {
-      requestId: selectedLRDataToEdit.lrNumber,
+      requestId: editAbleData.lrNumber,
       title: "LR edit",
-      message: selectedLRDataToEdit.branch.branchName,
-      description: selectedLRDataToEdit.branch.id,
+      message: editAbleData.branch.branchName,
+      description: editAbleData.branchId,
       data: JSON.stringify(notificationData),
       status: "editable",
     };
@@ -890,7 +894,7 @@ export default function LRCreate({
                             <AntSelect
                               showSearch
                               placeholder="Select vehicle... "
-                              options={vehicles.map((vehicle)=>({
+                              options={vehicles.map((vehicle) => ({
                                 value: vehicle.vehicleNumber,
                                 label: vehicle.vehicleNumber,
                               }))}

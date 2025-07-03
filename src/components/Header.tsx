@@ -330,6 +330,7 @@ export default function Header({
       branchId: notification.description,
       description: "declined",
     };
+
     setIsLoading(true);
     const response = await createNotificationForBranchApi(data);
     if (response?.status === 200) {
@@ -953,6 +954,8 @@ export default function Header({
       return `Are you sure you want to remove this Expense ${requestId}? This action is permanent and cannot be undone.`;
     } else if (title === "POD delete") {
       return `Are you sure you want to remove this POD of LR No. ${requestId}? This action is permanent and cannot be undone.`;
+    } else if (title === "LR edit") {
+      return "";
     } else {
       return description;
     }

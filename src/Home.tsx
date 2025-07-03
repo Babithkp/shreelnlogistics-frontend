@@ -199,11 +199,8 @@ export default function Home() {
     const response = await getLRApi();
     if (response?.status === 200) {
       const data = response.data.data;
-      data.map((lr: LrInputs) => {
-        if (lr.branchId === branchId) {
-          setLRData((prev) => [...prev, lr]);
-        }
-      });
+      const filteredData = data.filter((lr: LrInputs) => lr.branchId === branchId);
+      setLRData(filteredData);
     }
   }
 
@@ -237,6 +234,7 @@ export default function Home() {
         });
         getBillDetails();
         fetchFMs();
+        fetchLRs();
       } else {
         setBranch({
           id: branch.id,
@@ -245,6 +243,7 @@ export default function Home() {
         });
         getBillDetailsByBranchId(branch.id);
         fetchFMsByBranchId(branch.id);
+        fetchLRsByBranchId(branch.id);
       }
     }
 
