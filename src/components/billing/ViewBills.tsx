@@ -454,7 +454,7 @@ export default function ViewBills({
         <motion.div
           animate={{ width: showPreview ? "50%" : "100%" }}
           transition={{ duration: 0.3 }}
-          className={`flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+          className={`flex h-fit w-full max-h-[85vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
         >
           <div className={`flex items-center justify-between`}>
             <p className="text-xl font-medium">Bills</p>
@@ -786,7 +786,7 @@ export default function ViewBills({
               </AlertDialog>
             )}
           </div>
-          <PDFViewer className="h-[75vh] w-full">
+          <PDFViewer className="h-[70vh] w-full">
             <BillTemplate
               billInputs={selectedBill}
               companyProfile={companyProfile}
