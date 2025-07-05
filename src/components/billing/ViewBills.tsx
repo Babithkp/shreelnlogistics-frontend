@@ -106,7 +106,7 @@ export default function ViewBills({
 
   const getPdfFile = async () => {
     const pdfFile = await pdf(
-      <BillTemplate billInputs={selectedBill} bankDetails={bankDetails} />,
+      <BillTemplate billInputs={selectedBill} bankDetails={bankDetails} companyProfile={companyProfile}/>,
     ).toBlob();
     setAttachment(pdfFile);
   };

@@ -446,7 +446,7 @@ const BillTemplate = ({
         </Text>
         <Text>Total INR {billInputs?.subTotal.toFixed(2)}</Text>
       </View>
-      <View style={{ marginTop: 10, gap: 3 }}>
+      <View style={{ marginTop: 10, gap: 3,fontSize:9 }}>
         <Text>GST Payable on reverse charge basis Yes/No : Yes</Text>
         <Text>GST Amount payable under RCM by the billed party</Text>
         <View style={{ flexDirection: "row", gap: 3 }}>
