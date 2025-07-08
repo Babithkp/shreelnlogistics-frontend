@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
 import { getAllClientsApi } from "@/api/admin";
+import { ClientInputs } from "@/types";
 
 type ClientSummary = {
   clientName: string;
@@ -16,48 +17,85 @@ export default function ClientPayments({
   goBackHandler: () => void;
 }) {
   const [transactions, setTransactions] = useState<ClientSummary[]>([]);
+  const [search, setSearch] = useState("");
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    ClientSummary[]
+  >([]);
 
-  function summarizeClients(data: any[]): ClientSummary[] {
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const text = search.trim().toLowerCase();
+
+      if (!text) {
+        setFilteredTransactions(transactions);
+        return;
+      }
+      const filtered = transactions.filter((transaction) =>
+        [
+          transaction.clientName,
+        ]
+          .filter(Boolean)
+          .some((field) => field?.toLowerCase().includes(text)),
+      );
+
+      setFilteredTransactions(filtered);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search, transactions]);
+
+
+  function summarizeClients(data: ClientInputs[]): ClientSummary[] {
     return data.map((client) => {
       const clientName = client.name;
 
+      // Total Invoiced Amount
       const totalInvoice = client.bill?.reduce(
-        (sum: number, bill: any) => sum + (bill.total || 0),
+        (sum, bill) => sum + (bill.total || 0),
         0,
       );
 
+      // Total Pending Payment
       const pendingPayment = client.bill?.reduce(
-        (sum: number, bill: any) => sum + (bill.pendingAmount || 0),
+        (sum, bill) => sum + (bill.pendingAmount || 0),
         0,
       );
 
-      const totalReceived = client.PaymentRecord?.reduce(
-        (sum: number, record: any) => sum + parseFloat(record.amount || "0"),
+      // Flatten all PaymentRecords from all bills
+      const allPaymentRecords =
+        client.bill?.flatMap((bill) => bill.PaymentRecords || []) || [];
+
+      // Total Received
+      const totalReceived = allPaymentRecords.reduce(
+        (sum, record) => sum + parseFloat(record.amount || "0"),
         0,
       );
 
-      const latestDate = client.PaymentRecord?.reduce(
-        (latest: string, record: any) => {
-          return new Date(record.date) > new Date(latest)
-            ? record.date
-            : latest;
-        },
-        "Waiting For Payment",
-      );
+      // Latest Payment Date
+      const latestDate =
+        allPaymentRecords.length > 0
+          ? allPaymentRecords.reduce(
+              (latest, record) =>
+                new Date(record.date) > new Date(latest) ? record.date : latest,
+              allPaymentRecords[0].date,
+            )
+          : "Waiting For Payment";
 
       return {
         clientName,
         totalInvoice,
-        totalReceived,
         pendingPayment,
+        totalReceived,
         latestDate,
       };
     });
   }
+
   async function fetchTransactions() {
     const response = await getAllClientsApi();
     if (response?.status === 200) {
       setTransactions(summarizeClients(response.data.data));
+      setFilteredTransactions(transactions);
     }
   }
   useEffect(() => {
@@ -67,13 +105,22 @@ export default function ClientPayments({
     <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full justify-between">
         <p className="text-lg font-medium">Client Pending Payments</p>
-        <Button
-          onClick={goBackHandler}
-          className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"
-          variant={"outline"}
-        >
-          Go Back
-        </Button>
+        <div className="flex items-center gap-5">
+          <input
+            type="text"
+            className="border-primary rounded-2xl border p-1 px-3"
+            placeholder="Search Transaction"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Button
+            onClick={goBackHandler}
+            className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"
+            variant={"outline"}
+          >
+            Go Back
+          </Button>
+        </div>
       </div>
       <table className="w-full">
         <thead>
@@ -102,15 +149,13 @@ export default function ClientPayments({
           </tr>
         </thead>
         <tbody>
-          {transactions?.map((transaction) => (
+          {filteredTransactions?.map((transaction) => (
             <tr key={transaction.clientName}>
               <td className="py-2">{transaction.clientName}</td>
               <td className="py-2">INR {transaction.totalInvoice}</td>
               <td className="py-2">INR {transaction.totalReceived}</td>
               <td className="py-2">INR {transaction.pendingPayment}</td>
-              <td className="py-2 text-center">
-                {new Date(transaction.latestDate).toLocaleDateString()}
-              </td>
+              <td className="py-2 text-center">{transaction.latestDate}</td>
             </tr>
           ))}
         </tbody>

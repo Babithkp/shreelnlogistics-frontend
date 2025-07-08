@@ -214,7 +214,7 @@ export type ClientInputs = {
   creditLimit: string;
   createdAt: string;
   pendingPayment: string;
-  PaymentRecord: PaymentRecord[];
+  bill: billInputs[];
   LR: LrInputs[];
 };
 

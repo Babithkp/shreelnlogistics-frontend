@@ -107,7 +107,7 @@ export default function LRList({
   }, [search, LRData]);
 
   const getPdfFile = async () => {
-    const pdfFile = await pdf(<LRTemplate LRData={selectedLR} />).toBlob();
+    const pdfFile = await pdf(<LRTemplate LRData={selectedLR} companyProfile={companyProfile} />).toBlob();
     setAttachment(pdfFile);
   };
 

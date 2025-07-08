@@ -10,6 +10,33 @@ export interface ExtendedPaymentRecord extends PaymentRecord {
 }
 export default function RecentTransaction() {
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    ExtendedPaymentRecord[]
+  >([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const text = search.trim().toLowerCase();
+
+      if (!text) {
+        setFilteredTransactions(transactions);
+        return;
+      }
+      const filtered = transactions.filter((transaction) =>
+        [
+          transaction.customerName,
+        ]
+          .filter(Boolean)
+          .some((field) => field?.toLowerCase().includes(text)),
+      );
+
+      setFilteredTransactions(filtered);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search, transactions]);
+
 
   async function fetchTransactions(branchId?: string) {
     const response = await getAllRecordPaymentApi();
@@ -21,6 +48,7 @@ export default function RecentTransaction() {
           )
         : allTransactions;
       setTransactions(filteredTransactions);
+      setFilteredTransactions(filteredTransactions);
     }
   }
   useEffect(() => {
@@ -39,7 +67,17 @@ export default function RecentTransaction() {
   }, []);
   return (
     <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
-      <p className="text-lg font-medium">Recent Transactions</p>
+      <div className="flex w-full items-center justify-between">
+        <p className="text-lg font-medium">Recent Transactions</p>
+        <input
+          type="text"
+          className="rounded-2xl border p-1 px-3  border-primary"
+          placeholder="Search Transaction"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       <table className="w-full">
         <thead>
           <tr>
@@ -64,9 +102,11 @@ export default function RecentTransaction() {
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => (
+          {filteredTransactions.map((transaction) => (
             <tr key={transaction.id}>
-              <td className="py-2">{new Date(transaction.date).toLocaleDateString()}</td>
+              <td className="py-2">
+                {new Date(transaction.date).toLocaleDateString()}
+              </td>
               <td className="py-2">{transaction.customerName}</td>
               <td className="py-2">{transaction.billId ? "Cr." : "Dr"} </td>
               <td className="py-2">INR {transaction.amount}</td>

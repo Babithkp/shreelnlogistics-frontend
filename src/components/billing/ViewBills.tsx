@@ -191,6 +191,8 @@ export default function ViewBills({
       });
 
       setFilteredBills(filtered);
+      console.log(filtered);
+      
     }, 300);
 
     return () => clearTimeout(delay);

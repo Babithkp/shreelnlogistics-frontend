@@ -78,6 +78,9 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     isAdmin: false,
   });
   const [search, setSearch] = useState("");
+  const allRecords = selectedClient?.bill?.flatMap(
+    (bill) => bill.PaymentRecords || [],
+  );
 
   const {
     register,
@@ -126,6 +129,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
       });
 
       setFilteredClients(filtered);
+      console.log(filtered);
     }, 300);
 
     return () => clearTimeout(delay);
@@ -597,7 +601,9 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
                 <td className="py-2">INR {client.pendingPayment}</td>
-                <td className="py-2">{new Date(client.createdAt).toLocaleDateString()}</td>
+                <td className="py-2">
+                  {new Date(client.createdAt).toLocaleDateString()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -728,14 +734,16 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedClient?.PaymentRecord.map((record, index) => (
+                        {allRecords?.map((record, index) => (
                           <tr
                             className="hover:bg-accent text-center"
                             key={record.id}
                           >
                             <td className="p-2">{index + 1}</td>
                             <td>INR {record.amount}</td>
-                            <td>{new Date(record.date).toLocaleDateString()}</td>
+                            <td>
+                              {new Date(record.date).toLocaleDateString()}
+                            </td>
                             <td>{record.paymentMode}</td>
                             <td>{record.transactionNumber}</td>
                           </tr>
