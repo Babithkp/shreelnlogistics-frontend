@@ -20,6 +20,7 @@ import { toast } from "react-toastify";
 import {
   checkBillExistsApi,
   createBillApi,
+  createBillsupplementaryApi,
   updateBillDetailsApi,
 } from "@/api/billing";
 import { VscLoading } from "react-icons/vsc";
@@ -46,11 +47,13 @@ export default function GenerateBIll({
   sectionChangeHandler,
   setSelectedBillToEdit,
   clientData,
+  supplementary,
 }: {
   selectedBillToEdit?: billInputs | null;
   sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs | null) => void;
   clientData: ClientInputs[];
+  supplementary: boolean;
 }) {
   const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [client, setClient] = useState<ClientInputs[]>(clientData);
@@ -402,6 +405,7 @@ export default function GenerateBIll({
       const BillResponse = await checkBillExistsApi({
         billNumber: data.billNumber,
       });
+      data.clientName = data.Client.name;
       if (BillResponse?.status === 200) {
         toast.error("Bill already exists");
         setBillNumberAlreadyExists(true);
@@ -411,18 +415,32 @@ export default function GenerateBIll({
         setLoading(false);
         return;
       }
-      data.clientName = data.Client.name;
-      const response = await createBillApi(data);
-      if (response?.status === 200) {
-        toast.success("Bill has been created");
-        setSelectLrData([]);
-        reset();
-        sectionChangeHandler({
-          billList: true,
-          createNew: false,
-        });
+      if (supplementary) {
+        const response = await createBillsupplementaryApi(data);
+        if (response?.status === 200) {
+          toast.success("Bill has been created");
+          setSelectLrData([]);
+          reset();
+          sectionChangeHandler({
+            billList: true,
+            createNew: false,
+          });
+        } else {
+          toast.error("Something Went Wrong, Check All Fields");
+        }
       } else {
-        toast.error("Something Went Wrong, Check All Fields");
+        const response = await createBillApi(data);
+        if (response?.status === 200) {
+          toast.success("Bill has been created");
+          setSelectLrData([]);
+          reset();
+          sectionChangeHandler({
+            billList: true,
+            createNew: false,
+          });
+        } else {
+          toast.error("Something Went Wrong, Check All Fields");
+        }
       }
     }
     setLoading(false);
@@ -515,9 +533,9 @@ export default function GenerateBIll({
               <label className="font-medium">Bill Number</label>
               <input
                 type="text"
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className={`border-primary rounded-md border p-2 ${!supplementary && "cursor-not-allowed"}`}
                 {...register("billNumber", { required: true })}
-                readOnly
+                readOnly={!supplementary}
               />
               {errors.billNumber && (
                 <p className="text-red-500">Please enter a vaild Bill Number</p>
@@ -1318,11 +1336,11 @@ export default function GenerateBIll({
             <div className="flex flex-col gap-3 text-end">
               <div>
                 <p>Total INR {totalAmounts.subtotal.toFixed(2)}</p>
-                <div className="capitalize flex gap-2 items-center">
+                <div className="flex items-center gap-2 capitalize">
                   Total in words -
                   <input
                     type="text"
-                    className="border-primary rounded-md border px-2 p-1 w-100"
+                    className="border-primary w-100 rounded-md border p-1 px-2"
                     value={totalAmounts.totalInWords}
                     onChange={(e) =>
                       setTotalAmounts({

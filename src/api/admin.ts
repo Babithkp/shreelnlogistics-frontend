@@ -152,3 +152,22 @@ export const updateOtherSettingsApi = async (data: any) => {
     console.log(error);
   }
 };
+
+export const getDashboardDataApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getDashboardData`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const getDashboardDataForBranchApi = async (id: string) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getDashboardDataForBranch/${id}`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};

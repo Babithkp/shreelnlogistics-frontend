@@ -16,11 +16,18 @@ import {
 } from "recharts";
 import { DatePicker } from "antd";
 const { RangePicker } = DatePicker;
-import { filterBillBymonthApi } from "@/api/billing";
-import { filterFMBymonthApi } from "@/api/shipment";
+import {
+  filterBillBymonthApi,
+  filterBillBymonthForBranchApi,
+} from "@/api/billing";
+import {
+  filterFMBymonthApi,
+  filterFMBymonthForBranchApi,
+} from "@/api/shipment";
 import { filterBranchBymonthApi } from "@/api/branch";
-import { fetchAdminDataApi, getAllClientsApi } from "@/api/admin";
+import { getDashboardDataApi, getDashboardDataForBranchApi } from "@/api/admin";
 import { billInputs, BranchInputs, ClientInputs, FMInputs } from "@/types";
+import { formatter } from "@/lib/utils";
 
 type GraphPoint = {
   date: string;
@@ -52,29 +59,25 @@ const COLORS = [
   "#DA70D6",
 ];
 
-export default function Dashboard({
-  branchLength,
-  clientLength,
-  vendorLength,
-  billData,
-  fmData,
-  branchData,
-}: {
-  branchLength: number;
-  clientLength: number;
-  vendorLength: number;
+interface DashboardData {
+  clientData: ClientInputs[];
+  vendorCount: string;
+  overAllBranchData: BranchInputs[];
+  FMData: FMInputs[];
   billData: billInputs[];
-  fmData: FMInputs[];
   branchData: BranchInputs[];
-}) {
-  const [bill, setBill] = useState<billInputs[]>([]);
-  const [fm, setFM] = useState<FMInputs[]>([]);
-  const [branch, setBranch] = useState<BranchInputs[]>([]);
-  const [clients, setClients] = useState<ClientInputs[]>([]);
-  const [admin, setAdmin] = useState<BranchInputs[]>();
-  const [isAdmin, setIsAdmin] = useState(false);
+}
 
-  const getMonthlyRevenueChange = (bills: billInputs[]): number => {
+export default function Dashboard() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [branchId, setBranchId] = useState("");
+  const [dashboardData, setDashboardData] = useState<DashboardData>();
+  const totalInvoice = dashboardData?.billData
+    .reduce((acc, bill) => acc + bill.subTotal, 0)
+    .toFixed(2);
+
+  const getMonthlyRevenueChange = (): number => {
+    if (!dashboardData) return 0;
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
@@ -86,7 +89,7 @@ export default function Dashboard({
     let thisMonthRevenue = 0;
     let lastMonthRevenue = 0;
 
-    for (const bill of bills) {
+    for (const bill of dashboardData?.billData) {
       const billDate = new Date(bill.date);
       const billMonth = billDate.getMonth();
       const billYear = billDate.getFullYear();
@@ -108,21 +111,20 @@ export default function Dashboard({
     return parseFloat(percentageChange.toFixed(2));
   };
 
-  const formatGraphData = (
-    bills: billInputs[],
-    fms: FMInputs[],
-  ): GraphPoint[] => {
+  const formatGraphData = (): GraphPoint[] => {
+    if (!dashboardData) return [];
+    const { billData, FMData } = dashboardData;
     const monthlyData: Record<
       MonthKey,
       { date: string; totalBill: number; totalFM: number; totalPayment: number }
     > = {};
 
     const getMonthKey = (date: string) => {
-      const [year, month] = date.slice(0, 10).split("-");
+      const [year, month] = date?.slice(0, 10).split("-");
       return `${year}-${month}`;
     };
 
-    bills.forEach((bill) => {
+    billData.forEach((bill) => {
       const date = bill.date.slice(0, 10);
       const key = getMonthKey(date);
 
@@ -145,7 +147,7 @@ export default function Dashboard({
       }
     });
 
-    fms.forEach((fm) => {
+    FMData.forEach((fm) => {
       const date = fm.date.slice(0, 10);
       const key = getMonthKey(date);
 
@@ -179,15 +181,14 @@ export default function Dashboard({
     return result;
   };
 
-  const getRecordPayments = (bill: billInputs[]) => {
-    return bill
-      .reduce((total, bill) => {
-        const billTotal = (bill.PaymentRecords || []).reduce((sum, record) => {
-          return sum + parseFloat(record.amount || "0");
-        }, 0);
-        return total + billTotal;
-      }, 0)
-      .toFixed(2);
+  const getRecordPayments = () => {
+    const recieved = dashboardData?.billData.reduce((total, bill) => {
+      const billTotal = (bill.PaymentRecords || []).reduce((sum, record) => {
+        return sum + parseFloat(record.amount || "0");
+      }, 0);
+      return total + billTotal;
+    }, 0);
+    return formatter.format(recieved ?? 0);
   };
 
   const getClientTotalBill = (clients: any[]) => {
@@ -258,18 +259,43 @@ export default function Dashboard({
       new Date(`${endMonth}-01`).getMonth() + 1,
       0,
     );
-    const billResponse = await filterBillBymonthApi({
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    });
-    const fmResponse = await filterFMBymonthApi({
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    });
+    let billResponse;
+    let fmResponse;
+    if (isAdmin) {
+      billResponse = await filterBillBymonthApi({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+      fmResponse = await filterFMBymonthApi({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+    } else if (!isAdmin && branchId) {
+      billResponse = await filterBillBymonthForBranchApi(
+        {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        branchId,
+      );
+      fmResponse = await filterFMBymonthForBranchApi(
+        {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        branchId,
+      );
+    }
 
     if (billResponse?.status === 200 && fmResponse?.status === 200) {
-      setBill(billResponse.data.data);
-      setFM(fmResponse.data.data);
+      setDashboardData((prevState) => {
+        if (!prevState) return undefined;
+        return {
+          ...prevState,
+          billData: billResponse.data.data,
+          FMData: fmResponse.data.data,
+        };
+      });
     }
   };
   const branchFilterHandler = async (dateStrings: [string, string] | null) => {
@@ -281,44 +307,61 @@ export default function Dashboard({
       new Date(`${endMonth}-01`).getMonth() + 1,
       0,
     );
-    const billResponse = await filterBranchBymonthApi({
+    const branchResponse = await filterBranchBymonthApi({
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     });
+    if (branchResponse?.status === 200) {
+      const branch = branchResponse.data.data.filter(
+        (item: any) => item !== null,
+      );
 
-    if (billResponse?.status === 200) {
-      setBranch(billResponse.data.data);
+      setDashboardData((prevState) => {
+        if (!prevState) return undefined;
+        return {
+          ...prevState,
+          branchData: branch,
+        };
+      });
     }
   };
 
-  async function fetchAdminData() {
-    const response = await fetchAdminDataApi();
+  async function fetchDashboardData() {
+    const response = await getDashboardDataApi();
     if (response?.status === 200) {
-      setBranch([response.data.data, ...branchData]);
-      setAdmin([response.data.data, ...branchData]);
+      setDashboardData(response.data.data);
     }
   }
 
-  async function fetchClientData() {
-    const response = await getAllClientsApi();
+  async function fetchDashboardDataForBranch(branchId: string) {
+    const response = await getDashboardDataForBranchApi(branchId);
     if (response?.status === 200) {
-      setClients(response.data.data);
+      setDashboardData(response.data.data);
     }
   }
 
   useEffect(() => {
-    setBill(billData);
-    setFM(fmData);
-    fetchAdminData();
-    fetchClientData();
-    const isAdmin = localStorage.getItem("isAdmin");
-    if (isAdmin === "true") {
-      setIsAdmin(true);
+    if (isAdmin) {
+      fetchDashboardData();
+    } else if (!isAdmin && branchId) {
+      fetchDashboardDataForBranch(branchId);
     }
-  }, [billData, fmData, branchData]);
+  }, [isAdmin, branchId]);
+
+  useEffect(() => {
+    const isAdmin = localStorage.getItem("isAdmin");
+    const branch = localStorage.getItem("branchDetails");
+    if (isAdmin === "true" && branch) {
+      setIsAdmin(true);
+    } else if (branch) {
+      const branchDetails = JSON.parse(branch);
+      setBranchId(branchDetails.id);
+      setIsAdmin(false);
+    }
+  }, []);
 
   return (
-    <>
+    <div className="flex flex-col gap-5">
       <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
@@ -328,13 +371,12 @@ export default function Dashboard({
             <div className="font-medium">
               <p className="text-muted text-xs">Total Invoicing value</p>
               <p className="text-xl">
-                INR{" "}
-                {billData.reduce((acc, bill) => acc + bill.subTotal, 0).toFixed(2)}
+                {formatter.format(parseInt(totalInvoice ?? "0"))}
               </p>
               <p
-                className={`${getMonthlyRevenueChange(billData) > 0 ? "text-[#05CD99]" : "text-red-500"}`}
+                className={`${getMonthlyRevenueChange() > 0 ? "text-[#05CD99]" : "text-red-500"}`}
               >
-                {getMonthlyRevenueChange(billData) || 0}%{" "}
+                {getMonthlyRevenueChange() || 0}%{" "}
                 <span className="text-muted text-sm font-[400]">
                   since last month
                 </span>
@@ -350,7 +392,7 @@ export default function Dashboard({
               </div>
               <div className="font-medium">
                 <p className="text-muted text-sm">Branches</p>
-                <p className="text-xl">{branchLength}</p>
+                <p className="text-xl">{dashboardData?.branchData.length}</p>
               </div>
             </div>
           </div>
@@ -362,7 +404,7 @@ export default function Dashboard({
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Total Clients</p>
-              <p className="text-xl">{clientLength}</p>
+              <p className="text-xl">{dashboardData?.clientData.length}</p>
             </div>
           </div>
         </div>
@@ -373,7 +415,7 @@ export default function Dashboard({
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Vendors</p>
-              <p className="text-xl">{vendorLength}</p>
+              <p className="text-xl">{dashboardData?.vendorCount}</p>
             </div>
           </div>
         </div>
@@ -394,18 +436,13 @@ export default function Dashboard({
               />
               <div className="">
                 <p>Total Bill Amount</p>
-                <p className="text-2xl font-medium">
-                  INR{" "}
-                  {billData
-                    .reduce((acc, bill) => acc + bill.subTotal, 0)
-                    .toFixed(2)}
+                <p className="text-xl font-medium">
+                  {formatter.format(parseInt(totalInvoice ?? "0"))}
                 </p>
               </div>
               <div>
                 <p>Total Recieved Amount</p>
-                <p className="text-2xl font-medium">
-                  INR {getRecordPayments(billData)}
-                </p>
+                <p className="text-xl font-medium">{getRecordPayments()}</p>
               </div>
             </div>
             <div>
@@ -420,7 +457,7 @@ export default function Dashboard({
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={formatGraphData(bill, fm)}>
+            <LineChart data={formatGraphData()}>
               <XAxis dataKey="date" axisLine={false} />
               <YAxis axisLine={false} />
               <Tooltip />
@@ -463,43 +500,49 @@ export default function Dashboard({
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    data={branch ? getBillOfBranchTotalForPieChart(branch) : []}
+                    data={
+                      dashboardData?.branchData
+                        ? getBillOfBranchTotalForPieChart(
+                            dashboardData?.branchData,
+                          )
+                        : []
+                    }
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {branch &&
-                      getBillOfBranchTotalForPieChart(branch).map(
-                        (_, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ),
-                      )}
+                    {dashboardData?.branchData &&
+                      getBillOfBranchTotalForPieChart(
+                        dashboardData?.branchData,
+                      ).map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
                 <div className="flex flex-col gap-1">
-                  {branch &&
-                    getBillOfBranchTotalForPieChart(branch).map(
-                      (data, index) => (
-                        <div
-                          className="flex max-h-[9vh] justify-between gap-8 overflow-y-auto"
-                          key={data.name}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`size-3 rounded-full`}
-                              style={{
-                                backgroundColor: COLORS[index % COLORS.length],
-                              }}
-                            ></div>
-                            <p className="text-sm">{data.name}</p>
-                          </div>
-                          <p className="text-sm">₹{data.value.toFixed(2)}</p>
+                  {dashboardData?.branchData &&
+                    getBillOfBranchTotalForPieChart(
+                      dashboardData?.branchData,
+                    ).map((data, index) => (
+                      <div
+                        className="flex max-h-[9vh] justify-between gap-8 overflow-y-auto"
+                        key={data.name}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`size-3 rounded-full`}
+                            style={{
+                              backgroundColor: COLORS[index % COLORS.length],
+                            }}
+                          ></div>
+                          <p className="text-sm">{data.name}</p>
                         </div>
-                      ),
-                    )}
+                        <p className="text-sm">₹{data.value.toFixed(2)}</p>
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
@@ -519,15 +562,17 @@ export default function Dashboard({
               </tr>
             </thead>
             <tbody>
-              {clients &&
-                getClientTotalBill(clients).map((client, i) => (
-                  <tr key={i}>
-                    <td className="py-2">{client.name}</td>
-                    <td className="py-2 text-end">
-                      ₹ {client.totalBill.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+              {dashboardData?.clientData &&
+                getClientTotalBill(dashboardData?.clientData).map(
+                  (client, i) => (
+                    <tr key={i}>
+                      <td className="py-2">{client.name}</td>
+                      <td className="py-2 text-end">
+                        {formatter.format(client.totalBill)}
+                      </td>
+                    </tr>
+                  ),
+                )}
             </tbody>
           </table>
         </div>
@@ -543,23 +588,25 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {admin &&
-                  getTop10Branches(admin).map((client) => (
-                    <tr key={client.name}>
-                      <td className="py-2">{client.name}</td>
-                      <td className="py-2 text-end">
-                        ₹ {client.totalInvoice.toFixed(2)}
-                      </td>
-                      <td className="py-2 text-end">
-                        ₹ {client.totalFreight.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
+                {dashboardData?.overAllBranchData &&
+                  getTop10Branches(dashboardData?.overAllBranchData).map(
+                    (client) => (
+                      <tr key={client.name}>
+                        <td className="py-2">{client.name}</td>
+                        <td className="py-2 text-end">
+                          {formatter.format(client.totalInvoice)}
+                        </td>
+                        <td className="py-2 text-end">
+                          {formatter.format(client.totalFreight)}
+                        </td>
+                      </tr>
+                    ),
+                  )}
               </tbody>
             </table>
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

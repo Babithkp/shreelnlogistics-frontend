@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
-import { getAllClientsApi } from "@/api/admin";
 import { ClientInputs } from "@/types";
+import { formatter } from "@/lib/utils";
+import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { filterClientByNameApi, getClientForPageApi } from "@/api/partner";
 
 type ClientSummary = {
   clientName: string;
@@ -21,6 +23,31 @@ export default function ClientPayments({
   const [filteredTransactions, setFilteredTransactions] = useState<
     ClientSummary[]
   >([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function filterClientByName(search: string) {
+    const response = await filterClientByNameApi(search);
+    if (response?.status === 200) {
+      const allTransactions = response.data.data;
+      setFilteredTransactions(summarizeClients(allTransactions));
+    }
+  }
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -30,20 +57,11 @@ export default function ClientPayments({
         setFilteredTransactions(transactions);
         return;
       }
-      const filtered = transactions.filter((transaction) =>
-        [
-          transaction.clientName,
-        ]
-          .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text)),
-      );
-
-      setFilteredTransactions(filtered);
+      filterClientByName(text);
     }, 300);
 
     return () => clearTimeout(delay);
   }, [search, transactions]);
-
 
   function summarizeClients(data: ClientInputs[]): ClientSummary[] {
     return data.map((client) => {
@@ -51,7 +69,7 @@ export default function ClientPayments({
 
       // Total Invoiced Amount
       const totalInvoice = client.bill?.reduce(
-        (sum, bill) => sum + (bill.total || 0),
+        (sum, bill) => sum + (bill.subTotal || 0),
         0,
       );
 
@@ -91,18 +109,25 @@ export default function ClientPayments({
     });
   }
 
-  async function fetchTransactions() {
-    const response = await getAllClientsApi();
+  async function fetchTransactions(page: number, limit: number) {
+    const response = await getClientForPageApi(page, limit);
     if (response?.status === 200) {
-      setTransactions(summarizeClients(response.data.data));
-      setFilteredTransactions(transactions);
+      const allTransactions = response.data.data;
+      setFilteredTransactions(summarizeClients(allTransactions.clientData));
+      setTransactions(summarizeClients(allTransactions.clientData));
+      setTotalItems(allTransactions.clientCount);
     }
   }
+
   useEffect(() => {
-    fetchTransactions();
+    fetchTransactions(currentPage, itemsPerPage);
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    fetchTransactions(currentPage, itemsPerPage);
   }, []);
   return (
-    <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full justify-between">
         <p className="text-lg font-medium">Client Pending Payments</p>
         <div className="flex items-center gap-5">
@@ -120,6 +145,31 @@ export default function ClientPayments({
           >
             Go Back
           </Button>
+          {!search && (
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <p>
+                {startIndex}-{endIndex}
+              </p>
+              <p>of</p>
+              <p>{totalItems}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                >
+                  <MdOutlineChevronLeft size={20} />
+                </button>
+                <button
+                  className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                >
+                  <MdOutlineChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <table className="w-full">
@@ -152,10 +202,21 @@ export default function ClientPayments({
           {filteredTransactions?.map((transaction) => (
             <tr key={transaction.clientName}>
               <td className="py-2">{transaction.clientName}</td>
-              <td className="py-2">INR {transaction.totalInvoice}</td>
-              <td className="py-2">INR {transaction.totalReceived}</td>
-              <td className="py-2">INR {transaction.pendingPayment}</td>
-              <td className="py-2 text-center">{transaction.latestDate}</td>
+              <td className="py-2">
+                {formatter.format(transaction.totalInvoice)}
+              </td>
+              <td className="py-2">
+                {formatter.format(transaction.totalReceived)}
+              </td>
+              <td className="py-2">
+                {formatter.format(transaction.pendingPayment)}
+              </td>
+              <td className="py-2 text-center">
+                {new Date(transaction.latestDate).toLocaleDateString() ===
+                "Invalid Date"
+                  ? "Waiting For Payment"
+                  : new Date(transaction.latestDate).toLocaleDateString()}
+              </td>
             </tr>
           ))}
         </tbody>

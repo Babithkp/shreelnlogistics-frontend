@@ -6,6 +6,10 @@ import {
   addPaymentRecordToBillApi,
   deleteBillApi,
   deletePaymentRecordFromBillApi,
+  filterBillDataApi,
+  filterBillDetailsForBranchApi,
+  getBillByPageApi,
+  getBillByPageForBranchApi,
   getBillDetailsApi,
   sendBillEmailApi,
 } from "@/api/billing";
@@ -49,7 +53,11 @@ import { VscLoading } from "react-icons/vsc";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import BillTemplate from "./BillTemplate";
 import { toast } from "react-toastify";
-import { MdOutlineAdd } from "react-icons/md";
+import {
+  MdOutlineAdd,
+  MdOutlineChevronLeft,
+  MdOutlineChevronRight,
+} from "react-icons/md";
 import { getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
 import { Controller, useForm } from "react-hook-form";
@@ -57,6 +65,7 @@ import { PiRecord } from "react-icons/pi";
 import {
   convertToINRWords,
   filterOnlyCompletePrimitiveDiffs,
+  formatter,
   getUnmatchingFields,
 } from "@/lib/utils";
 import { billInputs, PaymentRecord } from "@/types";
@@ -71,12 +80,14 @@ export default function ViewBills({
   sectionChangeHandler,
   setSelectedBillToEdit,
   bankDetails,
-  data
+  data,
+  setSupplementary,
 }: {
   sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs) => void;
   bankDetails?: BankDetailsInputs;
   data?: billInputs[];
+  setSupplementary: (data: boolean) => void;
 }) {
   const [showPreview, setShowPreview] = useState(false);
   const [billData, setBillData] = useState<billInputs[]>(data || []);
@@ -103,10 +114,71 @@ export default function ViewBills({
     useState<Record<string, { obj1: any; obj2: any }>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function fetchBillDataForPage() {
+    const response = await getBillByPageApi(currentPage, itemsPerPage);
+    if (response?.status === 200) {
+      const allBills = response.data.data;
+      setBillData(allBills.BillData);
+      setFilteredBills(allBills.BillData);
+      setTotalItems(allBills.BillCount);
+    }
+  }
+
+  async function fetchBillDataForPageForBranch() {
+    const response = await getBillByPageForBranchApi(
+      currentPage,
+      itemsPerPage,
+      branch.branchId,
+    );
+    if (response?.status === 200) {
+      const allBills = response.data.data;
+      setBillData(allBills.BillData);
+      setFilteredBills(allBills.BillData);
+      setTotalItems(allBills.BillCount);
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchBillDataForPage();
+    } else if (!isAdmin && branch.branchId) {
+      fetchBillDataForPageForBranch();
+    }
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchBillDataForPage();
+    } else if (!isAdmin && branch.branchId) {
+      fetchBillDataForPageForBranch();
+    }
+  }, [isAdmin, branch.branchId]);
 
   const getPdfFile = async () => {
     const pdfFile = await pdf(
-      <BillTemplate billInputs={selectedBill} bankDetails={bankDetails} companyProfile={companyProfile}/>,
+      <BillTemplate
+        billInputs={selectedBill}
+        bankDetails={bankDetails}
+        companyProfile={companyProfile}
+      />,
     ).toBlob();
     setAttachment(pdfFile);
   };
@@ -150,6 +222,22 @@ export default function ViewBills({
     }
   }, [amount, setValue]);
 
+  async function filterBillData(text: string) {
+    const response = await filterBillDataApi(text);
+    if (response?.status === 200) {
+      const filtered = response.data.data;
+      setFilteredBills(filtered);
+    }
+  }
+
+  async function filterBillDataForBranch(branchId: string, text: string) {
+    const response = await filterBillDetailsForBranchApi(branchId, text);
+    if (response?.status === 200) {
+      const filtered = response.data.data;
+      setFilteredBills(filtered);
+    }
+  }
+
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
@@ -158,41 +246,11 @@ export default function ViewBills({
         setFilteredBills(billData);
         return;
       }
-
-      const filtered = billData.filter((bill) => {
-        const fieldsToSearch = [
-          bill.billNumber,
-          bill.Client?.name,
-          bill.Client?.GSTIN,
-          bill.hsnSacCode,
-          bill.placeOfSupply,
-          bill.state,
-          bill.statecode,
-          ...bill.lrData.map((lr) => lr.lrNumber),
-          bill.igstRate?.toString(),
-          bill.cgstRate?.toString(),
-          bill.sgstRate?.toString(),
-          bill.subTotal?.toString(),
-          bill.total?.toString(),
-          bill.totalInWords,
-          bill.billedIn,
-          bill.zeroToThirty,
-          bill.thirtyToSixty,
-          bill.sixtyPlus,
-          bill.createdAt,
-          bill.adminId,
-          bill.branchId,
-          bill.branchesId,
-        ];
-
-        return fieldsToSearch
-          .filter((field): field is string => typeof field === "string")
-          .some((field) => field.toLowerCase().includes(text));
-      });
-
-      setFilteredBills(filtered);
-      console.log(filtered);
-      
+      if (isAdmin) {
+        filterBillData(text);
+      } else {
+        filterBillDataForBranch(branch.branchId, text);
+      }
     }, 300);
 
     return () => clearTimeout(delay);
@@ -429,14 +487,13 @@ export default function ViewBills({
           adminId: branchDetails.id,
           branchName: branchDetails.branchName,
         });
-        getBillDetails();
       } else {
+        setIsAdmin(false);
         setBranch({
           branchId: branchDetails.id,
           adminId: "",
           branchName: branchDetails.branchName,
         });
-        getBillDetails(branchDetails.id);
       }
     }
   }, []);
@@ -456,20 +513,63 @@ export default function ViewBills({
         <motion.div
           animate={{ width: showPreview ? "50%" : "100%" }}
           transition={{ duration: 0.3 }}
-          className={`flex h-fit w-full max-h-[85vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+          className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
         >
           <div className={`flex items-center justify-between`}>
             <p className="text-xl font-medium">Bills</p>
-            <Button
-              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
-              onClick={() => [sectionChangeHandler({
-                billList: false,
-                createNew: true,
-              })]}
-            >
-              <MdOutlineAdd size={34} />
-              Create new
-            </Button>
+            <div className="flex gap-5">
+              <Button
+                variant={"outline"}
+                className="border-primary text-primary cursor-pointer rounded-2xl p-5"
+                onClick={() => [
+                  sectionChangeHandler({
+                    billList: false,
+                    createNew: true,
+                  }),
+                  setSupplementary(true),
+                ]}
+              >
+                <MdOutlineAdd size={34} /> Add Supplementary
+              </Button>
+              <Button
+                className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+                onClick={() => [
+                  setSupplementary(false),
+                  sectionChangeHandler({
+                    billList: false,
+                    createNew: true,
+                  }),
+                ]}
+              >
+                <MdOutlineAdd size={34} />
+                Create new
+              </Button>
+              {!search && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <p>
+                    {startIndex}-{endIndex}
+                  </p>
+                  <p>of</p>
+                  <p>{totalItems}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePrev}
+                      disabled={currentPage === 1}
+                      className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                    >
+                      <MdOutlineChevronLeft size={20} />
+                    </button>
+                    <button
+                      className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                    >
+                      <MdOutlineChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
             <thead>
@@ -516,22 +616,26 @@ export default function ViewBills({
                   <td className="py-2">
                     {new Date(data.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2">{data.subTotal.toFixed(2)}</td>
-                  <td className="py-2 text-center">
-                    {data.pendingAmount.toFixed(2)}
+                  <td className="py-2">{formatter.format(data.subTotal)}</td>
+                  <td className="py-2">
+                    {formatter.format(data.pendingAmount)}
                   </td>
                   {!showPreview && (
                     <>
-                      <td className="py-2 text-center">
-                        {(
-                          data.igstRate +
-                          data.cgstRate +
-                          data.sgstRate
-                        ).toFixed(2)}
+                      <td className="py-2">
+                        {formatter.format(
+                          data.igstRate + data.cgstRate + data.sgstRate,
+                        )}
                       </td>
-                      <td className="py-2 text-center">{data.zeroToThirty}</td>
-                      <td className="py-2 text-center">{data.thirtyToSixty}</td>
-                      <td className="py-2 text-center">{data.sixtyPlus}</td>
+                      <td className="py-2">
+                        {formatter.format(parseInt(data.zeroToThirty))}
+                      </td>
+                      <td className="py-2">
+                        {formatter.format(parseInt(data.thirtyToSixty))}
+                      </td>
+                      <td className="py-2">
+                        {formatter.format(parseInt(data.sixtyPlus))}
+                      </td>
                     </>
                   )}
                 </tr>
@@ -540,7 +644,7 @@ export default function ViewBills({
           </table>
         </motion.div>
         <motion.div
-          className="hidden flex-col gap-5 rounded-md bg-white p-5"
+          className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
           animate={{
             width: showPreview ? "50%" : "0%",
             display: showPreview ? "flex" : "none",
@@ -788,7 +892,7 @@ export default function ViewBills({
               </AlertDialog>
             )}
           </div>
-          <PDFViewer className="h-[70vh] w-full">
+          <PDFViewer className="h-full w-full">
             <BillTemplate
               billInputs={selectedBill}
               companyProfile={companyProfile}

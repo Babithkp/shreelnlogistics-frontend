@@ -20,6 +20,35 @@ export const getLRApi = async () => {
   }
 };
 
+export const getLRByPageApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getLRByPage?page=${currentPage}&limit=${itemsPerPage}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getLRByPageForBranchApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+  branchId: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getLRByPageForBranch?page=${currentPage}&limit=${itemsPerPage}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getLRByLrNumberApi = async (lrNumber: string) => {
   try {
     const response = await axios.get(
@@ -81,6 +110,35 @@ export const createFMApi = async (data: any) => {
 export const getFMApi = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/api/v1/getFM`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getFMByPageApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getFMByPage?page=${currentPage}&limit=${itemsPerPage}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getFMByPageForBranchApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+  branchId: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getFMByPageForBranch?page=${currentPage}&limit=${itemsPerPage}&branchId=${branchId}`,
+    );
     return response;
   } catch (error) {
     console.log(error);
@@ -160,6 +218,18 @@ export const filterFMBymonthApi = async (data: any) => {
   }
 };
 
+export const filterFMBymonthForBranchApi = async (data: any, branchId: string) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/filterFMBymonthForBranch/${branchId}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getFmByBranchId = async (branchId: string) => {
   try {
     const response = await axios.get(
@@ -220,7 +290,8 @@ export const deleteFMByNotificationApi = async (id: string) => {
 export const deleteLRByNotificationApi = async (data: any) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/api/v1/deleteLRByNotification`,data
+      `${BASE_URL}/api/v1/deleteLRByNotification`,
+      data,
     );
     return response;
   } catch (error) {
@@ -262,6 +333,39 @@ export const filterLRDetailsApi = async (text: string) => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/filterLRDetails/${text}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterLRDetailsForBranchApi = async (branchId: string, text: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterLRDetailsForBranch/${branchId}/${text}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterFMDetailsApi = async (text: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterFMDetails/${text}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterFMDetailsForBranchApi = async (branchId: string, text: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterFMDetailsForBranch/${branchId}/${text}`,
     );
     return response;
   } catch (error) {

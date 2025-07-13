@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
-import { getAllVendorsApi } from "@/api/partner";
+import {
+  filterVendorByNameApi,
+  getVendorForPageApi,
+} from "@/api/partner";
+import { formatter } from "@/lib/utils";
+import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
 
 type PaymentRecord = {
   amount: string;
@@ -37,6 +42,31 @@ export default function VendorOutstanding({
   const [filteredTransactions, setFilteredTransactions] = useState<
     VendorSummary[]
   >([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function filterVendorByName(search: string) {
+    const response = await filterVendorByNameApi(search);
+    if (response?.status === 200) {
+      const allTransactions = response.data.data;
+      setFilteredTransactions(summarizeVendors(allTransactions));
+    }
+  }
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -46,17 +76,11 @@ export default function VendorOutstanding({
         setFilteredTransactions(transactions);
         return;
       }
-      const filtered = transactions.filter((transaction) =>
-        [transaction.name]
-          .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text)),
-      );
-
-      setFilteredTransactions(filtered);
+      filterVendorByName(text);
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, transactions]);
+  }, [search]);
 
   function summarizeVendors(vendors: Vendor[]): VendorSummary[] {
     return vendors.map((vendor) => {
@@ -90,18 +114,26 @@ export default function VendorOutstanding({
     });
   }
 
-  async function fetchTransactions() {
-    const response = await getAllVendorsApi();
+  async function fetchTransactions(page: number, limit: number) {
+    const response = await getVendorForPageApi(page, limit);
     if (response?.status === 200) {
-      setTransactions(summarizeVendors(response.data.data));
-      setFilteredTransactions(transactions);
+      const allTransactions = response.data.data;
+      setFilteredTransactions(summarizeVendors(allTransactions.vendorData));
+      setTransactions(summarizeVendors(allTransactions.vendorData));
+      setTotalItems(allTransactions.vendorCount);
     }
   }
+
   useEffect(() => {
-    fetchTransactions();
+    fetchTransactions(currentPage, itemsPerPage);
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    fetchTransactions(currentPage, itemsPerPage);
   }, []);
+
   return (
-    <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full justify-between">
         <p className="text-lg font-medium">Vendor Outstanding</p>
         <div className="flex items-center gap-5">
@@ -119,6 +151,31 @@ export default function VendorOutstanding({
           >
             Go Back
           </Button>
+          {!search && (
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <p>
+                {startIndex}-{endIndex}
+              </p>
+              <p>of</p>
+              <p>{totalItems}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                >
+                  <MdOutlineChevronLeft size={20} />
+                </button>
+                <button
+                  className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                >
+                  <MdOutlineChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <table className="w-full">
@@ -151,9 +208,15 @@ export default function VendorOutstanding({
           {filteredTransactions.map((transaction) => (
             <tr key={transaction.name}>
               <td className="py-2">{transaction.name}</td>
-              <td className="py-2">INR {transaction.totalInvoice}</td>
-              <td className="py-2">INR {transaction.totalReceived}</td>
-              <td className="py-2">INR {transaction.pendingAmount}</td>
+              <td className="py-2">
+                {formatter.format(transaction.totalInvoice)}
+              </td>
+              <td className="py-2">
+                {formatter.format(transaction.totalReceived)}
+              </td>
+              <td className="py-2">
+                {formatter.format(transaction.pendingAmount)}
+              </td>
               <td className="py-2 text-center">
                 {new Date(
                   transaction.latestPaymentDate || "",

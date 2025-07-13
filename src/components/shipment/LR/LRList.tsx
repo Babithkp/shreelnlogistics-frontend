@@ -1,7 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { MdOutlineAdd } from "react-icons/md";
+import {
+  MdOutlineAdd,
+  MdOutlineChevronLeft,
+  MdOutlineChevronRight,
+} from "react-icons/md";
 import { useEffect, useState } from "react";
-import { deleteLRApi, getLRApi, sendLREmailApi } from "@/api/shipment";
+import {
+  deleteLRApi,
+  filterLRDetailsApi,
+  filterLRDetailsForBranchApi,
+  getLRByPageApi,
+  getLRByPageForBranchApi,
+  sendLREmailApi,
+} from "@/api/shipment";
 import { motion } from "motion/react";
 import { RxCross2 } from "react-icons/rx";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -45,12 +56,10 @@ export default function LRList({
   sectionChangeHandler,
   setSelectedLRDataToEdit,
   setFormStatus,
-  data
 }: {
   sectionChangeHandler: (section: Sections) => void;
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create" | "supplementary") => void;
-  data: LrInputs[]
 }) {
   interface ExtendedLRInputs extends LrInputs {
     admin?: {
@@ -59,8 +68,8 @@ export default function LRList({
     };
     mailBody?: string;
   }
-  const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data || []);
-  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data || []);
+  const [LRData, setLRData] = useState<ExtendedLRInputs[]>([]);
+  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedLR, setSelectedLR] = useState<ExtendedLRInputs>();
   const [isOpen, setIsOpen] = useState(false);
@@ -72,6 +81,63 @@ export default function LRList({
   const [branchId, setBranchId] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [search, setSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function fetchLRDataForPage() {
+    const response = await getLRByPageApi(currentPage, itemsPerPage);
+    if (response?.status === 200) {
+      const allLRs = response.data.data;
+      setLRData(allLRs.LRData);
+      setFilteredLRs(allLRs.LRData);
+      setTotalItems(allLRs.LRCount);
+    }
+  }
+
+  async function fetchLRDataForPageForBranch() {
+    const response = await getLRByPageForBranchApi(
+      currentPage,
+      itemsPerPage,
+      branchId,
+    );
+    if (response?.status === 200) {
+      const allLRs = response.data.data;
+      setLRData(allLRs.LRData);
+      setFilteredLRs(allLRs.LRData);
+      setTotalItems(allLRs.LRCount);
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchLRDataForPage();
+    } else if (!isAdmin && branchId) {
+      fetchLRDataForPageForBranch();
+    }
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchLRDataForPage();
+    } else if (!isAdmin && branchId) {
+      fetchLRDataForPageForBranch();
+    }
+  }, [isAdmin, branchId]);
 
   useEffect(() => {
     if (selectedLR) {
@@ -79,35 +145,42 @@ export default function LRList({
     }
   }, [selectedLR]);
 
+  async function filterLRDetails(text: string) {
+    const response = await filterLRDetailsApi(text);
+    if (response?.status === 200) {
+      const filteredLR = response.data.data;
+      setFilteredLRs(filteredLR);
+    }
+  }
+
+  async function filterLRDetailsForBranch(branchId: string, text: string) {
+    const response = await filterLRDetailsForBranchApi(branchId, text);
+    if (response?.status === 200) {
+      const filteredLR = response.data.data;
+      setFilteredLRs(filteredLR);
+    }
+  }
+
   useEffect(() => {
+    if (search.trim().length === 0) {
+      setFilteredLRs(LRData);
+      return;
+    }
     const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredLRs(LRData);
-        return;
+      if (isAdmin) {
+        filterLRDetails(search);
+      } else {
+        filterLRDetailsForBranch(branchId, search);
       }
-
-      const filtered = LRData.filter((lr) =>
-        [
-          lr.lrNumber,
-          lr.client.name,
-          lr.from,
-          lr.to,
-          lr.branch.branchName,
-        ]
-          .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text)),
-      );
-
-      setFilteredLRs(filtered);
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, LRData]);
+  }, [search]);
 
   const getPdfFile = async () => {
-    const pdfFile = await pdf(<LRTemplate LRData={selectedLR} companyProfile={companyProfile} />).toBlob();
+    const pdfFile = await pdf(
+      <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />,
+    ).toBlob();
     setAttachment(pdfFile);
   };
 
@@ -122,10 +195,10 @@ export default function LRList({
     if (response?.status === 200) {
       toast.success("LR Deleted");
       setShowPreview(false);
-      if (branchId) {
-        fetchLRs(branchId);
-      } else {
-        fetchLRs();
+      if (isAdmin) {
+        fetchLRDataForPage();
+      } else if (!isAdmin && branchId) {
+        fetchLRDataForPageForBranch();
       }
     } else {
       toast.error("Failed to Delete LR");
@@ -197,20 +270,6 @@ export default function LRList({
     }
   };
 
-  async function fetchLRs(branchId?: string) {
-    const response = await getLRApi();
-    if (response?.status === 200) {
-      const allLRs: LrInputs[] = response.data.data;
-
-      const filteredLRs = branchId
-        ? allLRs.filter((lr) => lr.branchId === branchId)
-        : allLRs;
-
-      setLRData(filteredLRs);
-      setFilteredLRs(filteredLRs);
-    }
-  }
-
   async function fetchCompanyProfile() {
     const response = await getCompanyProfileApi();
     if (response?.status === 200) {
@@ -224,11 +283,10 @@ export default function LRList({
     if (!branchDetailsRaw) return;
     const branchDetails = JSON.parse(branchDetailsRaw);
     if (isAdmin === "true") {
-      fetchLRs();
       setIsAdmin(true);
+      setBranchId(branchDetails.id);
     } else {
       setIsAdmin(false);
-      fetchLRs(branchDetails.id);
       setBranchId(branchDetails.id);
     }
     fetchCompanyProfile();
@@ -248,21 +306,11 @@ export default function LRList({
       <motion.div
         animate={{ width: showPreview ? "50%" : "100%" }}
         transition={{ duration: 0.3 }}
-        className={`flex h-fit max-h-[88vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+        className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
       >
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">LRs</p>
           <div className="flex gap-5">
-            <Button
-              variant={"outline"}
-              className="border-primary text-primary cursor-pointer rounded-2xl p-5"
-              onClick={() => [
-                sectionChangeHandler("createNew"),
-                setFormStatus("supplementary"),
-              ]}
-            >
-              <MdOutlineAdd size={34} /> Add Supplementary
-            </Button>
             <Button
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
               onClick={() => [
@@ -273,6 +321,31 @@ export default function LRList({
               <MdOutlineAdd size={34} />
               Create new
             </Button>
+            {!search && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <p>
+                  {startIndex}-{endIndex}
+                </p>
+                <p>of</p>
+                <p>{totalItems}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                  >
+                    <MdOutlineChevronLeft size={20} />
+                  </button>
+                  <button
+                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                  >
+                    <MdOutlineChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
@@ -299,16 +372,14 @@ export default function LRList({
             </tr>
           </thead>
           <tbody>
-            {filteredLRs.map((data) => (
+            {filteredLRs?.map((data) => (
               <tr
                 className="hover:bg-accent cursor-pointer"
                 key={data.lrNumber}
                 onClick={() => selectLRForPreview(data)}
               >
                 <td className="py-2">{data.lrNumber}</td>
-                <td className="py-2">
-                  {data.client.name}
-                </td>
+                <td className="py-2">{data.client.name}</td>
                 <td className="py-2">
                   {new Date(data.date).toLocaleDateString()}
                 </td>
@@ -323,7 +394,7 @@ export default function LRList({
         </table>
       </motion.div>
       <motion.div
-        className="hidden flex-col gap-5 rounded-md bg-white p-5"
+        className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
         animate={{
           width: showPreview ? "50%" : "0%",
           display: showPreview ? "flex" : "none",
@@ -533,7 +604,7 @@ export default function LRList({
             </AlertDialog>
           )}
         </div>
-        <PDFViewer className="h-[75vh] w-full">
+        <PDFViewer className="h-full w-full">
           <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />
         </PDFViewer>
       </motion.div>

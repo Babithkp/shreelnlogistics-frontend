@@ -14,10 +14,62 @@ export const createBillApi = async (data: any) => {
   }
 };
 
+export const createBillsupplementaryApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/billing/createBillsupplementary`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getBillDetailsApi = async () => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/billing/getBillDetails`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getBillByPageApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/billing/getBillByPage?page=${currentPage}&limit=${itemsPerPage}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getBillByPageForBranchApi = async (
+  currentPage: number,
+  itemsPerPage: number,
+  branchId: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/billing/getBillByPageForBranch?page=${currentPage}&limit=${itemsPerPage}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillDataApi = async (data: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/billing/filterBillData/${data}`,
     );
     return response;
   } catch (error) {
@@ -98,8 +150,31 @@ export const checkBillExistsApi = async (data: any) => {
 export const filterBillBymonthApi = async (data: any) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/api/v1/billing/sendBillEmail`,
+      `${BASE_URL}/api/v1/billing/filterBillBymonth`,
       data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillBymonthForBranchApi = async (data: any, branchId: string) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/billing/filterBillBymonthForBranch/${branchId}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillDetailsForBranchApi = async (branchId: string, text: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/billing/filterBillDetailsForBranch/${branchId}/${text}`,
     );
     return response;
   } catch (error) {

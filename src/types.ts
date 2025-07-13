@@ -80,6 +80,7 @@ export interface LrInputs {
     vehicletypes: string;
     driverName: string;
     driverPhone: string;
+    vendorName: string;
   };
 }
 

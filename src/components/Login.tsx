@@ -123,7 +123,7 @@ export default function Login() {
               <FaRegUser size={14} />
               <input
                 placeholder="Username"
-                className="w-full outline-none placeholder:text-black"
+                className="w-full outline-none placeholder:font-medium"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
               />
@@ -132,7 +132,7 @@ export default function Login() {
               <MdOutlineLock size={17} />
               <input
                 placeholder="Password"
-                className="w-full outline-none placeholder:text-black"
+                className="w-full outline-none placeholder:font-medium"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"

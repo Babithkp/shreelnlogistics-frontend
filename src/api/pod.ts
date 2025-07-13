@@ -66,3 +66,27 @@ export const deletePODByNotificationApi = async (id: string) => {
     console.log(error);
   }
 };
+
+
+export const getPodByPageApi = async (page: number, limit: number, branchId?: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/pod/getPodByPage?page=${page}&limit=${limit}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const filterPODByTextApi = async (text: string, branchId?: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/pod/filterPODByText/${text}/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};

@@ -23,7 +23,6 @@ import {
 import { Select as AntSelect } from "antd";
 import {
   createLRApi,
-  getLRApi,
   updateLRDetailsApi,
 } from "../../../api/shipment";
 import { createNotificationApi, getAllClientsApi } from "../../../api/admin";
@@ -53,10 +52,9 @@ export default function LRCreate({
 }: {
   resetToDefault: () => void;
   selectedLRDataToEdit?: LrInputs;
-  formStatus: "edit" | "create" | "supplementary";
+  formStatus: "edit" | "create";
 }) {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [existingLRData, setExistingLRData] = useState<LrInputs[]>([]);
   const [branch, setBranch] = useState({
     id: "",
     branchName: "",
@@ -93,6 +91,8 @@ export default function LRCreate({
   });
 
   const setAllDataTOEdit = (data: LrInputs) => {
+    console.log(data.Vehicle);
+
     if (data) {
       setValue("id", data.id);
       setValue("lrNumber", data.lrNumber);
@@ -125,8 +125,8 @@ export default function LRCreate({
         setSize("FTL");
         setValue("ftl", data.ftl);
       }
-      setValue("Vehicle.vehicleNumber", data.Vehicle.vehicleNumber);
       setValue("vehicleId", data.Vehicle.id);
+      setValue("Vehicle.vehicleNumber", data.Vehicle.vehicleNumber);
       setValue("Vehicle.vehicletypes", data.Vehicle.vehicletypes);
       setValue("Vehicle.driverName", data.Vehicle.driverName);
       setValue("Vehicle.driverPhone", data.Vehicle.driverPhone);
@@ -239,26 +239,7 @@ export default function LRCreate({
     }));
   }
 
-  function extractLRNumberOptions(LRData: LrInputs[]): Option[] {
-    const lrCountMap: Record<string, number> = {};
 
-    for (const data of LRData) {
-      const [baseLR, suffix] = data.lrNumber.split("/");
-      const base = baseLR.trim();
-      const version = suffix ? parseInt(suffix) : 0;
-
-      lrCountMap[base] = Math.max(lrCountMap[base] || 0, version);
-    }
-
-    return Object.entries(lrCountMap).map(([baseLR, version]) => {
-      const nextVersion = version + 1;
-      const formattedLR = `${baseLR}/${nextVersion}`;
-      return {
-        value: formattedLR,
-        label: formattedLR,
-      };
-    });
-  }
 
   async function fetchVendors() {
     const responseVechicles = await getAllVehiclesApi();
@@ -268,33 +249,7 @@ export default function LRCreate({
       setVehicles(responseVechicles.data.data);
     }
   }
-  async function fetchLRData(branchId?: string) {
-    const response = await getLRApi();
-    if (response?.status === 200) {
-      const allLRs: LrInputs[] = response.data.data;
 
-      const filteredLRs = branchId
-        ? allLRs.filter((lr) => lr.branchId === branchId)
-        : allLRs;
-      setExistingLRData(filteredLRs);
-    }
-  }
-
-  const setLRData = (data: LrInputs) => {
-    setValue("from", data.from);
-    setValue("to", data.to);
-    setValue("insurance", data.insurance);
-    setValue("consignorName", data.consignorName);
-    setValue("consignorGSTIN", data.consignorGSTIN);
-    setValue("consignorPincode", data.consignorPincode);
-    setValue("consignorAddress", data.consignorAddress);
-    setValue("consigneeName", data.consigneeName);
-    setValue("consigneeGSTIN", data.consigneeGSTIN);
-    setValue("consigneeGSTIN_1", data.consigneeGSTIN);
-    setValue("consigneePincode", data.consigneePincode);
-    setValue("consigneeAddress", data.consigneeAddress);
-    setValue("client", data.client);
-  };
 
   const setConsignorData = (data: VendorInputs) => {
     setValue("consignorGSTIN", data.GSTIN);
@@ -318,6 +273,7 @@ export default function LRCreate({
   };
 
   const setVechicleData = (data: VehicleInputs) => {
+    setValue("Vehicle.vehicleNumber", data.vehicleNumber);
     setValue("Vehicle.vehicletypes", data.vehicletypes);
     setValue("Vehicle.driverName", data.driverName);
     setValue("Vehicle.driverPhone", data.driverPhone);
@@ -333,7 +289,7 @@ export default function LRCreate({
     if (selectedEmails)
       data.emails = selectedEmails.filter((email: string) => email !== "");
 
-    if (formStatus === "create" || formStatus === "supplementary") {
+    if (formStatus === "create") {
       const response = await createLRApi(data);
       if (response?.status === 200) {
         toast.success("LR has been created");
@@ -403,13 +359,11 @@ export default function LRCreate({
     const branchDetails = JSON.parse(branchDetailsRaw);
     if (isAdmin === "true") {
       setIsAdmin(true);
-      fetchLRData();
       setBranch({
         id: branchDetails.id,
         branchName: branchDetails.branchName,
       });
     } else {
-      fetchLRData(branchDetails.id);
       setBranch({
         id: branchDetails.id,
         branchName: branchDetails.branchName,
@@ -421,11 +375,7 @@ export default function LRCreate({
   return (
     <div className="flex flex-col gap-2 rounded-md bg-white p-5">
       <p className="text-xl font-medium">
-        {formStatus === "edit"
-          ? "Edit LR"
-          : formStatus === "supplementary"
-            ? "Add Supplementary"
-            : "Create LR"}
+        {formStatus === "edit" ? "Edit LR" : "Create LR"}
       </p>
       <form
         className="flex flex-wrap justify-between gap-5"
@@ -434,44 +384,13 @@ export default function LRCreate({
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
             <label className="font-medium">LR#</label>
-            {formStatus !== "supplementary" && (
-              <input
-                className={`border-primary rounded-md border p-2 ${formStatus === "edit" && "cursor-not-allowed"}`}
-                {...register("lrNumber", { required: true })}
-                disabled={formStatus === "edit"}
-              />
-            )}
-            {formStatus === "supplementary" && (
-              <Controller
-                name="lrNumber"
-                control={control}
-                defaultValue={""}
-                rules={{ required: "Please enter a vaild LR number" }}
-                render={({ field }) => (
-                  <AntSelect
-                    {...field}
-                    size="large"
-                    onChange={(value) => {
-                      field.onChange(value);
-                      const baseLR = value.split("/")[0];
-                      const match = existingLRData.find((lr) =>
-                        lr.lrNumber.startsWith(baseLR),
-                      );
 
-                      if (match) {
-                        setLRData(match);
-                      }
-                    }}
-                    showSearch
-                    options={extractLRNumberOptions(existingLRData)}
-                    style={{
-                      border: "1px solid #64BAFF",
-                      borderRadius: "10px",
-                    }}
-                  />
-                )}
-              />
-            )}
+            <input
+              className={`border-primary rounded-md border p-2 ${formStatus === "edit" && "cursor-not-allowed"}`}
+              {...register("lrNumber", { required: true })}
+              disabled={formStatus === "edit"}
+            />
+
             {errors.lrNumber && (
               <p className="text-red-500">Please enter a vaild LR number</p>
             )}
@@ -501,7 +420,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("from", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.from && (
               <p className="text-red-500">Please enter a vaild from field</p>
@@ -514,7 +432,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("to", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.to && (
               <p className="text-red-500">Please enter a vaild to field</p>
@@ -574,7 +491,6 @@ export default function LRCreate({
                     border: "1px solid #64BAFF",
                     borderRadius: "10px",
                   }}
-                  disabled={formStatus === "supplementary"}
                 />
               )}
             />
@@ -594,7 +510,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("consignorGSTIN", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.consignorGSTIN && (
               <p className="text-red-500">Please enter a vaild GSTIN</p>
@@ -607,7 +522,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("consignorPincode", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.consignorPincode && (
               <p className="text-red-500">Please enter a vaild pincode</p>
@@ -620,7 +534,6 @@ export default function LRCreate({
             <textarea
               className="border-primary rounded-md border p-2"
               {...register("consignorAddress", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.consignorAddress && (
               <p className="text-red-500">
@@ -656,7 +569,6 @@ export default function LRCreate({
                     border: "1px solid #64BAFF",
                     borderRadius: "10px",
                   }}
-                  disabled={formStatus === "supplementary"}
                 />
               )}
             />
@@ -676,7 +588,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("consigneeGSTIN")}
-              disabled={formStatus === "supplementary"}
             />
           </div>
         </div>
@@ -686,7 +597,6 @@ export default function LRCreate({
             <input
               className="border-primary rounded-md border p-2"
               {...register("consigneePincode", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.consigneePincode && (
               <p className="text-red-500">Please enter a vaild pincode</p>
@@ -699,7 +609,6 @@ export default function LRCreate({
             <textarea
               className="border-primary rounded-md border p-2"
               {...register("consigneeAddress", { required: true })}
-              disabled={formStatus === "supplementary"}
             />
             {errors.consigneeAddress && (
               <p className="text-red-500">
@@ -794,7 +703,6 @@ export default function LRCreate({
                         placeholder="Type here..."
                         className="p-1 outline-none"
                         {...register("consigneeGSTIN_1")}
-                        disabled={formStatus === "supplementary"}
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -883,10 +791,10 @@ export default function LRCreate({
                 <td className="border-primary border p-2 align-top">
                   <div className="flex flex-col items-center justify-between gap-20">
                     <div>
-                      <div className="flex items-center gap-5">
+                      <div className="flex flex-col gap-2">
                         <p className="text-xs font-medium">Vehicle No.</p>
                         <Controller
-                          name="Vehicle.vehicleNumber"
+                          name="vehicleId"
                           control={control}
                           defaultValue=""
                           rules={{ required: "Please select a vehicle" }}
@@ -895,16 +803,22 @@ export default function LRCreate({
                               showSearch
                               placeholder="Select vehicle... "
                               options={vehicles.map((vehicle) => ({
-                                value: vehicle.vehicleNumber,
-                                label: vehicle.vehicleNumber,
+                                value: vehicle.id,
+                                label: `${vehicle.vehicleNumber}-${vehicle.vendorName}`,
                               }))}
-                              className="w-[50%]"
+                              filterOption={(input, option) => {
+                                if (!option || !option.label) return false;
+                                return option.label
+                                  .toLowerCase()
+                                  .includes(input.toLowerCase());
+                              }}
+                              className="w-[100%]"
                               size="middle"
                               value={field.value}
                               onChange={(value) => {
                                 field.onChange(value);
                                 const selectedVehicle = vehicles.find(
-                                  (veh) => veh.vehicleNumber === value,
+                                  (veh) => veh.id === value,
                                 );
                                 if (selectedVehicle) {
                                   setVechicleData(selectedVehicle);
@@ -1142,7 +1056,6 @@ export default function LRCreate({
                       border: "1px solid #64BAFF",
                       borderRadius: "10px",
                     }}
-                    disabled={formStatus === "supplementary"}
                   />
                 )}
               />
@@ -1167,8 +1080,6 @@ export default function LRCreate({
               <VscLoading size={24} className="animate-spin" />
             ) : formStatus === "edit" ? (
               "Update LR"
-            ) : formStatus === "supplementary" ? (
-              "Add Supplementary"
             ) : (
               "Create LR"
             )}
@@ -1179,7 +1090,7 @@ export default function LRCreate({
         open={notificationAlertOpen}
         onOpenChange={setNotificationAlertOpen}
       >
-        <AlertDialogTrigger className="cursor-pointer"></AlertDialogTrigger>
+        <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Alert!</AlertDialogTitle>

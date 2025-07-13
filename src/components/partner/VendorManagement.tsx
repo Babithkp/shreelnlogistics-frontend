@@ -48,10 +48,13 @@ import { TbCopy } from "react-icons/tb";
 import {
   createVehicleApi,
   createVendorApi,
+  deleteVehicleApi,
   // deleteVehicleApi,
   deleteVendorApi,
+  filterVendorByNameApi,
   getAllVehiclesApi,
   getAllVendorsApi,
+  getVendorForPageApi,
   updateVehicleDetailsApi,
   updateVendorDetailsApi,
 } from "@/api/partner";
@@ -59,6 +62,7 @@ import { getGeneralSettingsApi } from "@/api/settings";
 import { generalSettings, VehicleInputs, VendorInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
+import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
 
 type Option = { value: string; label: string };
 type SortOrder = "asc" | "desc";
@@ -75,11 +79,10 @@ export default function VendorManagement({
   const [isLoading, setIsLoading] = useState(false);
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [filteredVendors, setFilteredVendors] = useState<VendorInputs[]>([]);
-  const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
+  // const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<VehicleInputs[]>([]);
   const [vendorSortOrder, setVendorSortOrder] = useState<SortOrder>("asc");
   const [showVehicles, setShowVehicles] = useState(false);
-  const [isVendorNameAvailable, setIsVendorNameAvailable] = useState(true);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<VendorInputs>();
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleInputs>();
@@ -95,6 +98,34 @@ export default function VendorManagement({
   });
   const [search, setSearch] = useState("");
   const [isVehicleNameMatched, setIsVehicleNameMatched] = useState(false);
+  const [isVendorNameMatched, setIsVendorNameMatched] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function getVendorForPage(page: number, limit: number) {
+    const response = await getVendorForPageApi(page, limit);
+    if (response?.status === 200) {
+      const allVendors = response.data.data;
+      setFilteredVendors(allVendors.vendorData);
+      setVendors(allVendors.vendorData);
+      setTotalItems(allVendors.vendorCount);
+    }
+  }
 
   async function fetchVehicleType() {
     const response = await getGeneralSettingsApi();
@@ -103,16 +134,17 @@ export default function VendorManagement({
       setVehicleTypes(vehicles.vehicleTypes);
     }
   }
-  useEffect(() => {
-    fetchVehicleType();
-  }, []);
 
   useEffect(() => {
-    setVehicles(vehiclesData);
-    setFilteredVehicles(vehiclesData);
-    setVendors(vendorsData);
-    setFilteredVendors(vendorsData);
-  }, [vendorsData, vehiclesData]);
+    getVendorForPage(currentPage, itemsPerPage);
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    fetchVehicleType();
+    getVendorForPage(currentPage, itemsPerPage);
+  }, []);
+
+
 
   const {
     handleSubmit,
@@ -133,6 +165,14 @@ export default function VendorManagement({
     formState: { errors: VehicleErrors },
   } = useForm<VehicleInputs>();
 
+  async function filterVendorByName(search: string) {
+    const response = await filterVendorByNameApi(search);
+    if (response?.status === 200) {
+      const allVendors = response.data.data;
+      setFilteredVendors(allVendors);
+    }
+  }
+
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
@@ -141,22 +181,7 @@ export default function VendorManagement({
         setFilteredVendors(vendors);
         return;
       }
-      const filtered = vendors.filter((vendor) =>
-        [
-          vendor.name,
-          vendor.GSTIN,
-          vendor.contactPerson,
-          vendor.contactNumber,
-          vendor.address,
-          vendor.city,
-          vendor.state,
-          vendor.pincode,
-        ]
-          .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text)),
-      );
-
-      setFilteredVendors(filtered);
+      filterVendorByName(text);
     }, 300);
 
     return () => clearTimeout(delay);
@@ -224,9 +249,9 @@ export default function VendorManagement({
         reset();
         setIsModalOpen(false);
       } else if (response?.status === 201) {
-        setIsVendorNameAvailable(false);
+        setIsVendorNameMatched(true);
         setTimeout(() => {
-          setIsVendorNameAvailable(true);
+          setIsVendorNameMatched(false);
         }, 2000);
       } else {
         toast.error("Something Went Wrong");
@@ -248,11 +273,6 @@ export default function VendorManagement({
           };
           await createNotificationApi(notificationData);
         }
-      } else if (response?.status === 201) {
-        setIsVendorNameAvailable(false);
-        setTimeout(() => {
-          setIsVendorNameAvailable(true);
-        }, 2000);
       } else {
         toast.error("Something Went Wrong");
       }
@@ -281,28 +301,27 @@ export default function VendorManagement({
     }
   };
 
-  // const onVehicleDeleteHandler = async (id: string) => {
-  //   const response = await deleteVehicleApi(id);
-  //   if (response?.status === 200) {
-  //     toast.success("Vehicle Deleted");
-  //     fetchVehicles();
-  //     setIsDetailsModalOpen(false);
-  //     fetchVehicles();
-  //     fetchVendors();
-  //     if (!branch.isAdmin) {
-  //       const notificationData = {
-  //         requestId: selectedVendor?.id,
-  //         title: "Vehicle delete",
-  //         message: branch.branchName,
-  //         description: selectedVendor?.name,
-  //         status: "editable",
-  //       };
-  //       await createNotificationApi(notificationData);
-  //     }
-  //   } else {
-  //     toast.error("Failed to Delete Vehicle");
-  //   }
-  // };
+  const onVehicleDeleteHandler = async (id: string) => {
+    const response = await deleteVehicleApi(id);
+    if (response?.status === 200) {
+      toast.success("Vehicle Deleted");
+      fetchVehicles();
+      setIsDetailsModalOpen(false);
+      fetchVendors();
+      if (!branch.isAdmin) {
+        const notificationData = {
+          requestId: selectedVendor?.id,
+          title: "Vehicle delete",
+          message: branch.branchName,
+          description: selectedVendor?.name,
+          status: "editable",
+        };
+        await createNotificationApi(notificationData);
+      }
+    } else {
+      toast.error("Failed to Delete Vehicle");
+    }
+  };
 
   const sortVendorsByName = () => {
     const newOrder: SortOrder = vendorSortOrder === "asc" ? "desc" : "asc";
@@ -381,7 +400,6 @@ export default function VendorManagement({
   async function fetchVehicles() {
     const response = await getAllVehiclesApi();
     if (response?.status === 200) {
-      setVehicles(response.data.data);
       setFilteredVehicles(response.data.data);
     }
   }
@@ -408,17 +426,8 @@ export default function VendorManagement({
   }, []);
 
   return (
-    <>
-      <div className="relative flex gap-10">
-        <div className="absolute -top-17 right-[13vw] flex items-center gap-2 rounded-full bg-white p-3 px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+    <div className="flex flex-col gap-5 ">
+      <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
             <div className="rounded-full bg-[#F4F7FE] p-3">
@@ -426,7 +435,7 @@ export default function VendorManagement({
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Vendors</p>
-              <p className="text-xl">{vendors?.length}</p>
+              <p className="text-xl">{vendorsData?.length}</p>
             </div>
           </div>
         </div>
@@ -439,7 +448,7 @@ export default function VendorManagement({
               <p className="text-muted text-sm">Total outstanding payment</p>
               <p className="text-xl">
                 INR{" "}
-                {vendors
+                {vendorsData
                   .reduce((acc, data) => acc + data.currentOutStanding, 0)
                   .toFixed(2)}
               </p>
@@ -454,19 +463,19 @@ export default function VendorManagement({
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Total vehicles</p>
-              <p className="text-xl">{vehicles?.length}</p>
+              <p className="text-xl">{vehiclesData?.length}</p>
             </div>
           </div>
         </div>
       </div>
 
       {
-        <section className="flex flex-col gap-5 rounded-md bg-white p-5">
+        <section className="flex flex-col gap-5 rounded-md bg-white p-5 max-h-[73vh] overflow-y-auto">
           <div className="flex items-center justify-between">
             <p className="text-xl font-medium">
               {showVehicles ? "All Vechiles" : "All Vendors"}
             </p>
-            <div className="flex gap-5">
+            <div className="flex items-center gap-5">
               <Modal
                 open={isModalOpen}
                 width={1240}
@@ -491,7 +500,7 @@ export default function VendorManagement({
                     {errors.name && (
                       <p className="text-red-500">Vendor Name is required</p>
                     )}
-                    {!isVendorNameAvailable && (
+                    {isVendorNameMatched && (
                       <p className="text-red-500">
                         Vendor Name already exists, please try another one
                       </p>
@@ -967,6 +976,15 @@ export default function VendorManagement({
                   </div>
                 </form>
               </Modal>
+              {!showVehicles && <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                <LuSearch size={18} />
+                <input
+                  placeholder="Search"
+                  className="outline-none placeholder:font-medium"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>}
 
               <Button
                 className="bg-secondary hover:bg-muted/30 cursor-pointer rounded-xl text-black"
@@ -993,6 +1011,31 @@ export default function VendorManagement({
                 <IoMdAdd color="white" size={30} />
                 Add Vendor
               </Button>
+              {!showVehicles && !search && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <p>
+                    {startIndex}-{endIndex}
+                  </p>
+                  <p>of</p>
+                  <p>{totalItems}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePrev}
+                      disabled={currentPage === 1}
+                      className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                    >
+                      <MdOutlineChevronLeft size={20} />
+                    </button>
+                    <button
+                      className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                    >
+                      <MdOutlineChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {!showVehicles && (
@@ -1323,7 +1366,7 @@ export default function VendorManagement({
                           >
                             <RiEditBoxLine size={20} />
                           </button>
-                          {/* <AlertDialog>
+                          <AlertDialog>
                             <AlertDialogTrigger className="cursor-pointer">
                               <RiDeleteBin6Line size={20} color="red" />
                             </AlertDialogTrigger>
@@ -1347,7 +1390,7 @@ export default function VendorManagement({
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
-                          </AlertDialog> */}
+                          </AlertDialog>
                         </div>
                       </td>
                     </tr>
@@ -1364,6 +1407,6 @@ export default function VendorManagement({
           </DialogContent>
         )}
       </Dialog>
-    </>
+    </div>
   );
 }

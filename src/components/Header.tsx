@@ -1037,7 +1037,7 @@ export default function Header({
   }, []);
 
   return (
-    <section className="flex w-full justify-between">
+    <section className="flex w-full justify-between pb-5">
       <div>
         <p className="text-sm font-medium text-[#707EAE]">
           {isAdmin ? "Admin" : branchDetails?.branchName}

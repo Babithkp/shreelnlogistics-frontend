@@ -75,26 +75,33 @@ export const getAllRecordPaymentApi = async () => {
   }
 };
 
-export const filterRecordPaymentApi = async (data:any) => {
+export const getRecentPaymentsForPageApi = async (
+  page: number,
+  limit: number,
+) => {
   try {
-    const response = await axios.post(`${BASE_URL}/api/v1/filterRecordPayment`, data);
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getAllRecordPaymentForPage?page=${page}&limit=${limit}`,
+    );
     return response;
   } catch (error) {
     console.log(error);
   }
 };
 
-export const filterBranchBymonthApi = async (data:any) => {
+export const filterBranchBymonthApi = async (data: any) => {
+  console.log("Filter Branch By Month");
+
   try {
-    const response = await axios.post(`${BASE_URL}/api/v1/filterBranchBymonth`, data);
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/filterBranchBymonth`,
+      data,
+    );
     return response;
   } catch (error) {
     console.log(error);
   }
 };
-
-
-
 
 export const getBranchNotificationsApi = async (branchId: string) => {
   try {
@@ -112,6 +119,59 @@ export const createNotificationForBranchApi = async (data: any) => {
     const response = await axios.post(
       `${BASE_URL}/api/v1/createNotificationForBranch`,
       data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterRecentPaymentsForPageApi = async (
+  page: number,
+  limit: number,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getAllRecordPaymentForPage?page=${page}&limit=${limit}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterRecentPaymentsForBranchPageApi = async (
+  page: number,
+  limit: number,
+  branchId: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getAllRecordPaymentForBranchPage?page=${page}&limit=${limit}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const filterRecordPaymentApi = async (name: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterRecordPaymentByName/${name}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterRecordPaymentByNameForBranchApi = async (
+  name: string,
+  branchId: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/filterRecordPaymentByNameForBranch/${name}/${branchId}`,
     );
     return response;
   } catch (error) {

@@ -15,7 +15,6 @@ import { useNavigate } from "react-router";
 import { getAllVehiclesApi, getAllVendorsApi } from "@/api/partner";
 import { toast } from "react-toastify";
 import { getAllClientsApi } from "@/api/admin";
-import { getAllBranchDetailsApi } from "@/api/branch";
 import Branch from "./components/branch/Branch";
 import ClientManagement from "./components/partner/ClientManagement";
 import VendorManagement from "./components/partner/VendorManagement";
@@ -37,14 +36,10 @@ import {
 import OutStandingPage from "./components/outstanding/OutStandingPage";
 import Statements from "./components/statements/Statements";
 import { getBillByBranchIdApi, getBillDetailsApi } from "./api/billing";
-import { getFMApi, getFmByBranchId, getLRApi } from "./api/shipment";
 import {
   billInputs,
-  BranchInputs,
   ClientInputs,
-  FMInputs,
   generalSettings,
-  LrInputs,
   Section,
   SectionsState,
   VehicleInputs,
@@ -83,18 +78,14 @@ export default function Home() {
   const [dropDown, setDropDown] = useState({
     shipment: false,
     partner: false,
-    billing: false,
   });
 
   const navigate = useNavigate();
-  const [branches, setBranches] = useState<BranchInputs[]>([]);
   const [clients, setClients] = useState<ClientInputs[]>([]);
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
-  const [lrData, setLRData] = useState<LrInputs[]>([]);
   const [settings, setSettings] = useState<Setting>();
   const [billData, setBillData] = useState<billInputs[]>([]);
-  const [fmData, setFMData] = useState<FMInputs[]>([]);
   const [branch, setBranch] = useState({
     id: "",
     branchName: "",
@@ -104,17 +95,10 @@ export default function Home() {
   const onLogoutHandler = () => {
     localStorage.removeItem("isAdmin");
     localStorage.removeItem("id");
+    localStorage.removeItem("branchDetails");
     navigate("/");
   };
 
-  async function getBranchDetails() {
-    const response = await getAllBranchDetailsApi();
-    if (response?.status === 200) {
-      setBranches(response.data.data);
-    } else {
-      toast.error("Failed to fetch Branch Details");
-    }
-  }
 
   async function getClientDetails() {
     const response = await getAllClientsApi();
@@ -163,60 +147,16 @@ export default function Home() {
     }
   };
 
-  const getBillDetailsByBranchId = async (branchId: string) => {
-    const response = await getBillByBranchIdApi(branchId);
-    if (response?.status === 200) {
-      const data = response.data.data;
-      setBillData(data);
-    }
-  };
 
-  async function fetchFMs() {
-    const response = await getFMApi();
-    if (response?.status === 200) {
-      const data = response.data.data;
-      setFMData(data);
-    }
-  }
-
-  async function fetchFMsByBranchId(branchId: string) {
-    const response = await getFmByBranchId(branchId);
-    if (response?.status === 200) {
-      const data = response.data.data;
-      setFMData(data);
-    }
-  }
-
-  async function fetchLRs() {
-    const response = await getLRApi();
-    if (response?.status === 200) {
-      const data = response.data.data;
-      setLRData(data);
-    }
-  }
-
-  async function fetchLRsByBranchId(branchId: string) {
-    const response = await getLRApi();
-    if (response?.status === 200) {
-      const data = response.data.data;
-      const filteredData = data.filter((lr: LrInputs) => lr.branchId === branchId);
-      setLRData(filteredData);
-    }
-  }
 
   const onRefresh = async () => {
     if (branch.isAdmin) {
-      fetchFMs();
       getBillDetails();
-      fetchLRs();
     } else {
-      fetchFMsByBranchId(branch.id);
       getBillByBranchIdApi(branch.id);
-      fetchLRsByBranchId(branch.id);
     }
     fetchVendors();
     fetchVehicles();
-    getBranchDetails();
     getClientDetails();
   };
 
@@ -232,26 +172,19 @@ export default function Home() {
           branchName: branch.branchName,
           isAdmin: true,
         });
-        getBillDetails();
-        fetchFMs();
-        fetchLRs();
       } else {
         setBranch({
           id: branch.id,
           branchName: branch.branchName,
           isAdmin: false,
         });
-        getBillDetailsByBranchId(branch.id);
-        fetchFMsByBranchId(branch.id);
-        fetchLRsByBranchId(branch.id);
       }
     }
 
-    getBranchDetails();
-    getClientDetails();
     fetchSettings();
     fetchVendors();
     fetchVehicles();
+    getClientDetails();
   }, []);
 
   const sectionDropChangeHandler = (section: DropDowns) => {
@@ -274,7 +207,7 @@ export default function Home() {
       section !== "client" &&
       section !== "Bill"
     ) {
-      setDropDown({ shipment: false, partner: false, billing: false });
+      setDropDown({ shipment: false, partner: false });
     }
     setSections((prev) => {
       const updatedSections: SectionsState = Object.keys(prev).reduce(
@@ -358,9 +291,7 @@ export default function Home() {
                 size={24}
                 color={`${sections.Bill ? "#2196F3" : "#A3AED0"}`}
               />
-              <p className={`${sections.Bill ? "text-black" : ""}`}>
-                Billing
-              </p>
+              <p className={`${sections.Bill ? "text-black" : ""}`}>Billing</p>
             </button>
           </div>
           <div
@@ -491,26 +422,17 @@ export default function Home() {
           {version && <p>v{version}</p>}
         </div>
       </nav>
-      <section className="flex h-full w-full flex-col gap-5 overflow-y-auto p-5">
+      <div className="flex h-full w-full flex-col overflow-y-auto p-5">
         <Header
           title={sections}
           setSections={setSections}
           onFresh={onRefresh}
         />
-        {sections.dashboard && (
-          <Dashboard
-            branchLength={branches.length}
-            clientLength={clients.length}
-            vendorLength={vendors.length}
-            billData={billData}
-            fmData={fmData}
-            branchData={branches}
-          />
-        )}
+        {sections.dashboard && <Dashboard />}
         {sections.branch && <Branch />}
-        {sections.LR && <LRPage lrData={lrData} />}
-        {sections.FM && <FMPage fmData={fmData} />}
-        {sections.client && <ClientManagement data={clients} />}
+        {sections.LR && <LRPage />}
+        {sections.FM && <FMPage />}
+        {sections.client && <ClientManagement data={clients}/>}
         {sections.vendor && (
           <VendorManagement vendorsData={vendors} vehiclesData={vehicles} />
         )}
@@ -527,7 +449,7 @@ export default function Home() {
         {sections.expenses && <Expenses />}
         {sections.outstanding && <OutStandingPage />}
         {sections.statements && <Statements />}
-      </section>
+      </div>
     </main>
   );
 }

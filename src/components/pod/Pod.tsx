@@ -1,4 +1,8 @@
-import { MdOutlineAdd } from "react-icons/md";
+import {
+  MdOutlineAdd,
+  MdOutlineChevronLeft,
+  MdOutlineChevronRight,
+} from "react-icons/md";
 import { Button } from "../ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Select } from "antd";
@@ -14,7 +18,9 @@ import { toast } from "react-toastify";
 import {
   createPODApi,
   deletePODApi,
+  filterPODByTextApi,
   getAllPODsApi,
+  getPodByPageApi,
   updatePODDetailsApi,
 } from "@/api/pod";
 import {
@@ -83,6 +89,24 @@ export default function Pod() {
     useState<Record<string, any>>();
   const [search, setSearch] = useState("");
   const [LRList, setLRList] = useState<LrInputs[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (branch.branchName) {
@@ -108,6 +132,18 @@ export default function Pod() {
     }
   };
 
+  async function filterPODByText(text: string, branchId?: string) {
+    let branchIdToBeUsed = null;
+    if (branchId) {
+      branchIdToBeUsed = branchId;
+    }
+    const response = await filterPODByTextApi(text, branchIdToBeUsed);
+    if (response?.status === 200) {
+      const filtered = response.data.data;
+      setFilteredPods(filtered);
+    }
+  }
+
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
@@ -117,30 +153,11 @@ export default function Pod() {
         return;
       }
 
-      const filtered = pods.filter((pod) => {
-        const fieldsToSearch: (string | number | undefined | null)[] = [
-          pod.lrNumber,
-          pod.date,
-          pod.from,
-          pod.to,
-          pod.clientName,
-          pod.clientGSTIN,
-          pod.receivingDate,
-          pod.receivingBranch,
-          pod.documentLink,
-        ];
-
-        return fieldsToSearch.some((field) => {
-          if (typeof field === "string") {
-            return field.toLowerCase().includes(text);
-          }
-          if (typeof field === "number") {
-            return field.toString().includes(text);
-          }
-          return false;
-        });
-      });
-      setFilteredPods(filtered);
+      if (isAdmin) {
+        filterPODByText(text);
+      } else {
+        filterPODByText(text, branch.branchId);
+      }
     }, 300);
     return () => clearTimeout(delay);
   }, [search, pods]);
@@ -351,6 +368,36 @@ export default function Pod() {
     }
   }
 
+  async function getPODByPage(page: number, limit: number, branchId?: string) {
+    let branchIdToBeUsed = null;
+    if (branchId) {
+      branchIdToBeUsed = branchId;
+    }
+    const response = await getPodByPageApi(page, limit, branchIdToBeUsed);
+    if (response?.status === 200) {
+      const allPods = response.data.data;
+      setFilteredPods(allPods.PODData);
+      setPods(allPods.PODData);
+      setTotalItems(allPods.PODCount);
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      getPODByPage(currentPage, itemsPerPage);
+    } else if (!isAdmin && branch.branchId) {
+      getPODByPage(currentPage, itemsPerPage, branch.branchId);
+    }
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      getPODByPage(currentPage, itemsPerPage);
+    } else if (!isAdmin && branch.branchId) {
+      getPODByPage(currentPage, itemsPerPage, branch.branchId);
+    }
+  }, [isAdmin, branch.branchId]);
+
   useEffect(() => {
     fetchClients();
     fetchLRs();
@@ -361,19 +408,19 @@ export default function Pod() {
       const branchDetails = JSON.parse(branchDetailsRaw);
 
       if (isAdmin === "true") {
+        setIsAdmin(true);
         setBranch({
           branchId: branchDetails.id,
           branchName: branchDetails.branchName,
           isAdmin: true,
         });
-        fetchPods();
       } else {
+        setIsAdmin(false);
         setBranch({
           branchId: branchDetails.id,
           branchName: branchDetails.branchName,
           isAdmin: false,
         });
-        fetchPods(branchDetails.id);
       }
     }
   }, []);
@@ -389,21 +436,48 @@ export default function Pod() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <section className="relative flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <section className="relative flex h-fit max-h-[83vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">POD</p>
-          <Button
-            className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
-            onClick={() => [
-              setIsOpen(true),
-              reset(),
-              setSelectedPOD(null),
-              setFormStatus("New"),
-            ]}
-          >
-            <MdOutlineAdd size={34} />
-            Create new
-          </Button>
+          <div className="flex items-center gap-5">
+            <Button
+              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              onClick={() => [
+                setIsOpen(true),
+                reset(),
+                setSelectedPOD(null),
+                setFormStatus("New"),
+              ]}
+            >
+              <MdOutlineAdd size={34} />
+              Create new
+            </Button>
+            {!search && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <p>
+                  {startIndex}-{endIndex}
+                </p>
+                <p>of</p>
+                <p>{totalItems}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                  >
+                    <MdOutlineChevronLeft size={20} />
+                  </button>
+                  <button
+                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                  >
+                    <MdOutlineChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <table className="w-full">
           <thead>
@@ -438,14 +512,16 @@ export default function Pod() {
                 <td className="py-2">{pod.lrNumber}</td>
                 <td className="py-2">{pod.clientName}</td>
                 <td className="py-2">{pod.receivingDate}</td>
-                <td className="py-2 ">{new Date(pod.date).toLocaleDateString()}</td>
+                <td className="py-2">
+                  {new Date(pod.date).toLocaleDateString()}
+                </td>
                 <td className="py-2 text-center">
-
-                {Math.floor(
-                  (new Date(pod.receivingDate).getTime() -
-                  new Date(pod.date).getTime()) /
-                  (1000 * 60 * 60 * 24),
-                )} days
+                  {Math.floor(
+                    (new Date(pod.receivingDate).getTime() -
+                      new Date(pod.date).getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  )}{" "}
+                  days
                 </td>
               </tr>
             ))}

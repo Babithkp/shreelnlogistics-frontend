@@ -1,7 +1,11 @@
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import { Button } from "../ui/button";
-import { MdOutlineAdd } from "react-icons/md";
+import {
+  MdOutlineAdd,
+  MdOutlineChevronLeft,
+  MdOutlineChevronRight,
+} from "react-icons/md";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Select } from "antd";
@@ -15,13 +19,15 @@ import {
 import {
   convertToINRWords,
   filterOnlyCompletePrimitiveDiffs,
+  formatter,
   getUnmatchingFields,
 } from "@/lib/utils";
 import { getGeneralSettingsApi } from "@/api/settings";
 import {
   createExpenseApi,
   deleteExpenseApi,
-  getAllExpensesApi,
+  filterExpensesByTitleApi,
+  getExpenseByPageApi,
   updateExpenseDetailsApi,
 } from "@/api/expense";
 import { toast } from "react-toastify";
@@ -78,6 +84,24 @@ export default function Expenses() {
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
   const [search, setSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
 
   const {
     handleSubmit,
@@ -100,6 +124,18 @@ export default function Expenses() {
     }
   }, [amount, setValue]);
 
+  async function filterExpenseByTitle(text: string, branchId?: string) {
+    let branchIdToBeUsed = null;
+    if (branchId) {
+      branchIdToBeUsed = branchId;
+    }
+    const response = await filterExpensesByTitleApi(text, branchIdToBeUsed);
+    if (response?.status === 200) {
+      const allExpenses = response.data.data;
+      setFilteredExpenses(allExpenses);
+    }
+  }
+
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
@@ -109,35 +145,11 @@ export default function Expenses() {
         return;
       }
 
-      const filtered = expenses.filter((expense) => {
-        const fieldsToSearch: (string | number | undefined | null)[] = [
-          expense.expenseId,
-          expense.description,
-          expense.date,
-          expense.category,
-          expense.customerName,
-          expense.linkTo,
-          expense.billNumber,
-          expense.fmNumber,
-          expense.amount,
-          expense.amountInWords,
-          expense.paymentType,
-          expense.transactionNumber,
-          expense.title,
-        ];
-
-        return fieldsToSearch.some((field) => {
-          if (typeof field === "string") {
-            return field.toLowerCase().includes(text);
-          }
-          if (typeof field === "number") {
-            return field.toString().includes(text);
-          }
-          return false;
-        });
-      });
-
-      setFilteredExpenses(filtered);
+      if (branch.isAdmin) {
+        filterExpenseByTitle(text);
+      } else {
+        filterExpenseByTitle(text, branch.id);
+      }
     }, 300);
 
     return () => clearTimeout(delay);
@@ -157,10 +169,10 @@ export default function Expenses() {
         reset();
         setIsOpen(false);
 
-        if (branch.isAdmin) {
-          fetchExpenses();
-        } else {
-          fetchExpenses(branch.id);
+        if (isAdmin) {
+          fetchExpense();
+        } else if (!isAdmin && branch.id) {
+          fetchExpense(branch.id);
         }
       } else if (response?.status === 201) {
         toast.warning("Expense Id already exists, please try another one");
@@ -184,10 +196,10 @@ export default function Expenses() {
         toast.success("Expense Updated");
         reset();
         setIsOpen(false);
-        if (branch.isAdmin) {
-          fetchExpenses();
-        } else {
-          fetchExpenses(branch.id);
+        if (isAdmin) {
+          fetchExpense();
+        } else if (!isAdmin && branch.id) {
+          fetchExpense(branch.id);
         }
       }
     }
@@ -207,10 +219,10 @@ export default function Expenses() {
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
       setNotificationAlertOpen(false);
-      if (branch.isAdmin) {
-        fetchExpenses();
-      } else {
-        fetchExpenses(branch.id);
+      if (isAdmin) {
+        fetchExpense();
+      } else if (!isAdmin && branch.id) {
+        fetchExpense(branch.id);
       }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -231,10 +243,10 @@ export default function Expenses() {
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
-      if (branch.isAdmin) {
-        fetchExpenses();
-      } else {
-        fetchExpenses(branch.id);
+      if (isAdmin) {
+        fetchExpense();
+      } else if (!isAdmin && branch.id) {
+        fetchExpense(branch.id);
       }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -271,18 +283,6 @@ export default function Expenses() {
     }
   }
 
-  async function fetchExpenses(branchId?: string) {
-    const response = await getAllExpensesApi();
-    if (response?.status === 200) {
-      const allExpenses: ExpensesInputs[] = response.data.data;
-      const filteredExpenses = branchId
-        ? allExpenses.filter((expense) => expense.branchesId === branchId)
-        : allExpenses;
-      setExpenses(filteredExpenses);
-      setFilteredExpenses(filteredExpenses);
-    }
-  }
-
   async function deleteExpense() {
     if (!selectedExpense) {
       return;
@@ -291,10 +291,10 @@ export default function Expenses() {
     if (response?.status === 200) {
       toast.success("Expense Deleted");
       setIsDetailsModalOpen(false);
-      if (branch.isAdmin) {
-        fetchExpenses();
-      } else {
-        fetchExpenses(branch.id);
+      if (isAdmin) {
+        fetchExpense();
+      } else if (!isAdmin && branch.id) {
+        fetchExpense(branch.id);
       }
     } else {
       toast.error("Failed to Delete Expense");
@@ -308,6 +308,41 @@ export default function Expenses() {
     }
   }
 
+  async function fetchExpense(branchId?: string) {
+    let branchIdToBeUsed = null;
+    if (branchId) {
+      branchIdToBeUsed = branchId;
+    }
+    const response = await getExpenseByPageApi(
+      currentPage,
+      itemsPerPage,
+      branchIdToBeUsed,
+    );
+    if (response?.status === 200) {
+      const allExpenses = response.data.data;
+      setFilteredExpenses(allExpenses.ExpenseData);
+      setExpenses(allExpenses.ExpenseData);
+      setTotalItems(allExpenses.ExpenseCount);
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchExpense();
+    } else if (!isAdmin && branch.id) {
+      fetchExpense(branch.id);
+    }
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchExpense();
+    } else if (!isAdmin && branch.id) {
+      fetchExpense(branch.id);
+    }
+  }, [isAdmin, branch.id]);
+
+
   useEffect(() => {
     fetchVendors();
     const isAdmin = localStorage.getItem("isAdmin");
@@ -317,38 +352,29 @@ export default function Expenses() {
       const branchDetails = JSON.parse(branch);
       if (branchDetails) {
         if (isAdmin === "true") {
+          setIsAdmin(true)
           setValue("adminId", branchDetails.id);
-          fetchExpenses();
           setBranch({
             id: branchDetails.id,
             branchName: "",
             isAdmin: true,
           });
         } else {
+          setIsAdmin(false)
           setValue("branchesId", branchDetails.id);
           setBranch({
             id: branchDetails.id,
             branchName: branchDetails.branchName,
             isAdmin: false,
           });
-          fetchExpenses(branchDetails.id);
         }
       }
     }
   }, []);
 
   return (
-    <>
-      <section className="relative flex justify-between gap-5">
-        <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+    <div className="flex flex-col gap-5">
+      <section className="flex justify-between gap-5">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
             <div className="rounded-full bg-[#F4F7FE] p-3">
@@ -357,13 +383,12 @@ export default function Expenses() {
             <div className="font-medium">
               <p className="text-muted text-xs">Total Expenses</p>
               <p className="text-xl">
-                INR{" "}
-                {expenses
-                  .reduce(
+                {formatter.format(
+                  expenses.reduce(
                     (acc, data) => acc + (parseFloat(data.amount) || 0),
                     0,
-                  )
-                  .toFixed(2)}
+                  ),
+                )}
               </p>
             </div>
           </div>
@@ -380,22 +405,58 @@ export default function Expenses() {
           </div>
         </div>
       </section>
-      <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">All Expenses</p>
-          <Button
-            className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
-            onClick={() => [
-              setIsOpen(true),
-              reset(),
-              setSelectedExpense(null),
-              setFormStatus("New"),
-              getExpenseId(),
-            ]}
-          >
-            <MdOutlineAdd size={34} />
-            Record Expense
-          </Button>
+          <div className="flex items-center gap-5">
+            <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+              <LuSearch size={18} />
+              <input
+                placeholder="Search"
+                className="outline-none placeholder:font-medium"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button
+              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              onClick={() => [
+                setIsOpen(true),
+                reset(),
+                setSelectedExpense(null),
+                setFormStatus("New"),
+                getExpenseId(),
+              ]}
+            >
+              <MdOutlineAdd size={34} />
+              Record Expense
+            </Button>
+            {!search && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <p>
+                  {startIndex}-{endIndex}
+                </p>
+                <p>of</p>
+                <p>{totalItems}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                  >
+                    <MdOutlineChevronLeft size={20} />
+                  </button>
+                  <button
+                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                  >
+                    <MdOutlineChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <table className="w-full">
           <thead>
@@ -430,7 +491,9 @@ export default function Expenses() {
               >
                 <td className="py-2">{expense.expenseId}</td>
                 <td className="py-2">{expense.title}</td>
-                <td className="py-2">{new Date(expense.date).toLocaleDateString()}</td>
+                <td className="py-2">
+                  {new Date(expense.date).toLocaleDateString()}
+                </td>
                 <td className="py-2">{expense.category}</td>
                 {expense.Branches && (
                   <td className="py-2 text-center">
@@ -442,7 +505,9 @@ export default function Expenses() {
                     {expense.Admin?.branchName}
                   </td>
                 )}
-                <td className="py-2 text-center">{expense.amount}</td>
+                <td className="py-2">
+                  {formatter.format(parseFloat(expense.amount))}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -916,6 +981,6 @@ export default function Expenses() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

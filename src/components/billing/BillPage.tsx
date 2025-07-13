@@ -19,6 +19,7 @@ export default function BillPage({
   });
   const [selectedBillToEdit, setSelectedBillToEdit] =
     useState<billInputs | null>(null);
+    const [supplementary, setSupplementary] = useState(false);
 
   return (
     <>
@@ -28,6 +29,7 @@ export default function BillPage({
           sectionChangeHandler={setSelectedForm}
           setSelectedBillToEdit={setSelectedBillToEdit}
           data={billData}
+          setSupplementary={setSupplementary}
         />
       )}
       {selectedForm.createNew && (
@@ -36,6 +38,7 @@ export default function BillPage({
           clientData={clientData}
           sectionChangeHandler={setSelectedForm}
           setSelectedBillToEdit={setSelectedBillToEdit}
+          supplementary={supplementary}
         />
       )}
     </>

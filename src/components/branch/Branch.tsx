@@ -50,6 +50,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { BranchInputs, ExpensesInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
 import { getAllExpensesApi } from "@/api/expense";
+import { formatter } from "@/lib/utils";
 
 type EditBranchPassword = {
   adminPassword: string;
@@ -235,7 +236,7 @@ export default function Branch() {
   }, []);
 
   return (
-    <>
+    <div className="flex gap-5 flex-col">
       <div className="relative flex gap-10">
         <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <LuSearch size={18} />
@@ -266,10 +267,8 @@ export default function Branch() {
             <div className="font-medium">
               <p className="text-sm text-[#A3AED0]">Total Branch expenses</p>
               <p className="text-xl">
-                INR{" "}
-                {expenses
-                  .reduce((acc, expense) => acc + parseFloat(expense.amount), 0)
-                  .toFixed(2)}
+                {formatter.format(expenses
+                  .reduce((acc, expense) => acc + parseFloat(expense.amount), 0))}
               </p>
             </div>
           </div>
@@ -562,7 +561,7 @@ export default function Branch() {
                     setBranchDetails(branch),
                   ]}
                 >
-                  {branch?.bill?.reduce((acc, data) => acc + data.total, 0).toFixed(2)}
+                  {formatter.format(branch?.bill?.reduce((acc, data) => acc + data.total, 0))}
                 </td>
                 <td
                   className="py-3"
@@ -870,6 +869,6 @@ export default function Branch() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

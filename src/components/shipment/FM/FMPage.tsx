@@ -24,7 +24,7 @@ export interface BranchDetails {
   email:string
 }
 
-export default function FMPage({fmData}:{fmData:FMInputs[]}) {
+export default function FMPage() {
   const [selectedForm, setSelectedForm] = useState({
     FMList: true,
     createNew: false,
@@ -103,7 +103,6 @@ export default function FMPage({fmData}:{fmData:FMInputs[]}) {
           setSelectedFMDataToEdit={setSelectedFMDataToEdit}
           setFormStatus={setFormStatus}
           branchDetails={branchDetails}
-          data={fmData}
         />
       )}
       {selectedForm.createNew && (

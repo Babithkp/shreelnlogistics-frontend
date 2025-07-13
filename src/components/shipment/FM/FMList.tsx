@@ -1,11 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { MdOutlineAdd } from "react-icons/md";
+import {
+  MdOutlineAdd,
+  MdOutlineChevronLeft,
+  MdOutlineChevronRight,
+} from "react-icons/md";
 import { useEffect, useState } from "react";
 import {
   addPaymentRecordToFMApi,
   deleteFMApi,
   deletePaymentRecordFromFMApi,
-  getFMApi,
+  filterFMDetailsApi,
+  filterFMDetailsForBranchApi,
+  getFMByPageApi,
+  getFMByPageForBranchApi,
   getLRByLrNumberApi,
   sendFMEmailApi,
 } from "@/api/shipment";
@@ -55,6 +62,7 @@ import { Controller, useForm } from "react-hook-form";
 import {
   convertToINRWords,
   filterOnlyCompletePrimitiveDiffs,
+  formatter,
   getUnmatchingFields,
 } from "@/lib/utils";
 
@@ -66,9 +74,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Select as AntSelect } from "antd";
-import { FMInputs, PaymentRecord, VendorInputs } from "@/types";
+import { FMInputs, LrInputs, PaymentRecord, VendorInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
-import { filterFMByVendorApi, getAllVendorsApi } from "@/api/partner";
+import { filterFMLRByVendorApi, getAllVendorsApi } from "@/api/partner";
 import { LuSearch } from "react-icons/lu";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
@@ -90,18 +98,16 @@ export default function FMList({
   setSelectedFMDataToEdit,
   setFormStatus,
   branchDetails,
-  data,
 }: {
   sectionChangeHandler: (section: FMSection) => void;
   setSelectedFMDataToEdit: (data: FMInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
   branchDetails?: BranchDetails;
-  data: FMInputs[];
 }) {
-  const [FMData, setFMData] = useState<FMInputs[]>(data);
-  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>(data);
+  const [FMData, setFMData] = useState<FMInputs[]>([]);
+  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [selectedFM, setSelectedFM] = useState<ExtendedFmInputs>();
+  const [selectedFM, setSelectedFM] = useState<ExtendedFmInputs | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [mailGreeting, setMailGreeting] = useState("");
@@ -139,26 +145,83 @@ export default function FMList({
     vendorStatement: false,
   });
   const [FMStatement, setFMStatement] = useState<FMInputs[]>([]);
+  const [pendingLRs, setPendingLRs] = useState<LrInputs[]>([]);
   const [FilteredFMStatement, setFilteredFMStatement] = useState<FMInputs[]>(
     [],
   );
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
-  const [branchId, setBranchId] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  async function fetchFMDataForPage() {
+    const response = await getFMByPageApi(currentPage, itemsPerPage);
+    if (response?.status === 200) {
+      const allFMs = response.data.data;
+      setFMData(allFMs.FMData);
+      setFilteredFMs(allFMs.FMData);
+      setTotalItems(allFMs.FMCount);
+    }
+  }
+
+  async function fetchFMDataForPageForBranch() {
+    const response = await getFMByPageForBranchApi(
+      currentPage,
+      itemsPerPage,
+      branch.branchId,
+    );
+    if (response?.status === 200) {
+      const allFMs = response.data.data;
+      setFMData(allFMs.FMData);
+      setFilteredFMs(allFMs.FMData);
+      setTotalItems(allFMs.FMCount);
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchFMDataForPage();
+    } else if (!isAdmin && branch.branchId) {
+      fetchFMDataForPageForBranch();
+    }
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchFMDataForPage();
+    } else if (!isAdmin && branch.branchId) {
+      fetchFMDataForPageForBranch();
+    }
+  }, [isAdmin, branch.branchId]);
 
   const onFilterHandler = async () => {
     if (!filterInputs.name) {
       toast.error("Please enter a name");
       return;
     }
+    setPendingLRs([]);
     setFilterLoading(true);
-    const response = await filterFMByVendorApi(filterInputs);
+    const response = await filterFMLRByVendorApi(filterInputs, branch.branchId);
     if (response?.status === 200) {
       const AllFM = response.data.data;
-      const filteredFM = branchId
-        ? AllFM.filter((fm: FMInputs) => fm.branchId === branchId)
-        : AllFM;
-      setFMStatement(filteredFM);
-      setFilteredFMStatement(filteredFM);
+
+      setFMStatement(AllFM.FMs);
+      setFilteredFMStatement(AllFM.FMs);
+      setPendingLRs(AllFM.LRs);
 
       setSection({
         FMList: false,
@@ -176,6 +239,8 @@ export default function FMList({
     totalAdvance: number,
     totalAdvancePending: number,
     pendingAmount: number,
+    lrData: any[],
+    lrTotal: number,
   ) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
@@ -203,15 +268,39 @@ export default function FMList({
     worksheet.getCell("D8").value =
       `Total Advance Pending - INR ${totalAdvancePending}`;
     worksheet.getCell("D10").value = `Total Outstanding - INR ${pendingAmount}`;
-
     worksheet.getCell("K3").value = "Vendor summary";
+    worksheet.getCell("O9").value = "Pending LRs to be billed ";
+    worksheet.getCell("O11").value = `Total freight amount - INR ${lrTotal}`;
+    worksheet.getCell("O6").value = `${branchName}`;
     // Add headers
-    const headers = Object.keys(data[0]);
-    worksheet.getRow(12).values = headers;
 
-    // Add rows
-    data.forEach((item) => {
-      worksheet.addRow(Object.values(item));
+    if (data.length > 0) {
+      const headers = Object.keys(data[0]);
+      headers.forEach((key, idx) => {
+        worksheet.getCell(12, idx + 1).value = key;
+      });
+    }
+
+    // Add rows for Main Data
+    data.forEach((item, i) => {
+      Object.values(item).forEach((val, j) => {
+        worksheet.getCell(13 + i, j + 1).value = val as ExcelJS.CellValue;
+      });
+    });
+
+    if (lrData.length > 0) {
+      // Add headers for LR Data at same row 13 but starting from column H (col 8)
+      const lrHeaders = Object.keys(lrData[0]);
+      lrHeaders.forEach((key, idx) => {
+        worksheet.getCell(13, idx + 15).value = key; // starting at H13
+      });
+    }
+
+    // Add rows for LR Data
+    lrData.forEach((item, i) => {
+      Object.values(item).forEach((val, j) => {
+        worksheet.getCell(14 + i, j + 15).value = val as ExcelJS.CellValue; // rows start from 14, cols from H
+      });
     });
 
     // Generate and download the Excel file
@@ -238,6 +327,17 @@ export default function FMList({
     }));
   };
 
+  const formatLRData = (data: LrInputs[]) => {
+    return data.map((lr) => ({
+      "LR No.": lr.lrNumber,
+      Date: lr.date,
+      Origin: lr.from,
+      Destination: lr.to,
+      "Vehicle Number": lr.Vehicle.vehicleNumber,
+      "Freight Amount": lr.totalAmt,
+    }));
+  };
+
   const exportFMExcelHandler = () => {
     exportToExcelWithImage(
       formatFMData(FilteredFMStatement),
@@ -250,6 +350,8 @@ export default function FMList({
         (acc, FM) => acc + parseFloat(FM.outStandingBalance),
         0,
       ),
+      formatLRData(pendingLRs),
+      pendingLRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
   };
 
@@ -315,6 +417,22 @@ export default function FMList({
     }
   }, [amount, setValue]);
 
+  async function filterFMDetails(text: string) {
+    const response = await filterFMDetailsApi(text);
+    if (response?.status === 200) {
+      const filteredFM = response.data.data;
+      setFilteredFMs(filteredFM);
+    }
+  }
+
+  async function filterFMDetailsForBranch(branchId: string, text: string) {
+    const response = await filterFMDetailsForBranchApi(branchId, text);
+    if (response?.status === 200) {
+      const filteredFM = response.data.data;
+      setFilteredFMs(filteredFM);
+    }
+  }
+
   useEffect(() => {
     const delay = setTimeout(() => {
       const text = search.trim().toLowerCase();
@@ -323,34 +441,21 @@ export default function FMList({
         setFilteredFMs(FMData);
         return;
       }
-
-      const filtered = FMData.filter((fm) =>
-        [
-          fm.fmNumber,
-          fm.vendorName,
-          fm.from,
-          fm.to,
-          fm.hire,
-          fm.advance,
-          fm.balance,
-          fm.outStandingBalance,
-          fm.status,
-        ]
-          .filter(Boolean)
-          .some((field) => field?.toLowerCase().includes(text)),
-      );
-
-      setFilteredFMs(filtered);
+      if (isAdmin) {
+        filterFMDetails(search);
+      } else {
+        filterFMDetailsForBranch(branch.branchId, search);
+      }
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, FMData]);
+  }, [search]);
 
   const onSubmit = async (data: PaymentRecord) => {
-    // if (data.pendingAmount < 0) {
-    //   toast.error("Pending Amount cannot be negative");
-    //   return;
-    // }
+    if (data.pendingAmount < 0) {
+      toast.error("Pending Amount cannot be negative");
+      return;
+    }
 
     if (!isAdmin && formstate === "edit") {
       setSelectedFM((prev) => {
@@ -386,10 +491,10 @@ export default function FMList({
         setIsRecordModalOpen(false);
         reset();
         setShowPreview(false);
-        if (branch.branchId) {
-          fetchFMs(branch.branchId);
-        } else {
-          fetchFMs();
+        if (isAdmin) {
+          fetchFMDataForPage();
+        } else if (!isAdmin && branch.branchId) {
+          fetchFMDataForPageForBranch();
         }
       } else {
         toast.error("Something Went Wrong, Check All Fields");
@@ -410,9 +515,9 @@ export default function FMList({
       toast.success("Payment Record Deleted");
       setIsRecordModalOpen(false);
       if (isAdmin) {
-        fetchFMs();
-      } else {
-        fetchFMs(branch.branchId);
+        fetchFMDataForPage();
+      } else if (!isAdmin && branch.branchId) {
+        fetchFMDataForPageForBranch();
       }
     } else {
       toast.error("Failed to Delete Payment Record");
@@ -460,7 +565,7 @@ export default function FMList({
   const getPdfFile = async () => {
     if (!branchDetails) return;
     const pdfFile = await pdf(
-      <FMTemplate FmData={selectedFM} branchDetails={branchDetails} />,
+      <FMTemplate FmData={selectedFM!} branchDetails={branchDetails} />,
     ).toBlob();
     setAttachment([pdfFile]);
   };
@@ -511,7 +616,11 @@ export default function FMList({
     if (response?.status === 200) {
       toast.success("FM is Deleted");
       setShowPreview(false);
-      fetchFMs();
+      if (isAdmin) {
+        fetchFMDataForPage();
+      } else if (!isAdmin && branch.branchId) {
+        fetchFMDataForPageForBranch();
+      }
     } else {
       toast.error("Failed to Delete LR");
     }
@@ -591,9 +700,9 @@ export default function FMList({
       setNotificationAlertOpen(false);
       resetData();
       if (isAdmin) {
-        fetchFMs();
-      } else {
-        fetchFMs(branch.branchId);
+        fetchFMDataForPage();
+      } else if (!isAdmin && branch.branchId) {
+        fetchFMDataForPageForBranch();
       }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -601,17 +710,6 @@ export default function FMList({
     setIsLoading(false);
   };
 
-  async function fetchFMs(branchId?: string) {
-    const response = await getFMApi();
-    if (response?.status === 200) {
-      const allFMs: FMInputs[] = response.data.data;
-      const filteredFMs = branchId
-        ? allFMs.filter((fm) => fm.branchId === branchId)
-        : allFMs;
-      setFMData(filteredFMs);
-      setFilteredFMs(filteredFMs);
-    }
-  }
   async function fetchCompanyProfile() {
     const response = await getCompanyProfileApi();
     if (response?.status === 200) {
@@ -640,21 +738,19 @@ export default function FMList({
           branchId: "",
           adminId: branchDetails.id,
         });
-        fetchFMs();
       } else {
+        setIsAdmin(false);
         setBranch({
           branchId: branchDetails.id,
           adminId: "",
         });
-        fetchFMs(branchDetails.id);
-        setBranchId(branchDetails.id);
       }
     }
   }, []);
 
   return (
     <>
-      <div className="relative flex gap-5 rounded-lg bg-white p-3">
+      <div className="relative mb-5 flex gap-5 rounded-lg bg-white p-2">
         <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <LuSearch size={18} />
           <input
@@ -753,74 +849,99 @@ export default function FMList({
           <motion.div
             animate={{ width: showPreview ? "50%" : "100%" }}
             transition={{ duration: 0.3 }}
-            className={`flex h-fit max-h-[88vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+            className={`flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-3`}
           >
             <div className={`flex items-center justify-between`}>
               <p className="text-xl font-medium">FMs</p>
-              <Button
-                className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
-                onClick={() => [
-                  sectionChangeHandler("createNew"),
-                  setFormStatus("create"),
-                ]}
-              >
-                <MdOutlineAdd size={34} />
-                Create new
-              </Button>
+              <div className="flex gap-5">
+                <Button
+                  className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+                  onClick={() => [
+                    sectionChangeHandler("createNew"),
+                    setFormStatus("create"),
+                  ]}
+                >
+                  <MdOutlineAdd size={34} />
+                  Create new
+                </Button>
+                {!search && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <p>
+                      {startIndex}-{endIndex}
+                    </p>
+                    <p>of</p>
+                    <p>{totalItems}</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handlePrev}
+                        disabled={currentPage === 1}
+                        className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                      >
+                        <MdOutlineChevronLeft size={20} />
+                      </button>
+                      <button
+                        className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                        onClick={handleNext}
+                        disabled={currentPage === totalPages}
+                      >
+                        <MdOutlineChevronRight size={20} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
+            <table
+              className={`w-full border text-sm ${showPreview ? "text-[0.6rem]" : ""}`}
+            >
               <thead>
                 <tr>
-                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                  <th className="flex items-center gap-2 border text-start font-[400] text-[#797979]">
                     <p>FM#</p>
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    <div className="flex items-center gap-2">
-                      <p>Vendor Name</p>
-                    </div>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Vendor Name
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    <div className="flex items-center gap-2">
-                      <p>Date</p>
-                    </div>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    <p>Date</p>
                   </th>
-                  <th className="flex items-center gap-2 text-center font-[400] text-[#797979]">
+                  <th className="flex items-center gap-2 border text-center font-[400] text-[#797979]">
                     Hire Value
                   </th>
-                  <th className="text-center font-[400] text-[#797979]">
+                  <th className="border text-center font-[400] text-[#797979]">
                     Advance
                   </th>
                   {!showPreview && (
-                    <th className="text-center font-[400] text-[#797979]">
+                    <th className="border text-center font-[400] text-[#797979]">
                       Advance outstanding
                     </th>
                   )}
-                  <th className="text-center font-[400] text-[#797979]">
+                  <th className="border text-center font-[400] text-[#797979]">
                     Balance
                   </th>
                   {!showPreview && (
                     <>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="border text-center font-[400] text-[#797979]">
                         TDS
                       </th>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="border text-center font-[400] text-[#797979]">
                         0-30
                       </th>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="border text-center font-[400] text-[#797979]">
                         30-60
                       </th>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="border text-center font-[400] text-[#797979]">
                         60-90
                       </th>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="border text-center font-[400] text-[#797979]">
                         &gt;90
                       </th>
                     </>
                   )}
-                  <th className="text-center font-[400] text-[#797979]">
+                  <th className="border text-center font-[400] text-[#797979]">
                     Pending Amount
                   </th>
-                  <th className="text-center font-[400] text-[#797979]">
+                  <th className="border text-center font-[400] text-[#797979]">
                     Status
                   </th>
                 </tr>
@@ -828,51 +949,57 @@ export default function FMList({
               <tbody>
                 {filteredFMs.map((data) => (
                   <tr
-                    className="hover:bg-accent cursor-pointer"
+                    className={`hover:bg-accent cursor-pointer ${selectedFM?.fmNumber === data.fmNumber ? "bg-accent" : ""}`}
                     onClick={() => selectFMForPreview(data)}
                     key={data.fmNumber}
                   >
-                    <td className="py-2">{data.fmNumber}</td>
-                    <td className="py-2">{data.vendorName}</td>
-                    <td className="py-2">
+                    <td className="border py-2">{data.fmNumber}</td>
+                    <td className="border py-2">{data.vendorName}</td>
+                    <td className="border py-2">
                       {new Date(data.date).toLocaleDateString()}
                     </td>
-                    <td className="py-2">INR {data.hire}</td>
-                    <td className="py-2 text-center">
-                      INR {data.advance ? data.advance : 0}
+                    <td className="border py-2">
+                      {formatter.format(parseInt(data.hire))}
+                    </td>
+                    <td className="border py-2">
+                      {data.advance
+                        ? formatter.format(parseInt(data.advance))
+                        : 0}
                     </td>
                     {!showPreview && (
-                      <td className="py-2 text-center">
-                        INR {data.outStandingAdvance}
+                      <td className="border py-2">
+                        {formatter.format(data.outStandingAdvance)}
                       </td>
                     )}
-                    <td className="py-2 text-center">INR {data.netBalance}</td>
+                    <td className="border py-2">
+                      {formatter.format(parseInt(data.netBalance))}
+                    </td>
                     {!showPreview && (
                       <>
-                        <td className="py-2 text-center">
+                        <td className="border py-2">
                           {data.TDS === "Declared"
                             ? "0"
-                            : (parseFloat(data.netBalance) * 0.01).toFixed(2)}
+                            : formatter.format(
+                                parseFloat(data.netBalance) * 0.01,
+                              )}
                         </td>
-                        <td className="py-2 text-center">
-                          INR {data.zeroToThirty}
+                        <td className="border py-2">INR {data.zeroToThirty}</td>
+                        <td className="border py-2">
+                          {formatter.format(parseInt(data.thirtyToSixty))}
                         </td>
-                        <td className="py-2 text-center">
-                          INR {data.thirtyToSixty}
+                        <td className="border py-2">
+                          {formatter.format(parseInt(data.sixtyToNinety))}
                         </td>
-                        <td className="py-2 text-center">
-                          INR {data.sixtyToNinety}
-                        </td>
-                        <td className="py-2 text-center">
-                          INR {data.ninetyPlus}
+                        <td className="border py-2">
+                          {formatter.format(parseInt(data.ninetyPlus))}
                         </td>
                       </>
                     )}
-                    <td className="py-2 text-center">
-                      INR {parseFloat(data.outStandingBalance).toFixed(2)}
+                    <td className="border py-2">
+                      {formatter.format(parseFloat(data.outStandingBalance))}
                     </td>
                     <td
-                      className={`py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
+                      className={`border py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
                     >
                       {data.status}
                     </td>
@@ -882,7 +1009,7 @@ export default function FMList({
             </table>
           </motion.div>
           <motion.div
-            className="hidden flex-col gap-5 rounded-md bg-white p-5"
+            className="hidden h-[73vh] flex-col gap-5 rounded-md bg-white p-5"
             animate={{
               width: showPreview ? "50%" : "0%",
               display: showPreview ? "flex" : "none",
@@ -907,7 +1034,7 @@ export default function FMList({
                   <RxCross2
                     size={20}
                     color="white"
-                    onClick={() => setShowPreview(false)}
+                    onClick={() => [setShowPreview(false), setSelectedFM(null)]}
                   />
                 </button>
               </div>
@@ -1113,10 +1240,10 @@ export default function FMList({
                 </AlertDialog>
               )}
             </div>
-            <PDFViewer className="h-[75vh] w-full">
+            <PDFViewer className="h-full w-full">
               {branchDetails && (
                 <FMTemplate
-                  FmData={selectedFM}
+                  FmData={selectedFM!}
                   branchDetails={branchDetails}
                   companyProfile={companyProfile}
                 />
@@ -1475,6 +1602,9 @@ export default function FMList({
       )}
       {section.vendorStatement && (
         <section className="flex h-fit max-h-[88vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5 text-xs">
+          {pendingLRs.length > 0 && (
+            <p className="font-medium">{pendingLRs.length} Pending LRs to FM</p>
+          )}
           <table>
             <thead>
               <tr>

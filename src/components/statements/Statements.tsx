@@ -14,10 +14,12 @@ import {
   billInputs,
   ClientInputs,
   ExpensesInputs,
+  LrInputs,
   PaymentRecord,
   VendorInputs,
 } from "@/types";
 import { getAllExpensesApi } from "@/api/expense";
+import { formatter } from "@/lib/utils";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: any;
@@ -33,6 +35,7 @@ interface ExtendedPaymentRecord extends PaymentRecord {
 export default function Statements() {
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
   const [billData, setBillData] = useState<billInputs[]>([]);
+  const [LRs, setLRs] = useState<LrInputs[]>([]);
   const [clientsData, setClientsData] = useState<ClientInputs[]>([]);
   const [statementSection, setStatementSection] = useState({
     cashStatement: true,
@@ -62,6 +65,8 @@ export default function Statements() {
     clientName: string,
     totalAmount: number,
     pendingAmount: number,
+    lrData: any[],
+    lrTotal: number,
   ) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
@@ -73,36 +78,60 @@ export default function Statements() {
 
     const imageId = workbook.addImage({
       buffer: imageBuffer,
-      extension: "png", // or "jpeg"
+      extension: "png",
     });
 
-    // Position image at top (cell A1)
     worksheet.addImage(imageId, {
       tl: { col: 0, row: 0 },
       ext: { width: 300, height: 80 },
     });
 
-    // Add some text below the image
+    // Header content
     worksheet.getCell("A6").value = clientName;
     worksheet.getCell("A8").value = `Total Amount - INR ${totalAmount}`;
     worksheet.getCell("D8").value = `Pending Amount - INR ${pendingAmount}`;
-    worksheet.getCell("K3").value = "Outstanding summary";
-    // Add headers
-    const headers = Object.keys(data[0]);
-    worksheet.getRow(10).values = headers;
+    worksheet.getCell("A10").value = "Outstanding Summary";
+    worksheet.getCell("O9").value = "Pending LRs to be billed ";
+    worksheet.getCell("O11").value = `Total freight amount - INR ${lrTotal}`;
 
-    // Add rows
-    data.forEach((item) => {
-      worksheet.addRow(Object.values(item));
+    if (data.length > 0) {
+      // Add headers for Main Data at row 13
+      const mainHeaders = Object.keys(data[0]);
+      mainHeaders.forEach((key, idx) => {
+        worksheet.getCell(13, idx + 1).value = key; // starting at A13
+      });
+    }
+
+    // Add rows for Main Data
+    data.forEach((item, i) => {
+      Object.values(item).forEach((val, j) => {
+        worksheet.getCell(14 + i, j + 1).value = val as ExcelJS.CellValue; // rows start from 14
+      });
     });
 
-    // Generate and download the Excel file
+    if (lrData.length > 0) {
+      // Add headers for LR Data at same row 13 but starting from column H (col 8)
+      const lrHeaders = Object.keys(lrData[0]);
+      lrHeaders.forEach((key, idx) => {
+        worksheet.getCell(13, idx + 15).value = key; // starting at H13
+      });
+    }
+
+    // Add rows for LR Data
+    lrData.forEach((item, i) => {
+      Object.values(item).forEach((val, j) => {
+        worksheet.getCell(14 + i, j + 15).value = val as ExcelJS.CellValue; // rows start from 14, cols from H
+      });
+    });
+
+    // Export
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
     saveAs(blob, `${filename}.xlsx`);
   };
+
   const exportRecordExcel = async (data: any[], filename: string) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
@@ -158,6 +187,17 @@ export default function Statements() {
     }));
   };
 
+  const formatLRData = (data: LrInputs[]) => {
+    return data.map((lr) => ({
+      "LR No.": lr.lrNumber,
+      Date: lr.date,
+      Origin: lr.from,
+      Destination: lr.to,
+      "Vehicle Number": lr.Vehicle.vehicleNumber,
+      "Freight Amount": lr.totalAmt,
+    }));
+  };
+
   const formatRecordData = (data: ExtendedPaymentRecord[]) => {
     return data.map((record) => ({
       Date: new Date(record.date).toLocaleDateString(),
@@ -180,14 +220,18 @@ export default function Statements() {
       filterInputs.name,
       billData.reduce((acc, bill) => acc + bill.subTotal, 0),
       billData.reduce((acc, bill) => acc + bill.pendingAmount, 0),
+      formatLRData(LRs),
+      LRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
   };
 
   const filterButtonHandler = async () => {
+    setLRs([]);
     setLoading(true);
     const response = await filterBillByClientApi(filterInputs);
     if (response?.status === 200) {
-      setBillData(response.data.data);
+      setBillData(response.data.data.bills);
+      setLRs(response.data.data.LRs);
       setStatementSection({
         cashStatement: false,
         clientOutstanding: true,
@@ -260,7 +304,7 @@ export default function Statements() {
   }, []);
 
   return (
-    <>
+    <div className="flex flex-col gap-5">
       <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
@@ -270,7 +314,9 @@ export default function Statements() {
             <div className="font-medium">
               <p className="text-muted text-xs">Net Balance</p>
               <p className="text-xl">
-                {paymentTotals.totalCr - paymentTotals.totalDr}
+                {formatter.format(
+                  paymentTotals.totalCr - paymentTotals.totalDr,
+                )}
               </p>
             </div>
           </div>
@@ -283,10 +329,12 @@ export default function Statements() {
             <div className="font-medium">
               <p className="text-muted text-sm">Expenses</p>
               <p className="text-xl">
-                INR{" "}
-                {expenses
-                  .reduce((acc, data) => acc + parseFloat(data.amount), 0)
-                  .toFixed(2)}
+                {formatter.format(
+                  expenses.reduce(
+                    (acc, data) => acc + parseFloat(data.amount),
+                    0,
+                  ),
+                )}
               </p>
             </div>
           </div>
@@ -299,10 +347,12 @@ export default function Statements() {
             <div className="font-medium">
               <p className="text-muted text-sm">Vendor Outstanding</p>
               <p className="text-xl">
-                INR{" "}
-                {vendor
-                  ?.reduce((acc, data) => acc + data.currentOutStanding, 0)
-                  .toFixed(2)}
+                {formatter.format(
+                  vendor?.reduce(
+                    (acc, data) => acc + data.currentOutStanding,
+                    0,
+                  ),
+                )}
               </p>
             </div>
           </div>
@@ -315,13 +365,12 @@ export default function Statements() {
             <div className="font-medium">
               <p className="text-muted text-sm">Client Receivables</p>
               <p className="text-xl">
-                INR{" "}
-                {clientsData
-                  .reduce(
+                {formatter.format(
+                  clientsData.reduce(
                     (acc, data) => acc + parseFloat(data.pendingPayment),
                     0,
-                  )
-                  .toFixed(2)}
+                  ),
+                )}
               </p>
             </div>
           </div>
@@ -445,18 +494,18 @@ export default function Statements() {
                       {record.Admin?.branchName || record.Branches?.branchName}
                     </td>
                     <td className="py-2">
-                      INR {parseFloat(record.amount).toFixed(2)}
+                      {formatter.format(parseFloat(record.amount))}
                     </td>
                     {record.billId ? (
                       <td className="py-2">
-                        INR {parseFloat(record.amount).toFixed(2)}
+                        {formatter.format(parseFloat(record.amount))}
                       </td>
                     ) : (
                       <td className="py-2">-</td>
                     )}
                     {record.fMId ? (
                       <td className="py-2 text-center">
-                        INR {parseFloat(record.amount).toFixed(2)}
+                        {formatter.format(parseFloat(record.amount))}
                       </td>
                     ) : (
                       <td className="py-2 text-center">-</td>
@@ -468,18 +517,17 @@ export default function Statements() {
           </div>
           <div className="flex justify-end pr-10">
             <div className="flex gap-15">
-              <p>Total Value INR {paymentTotals.totalValue.toFixed(2)}</p>
+              <p>Total Value {formatter.format(paymentTotals.totalValue)}</p>
               <p className="flex gap-2">
                 Total CR.
                 <span className="text-green-500">
-                  INR {paymentTotals.totalCr.toFixed(2)}
+                  {formatter.format(paymentTotals.totalCr)}
                 </span>
               </p>
               <p className="flex gap-2">
                 Total DR.{" "}
                 <span className="text-red-500">
-                  {" "}
-                  INR {paymentTotals.totalDr.toFixed(2)}
+                  {formatter.format(paymentTotals.totalDr)}
                 </span>
               </p>
             </div>
@@ -488,7 +536,14 @@ export default function Statements() {
       )}
       {statementSection.clientOutstanding && (
         <section className="flex w-full flex-col justify-between gap-5 rounded-md bg-white p-5">
-          <p className="pb-2 text-lg font-medium">Outstanding summary</p>
+          <div className="flex justify-between">
+            <p className="text-lg font-medium">Outstanding summary</p>
+            {LRs.length > 0 && (
+              <p className="font-medium">
+                {LRs.length} LR Pending to be Billed
+              </p>
+            )}
+          </div>
           {billData.length > 0 && (
             <table className="w-full">
               <thead>
@@ -526,10 +581,7 @@ export default function Statements() {
               </thead>
               <tbody>
                 {billData.map((bill) => (
-                  <tr
-                    className="hover:bg-accent cursor-pointer"
-                    key={bill.billNumber}
-                  >
+                  <tr key={bill.billNumber}>
                     <td className="py-2">{bill.billNumber}</td>
                     <td className="max-w-[20rem] overflow-y-auto py-2">
                       {bill.lrData.map((lr) => lr.lrNumber)}
@@ -541,7 +593,9 @@ export default function Statements() {
                       {bill.lrData.length === 0 ? "-" : bill.lrData[0].to}
                     </td>
                     <td className="py-2">{bill.subTotal}</td>
-                    <td className="py-2">{bill.subTotal - bill.pendingAmount}</td>
+                    <td className="py-2">
+                      {bill.subTotal - bill.pendingAmount}
+                    </td>
                     <td className="py-2">
                       {(bill.cgstRate + bill.sgstRate + bill.igstRate).toFixed(
                         2,
@@ -563,6 +617,6 @@ export default function Statements() {
           )}
         </section>
       )}
-    </>
+    </div>
   );
 }

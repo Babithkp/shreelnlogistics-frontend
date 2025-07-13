@@ -7,10 +7,19 @@ import ClientPayments from "./ClientPayments";
 import { getAllVendorsApi } from "@/api/partner";
 import { getAllClientsApi } from "@/api/admin";
 import { ClientInputs, VendorInputs } from "@/types";
+import { formatter } from "@/lib/utils";
 
 export default function OutStandingPage() {
   const [vendor, setVendor] = useState<VendorInputs[]>();
   const [client, setClient] = useState<ClientInputs[]>();
+  const totalOutstanding = vendor?.reduce(
+    (acc, data) => acc + (Number(data.currentOutStanding) || 0),
+    0,
+  );
+  const totalPendingPayment = client?.reduce(
+    (acc, data) => acc + parseFloat(data.pendingPayment),
+    0,
+  );
 
   const [sections, setSections] = useState({
     recentTransactions: true,
@@ -46,7 +55,7 @@ export default function OutStandingPage() {
   }, []);
 
   return (
-    <>
+    <div className="flex gap-5 flex-col">
       <div className="flex gap-10">
         <button
           className="flex w-full cursor-pointer rounded-xl bg-white p-5"
@@ -65,10 +74,7 @@ export default function OutStandingPage() {
             <div className="text-start font-medium">
               <p className="text-muted text-sm">Vendor Outstanding</p>
               <p className="text-xl">
-                INR{" "}
-                {vendor
-                  ?.reduce((acc, data) => acc + data.currentOutStanding, 0)
-                  .toFixed(2)}
+                {formatter.format(totalOutstanding ?? 0)}
               </p>
             </div>
           </div>
@@ -90,13 +96,7 @@ export default function OutStandingPage() {
             <div className="text-start font-medium">
               <p className="text-muted text-sm">Pending payment (Client)</p>
               <p className="text-xl">
-                INR{" "}
-                {client
-                  ?.reduce(
-                    (acc, data) => acc + parseFloat(data.pendingPayment),
-                    0,
-                  )
-                  .toFixed(2)}
+                {formatter.format(totalPendingPayment ?? 0)}
               </p>
             </div>
           </div>
@@ -109,6 +109,6 @@ export default function OutStandingPage() {
       {sections.clientPendingPayment && (
         <ClientPayments goBackHandler={goBackHandler} />
       )}
-    </>
+    </div>
   );
 }

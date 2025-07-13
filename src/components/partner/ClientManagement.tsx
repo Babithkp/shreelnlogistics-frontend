@@ -39,34 +39,23 @@ import { toast } from "react-toastify";
 import {
   createClientApi,
   createNotificationApi,
-  getAllClientsApi,
 } from "@/api/admin";
 import { useEffect, useState } from "react";
 import { VscLoading } from "react-icons/vsc";
 import { PiUsersThree } from "react-icons/pi";
-import { FaChevronDown } from "react-icons/fa6";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import { TbCopy } from "react-icons/tb";
 import { deleteClientApi, updateClientDetailsApi } from "@/api/branch";
 import { ClientInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
+import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { filterClientByNameApi, getClientForPageApi } from "@/api/partner";
 
-type SortOrder = "asc" | "desc" | "";
-
-export default function ClientManagement({ data }: { data: ClientInputs[] }) {
+export default function ClientManagement({data}: {data: ClientInputs[]}) {
   const [isloading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [clients, setClients] = useState<ClientInputs[]>([]);
   const [filteredClients, setFilteredClients] = useState<ClientInputs[]>([]);
-  const [sortState, setSortState] = useState<{
-    name: SortOrder;
-    createdAt: SortOrder;
-    pendingPayment: SortOrder;
-  }>({
-    name: "",
-    createdAt: "",
-    pendingPayment: "",
-  });
   const [isClientNameAvailable, setIsClientNameAvailable] = useState(true);
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] =
     useState(false);
@@ -77,10 +66,27 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     branchName: "",
     isAdmin: false,
   });
-  const [search, setSearch] = useState("");
   const allRecords = selectedClient?.bill?.flatMap(
     (bill) => bill.PaymentRecords || [],
   );
+  const [search, setSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 50;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
 
   const {
     register,
@@ -89,6 +95,14 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     setValue,
     formState: { errors },
   } = useForm<ClientInputs>();
+
+  async function filterClientByName(search: string) {
+    const response = await filterClientByNameApi(search);
+    if (response?.status === 200) {
+      const allTransactions = response.data.data;
+      setFilteredClients(allTransactions);
+    }
+  }
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -99,41 +113,11 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         return;
       }
 
-      const filtered = clients.filter((client) => {
-        const fieldsToSearch: (string | number | undefined | null)[] = [
-          client.name,
-          client.GSTIN,
-          client.contactPerson,
-          client.email,
-          client.address,
-          client.city,
-          client.state,
-          client.pincode,
-          client.panNumber,
-          client.creditLimit,
-          client.branchName,
-          client.contactNumber,
-          client.createdAt,
-          client.pendingPayment,
-        ];
-
-        return fieldsToSearch.some((field) => {
-          if (typeof field === "string") {
-            return field.toLowerCase().includes(text);
-          }
-          if (typeof field === "number") {
-            return field.toString().includes(text);
-          }
-          return false;
-        });
-      });
-
-      setFilteredClients(filtered);
-      console.log(filtered);
+      filterClientByName(text);
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, clients]);
+  }, [search]);
 
   const onSubmit: SubmitHandler<ClientInputs> = async (data) => {
     if (data.branchName) {
@@ -148,7 +132,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         toast.success("Client Created");
         reset();
         setIsOpen(false);
-        getClientDetails();
+        fetchTransactions(currentPage, itemsPerPage);
       } else if (response?.status === 201) {
         setIsClientNameAvailable(false);
         setTimeout(() => {
@@ -163,7 +147,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         toast.success("Client Updated");
         reset();
         setIsOpen(false);
-        getClientDetails();
+        fetchTransactions(currentPage, itemsPerPage);
         if (!branch.isAdmin) {
           const notificationData = {
             requestId: selectedClient?.id,
@@ -190,7 +174,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     const response = await deleteClientApi(data.id);
     if (response?.status === 200) {
       toast.success("Client Deleted");
-      getClientDetails();
+      fetchTransactions(currentPage, itemsPerPage);
       setIsClientDetailsModalOpen(false);
       if (!branch.isAdmin) {
         const notificationData = {
@@ -207,16 +191,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     }
   };
 
-  async function getClientDetails() {
-    const response = await getAllClientsApi();
-    if (response?.status === 200) {
-      setClients(response.data.data);
-      setFilteredClients(response.data.data);
-    } else {
-      toast.error("Failed to fetch Client Details");
-    }
-  }
-
   const setClientDetails = (data: ClientInputs) => {
     setValue("name", data.name);
     setValue("GSTIN", data.GSTIN);
@@ -231,40 +205,21 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     setValue("creditLimit", data.creditLimit);
   };
 
-  const handleSort = (key: keyof typeof sortState) => {
-    const toggleOrder = (current: SortOrder): SortOrder =>
-      current === "asc" ? "desc" : "asc";
-
-    const currentOrder = sortState[key] || "asc";
-    const newOrder = toggleOrder(currentOrder);
-
-    setSortState((prevState) => ({
-      ...prevState,
-      [key]: newOrder,
-    }));
-
-    const sorted = [...data].sort((a, b) => {
-      if (key === "pendingPayment") {
-        const aNum = Number(a[key as keyof ClientInputs]);
-        const bNum = Number(b[key as keyof ClientInputs]);
-        return newOrder === "asc" ? aNum - bNum : bNum - aNum;
-      } else if (key === "createdAt") {
-        const aDate = new Date(a.createdAt).getTime();
-        const bDate = new Date(b.createdAt).getTime();
-        return newOrder === "asc" ? aDate - bDate : bDate - aDate;
-      } else if (key === "name") {
-        return newOrder === "asc"
-          ? String(a[key]).localeCompare(String(b[key]))
-          : String(b[key]).localeCompare(String(a[key]));
-      }
-      return 0;
-    });
-
-    setFilteredClients(sorted);
-  };
+  async function fetchTransactions(page: number, limit: number) {
+    const response = await getClientForPageApi(page, limit);
+    if (response?.status === 200) {
+      const allTransactions = response.data.data;
+      setClients(allTransactions.clientData);
+      setFilteredClients(allTransactions.clientData);
+      setTotalItems(allTransactions.clientCount);
+    }
+  }
 
   useEffect(() => {
-    getClientDetails();
+    fetchTransactions(currentPage, itemsPerPage);
+  }, [startIndex, endIndex]);
+
+  useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
     const branchDetails = localStorage.getItem("branchDetails");
     if (isAdmin === "false" && branchDetails) {
@@ -275,19 +230,11 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         isAdmin: false,
       });
     }
+    fetchTransactions(currentPage, itemsPerPage);
   }, []);
   return (
-    <>
-      <div className="relative flex gap-10">
-        <div className="absolute -top-17 right-[13vw] flex items-center gap-2 rounded-full bg-white p-3 px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+    <div className="flex flex-col gap-5">
+      <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
             <div className="rounded-full bg-[#F4F7FE] p-3">
@@ -295,7 +242,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Clients</p>
-              <p className="text-xl">{filteredClients.length}</p>
+              <p className="text-xl">{data.length}</p>
             </div>
           </div>
         </div>
@@ -319,10 +266,19 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 rounded-md bg-white p-5">
+      <div className="flex flex-col gap-2 rounded-md bg-white p-5 max-h-[73vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Clients</p>
-          <div>
+          <div className="flex items-center gap-5">
+            <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+              <LuSearch size={18} />
+              <input
+                placeholder="Search"
+                className="outline-none placeholder:font-medium"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
             <button
               className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
               onClick={() => [setIsOpen(true), reset(), setFormStatus("New")]}
@@ -555,6 +511,31 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
               </form>
             </Modal>
+            {!search && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <p>
+                  {startIndex}-{endIndex}
+                </p>
+                <p>of</p>
+                <p>{totalItems}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                  >
+                    <MdOutlineChevronLeft size={20} />
+                  </button>
+                  <button
+                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                  >
+                    <MdOutlineChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <table>
@@ -562,11 +543,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             <tr>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
                 <p>Client Name</p>
-                <FaChevronDown
-                  size={15}
-                  className="cursor-pointer"
-                  onClick={() => handleSort("name")}
-                />
               </th>
               <th className="text-start font-[400] text-[#797979]">City</th>
               <th className="text-start font-[400] text-[#797979]">
@@ -578,11 +554,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
               <th className="text-start font-[400] text-[#797979]">
                 <div className="flex items-center gap-2">
                   <p>Client Since</p>
-                  <FaChevronDown
-                    size={15}
-                    className="cursor-pointer"
-                    onClick={() => handleSort("createdAt")}
-                  />
                 </div>
               </th>
             </tr>
@@ -757,6 +728,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

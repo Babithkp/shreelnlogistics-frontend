@@ -65,3 +65,26 @@ export const deleteExpenseByNotificationApi = async (id: string) => {
     console.log(error);
   }
 }
+
+export const getExpenseByPageApi = async (page: number, limit: number, branchId?: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/expenses/getByPage?page=${page}&limit=${limit}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const filterExpensesByTitleApi = async (text: string, branchId: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/expenses/filterByTitle/${text}/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
