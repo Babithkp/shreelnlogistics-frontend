@@ -12,9 +12,7 @@ export default function LRPage() {
     createNew: false,
   });
   const [selectedLRData, setSelectedLRData] = useState<LrInputs>();
-  const [formStatus, setFormStatus] = useState<
-    "edit" | "create" | "supplementary"
-  >("create");
+  const [formStatus, setFormStatus] = useState<"edit" | "create">("create");
 
   const setSelectedLRDataToEdit = (data: LrInputs) => {
     setSelectedLRData(data);

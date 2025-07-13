@@ -16,7 +16,7 @@ import { adminLoginApi, getBranchesApi } from "@/api/admin";
 import { branchLoginApi } from "@/api/branch";
 import { VscLoading } from "react-icons/vsc";
 import { getVersion } from "@tauri-apps/api/app";
-import tikonaLogo from "../assets/trikona.png";
+import tikonaLogo from "../assets/tikona-logo.png";
 
 interface BranchesType {
   id: string;
@@ -156,9 +156,8 @@ export default function Login() {
         <div className="flex items-center gap-2 font-medium">
           <p>A Product of</p>
           <a href="https://www.trikonatech.com" target="_blank">
-            <img src={tikonaLogo} alt="tikona" className="w-8" />
+            <img src={tikonaLogo} alt="tikona" className="w-30 " />
           </a>
-          <p>Trikona</p>
         </div>
       </footer>
     </main>

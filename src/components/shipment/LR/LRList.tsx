@@ -59,7 +59,7 @@ export default function LRList({
 }: {
   sectionChangeHandler: (section: Sections) => void;
   setSelectedLRDataToEdit: (data: LrInputs) => void;
-  setFormStatus: (status: "edit" | "create" | "supplementary") => void;
+  setFormStatus: (status: "edit" | "create") => void;
 }) {
   interface ExtendedLRInputs extends LrInputs {
     admin?: {
