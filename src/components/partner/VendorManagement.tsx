@@ -349,7 +349,7 @@ export default function VendorManagement({
   }
 
   function setOwnerDetails(name: string) {
-    const selectedVendor = vendors.find((v) => v.name === name);
+    const selectedVendor = vendorsData.find((v) => v.name === name);
 
     if (selectedVendor) {
       VehicleSetValue("ownerName", selectedVendor.contactPerson);
