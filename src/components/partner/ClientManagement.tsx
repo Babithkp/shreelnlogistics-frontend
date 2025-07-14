@@ -50,6 +50,7 @@ import { ClientInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
 import { filterClientByNameApi, getClientForPageApi } from "@/api/partner";
+import { formatter } from "@/lib/utils";
 
 export default function ClientManagement({data}: {data: ClientInputs[]}) {
   const [isloading, setIsLoading] = useState(false);
@@ -254,13 +255,11 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
             <div className="font-medium">
               <p className="text-muted text-sm">Total pending payment</p>
               <p className="text-xl">
-                INR{" "}
-                {data
+                {formatter.format(data
                   .reduce(
                     (acc, data) => acc + parseFloat(data.pendingPayment),
                     0,
-                  )
-                  .toFixed(2)}
+                  ))}
               </p>
             </div>
           </div>
@@ -571,7 +570,7 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
                 <td className="py-2">{client.name}</td>
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
-                <td className="py-2">INR {client.pendingPayment}</td>
+                <td className="py-2">{formatter.format(parseInt(client.pendingPayment))}</td>
                 <td className="py-2">
                   {new Date(client.createdAt).toLocaleDateString()}
                 </td>

@@ -63,6 +63,7 @@ import { generalSettings, VehicleInputs, VendorInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { formatter } from "@/lib/utils";
 
 type Option = { value: string; label: string };
 type SortOrder = "asc" | "desc";
@@ -447,10 +448,8 @@ export default function VendorManagement({
             <div className="font-medium">
               <p className="text-muted text-sm">Total outstanding payment</p>
               <p className="text-xl">
-                INR{" "}
-                {vendorsData
-                  .reduce((acc, data) => acc + data.currentOutStanding, 0)
-                  .toFixed(2)}
+                {formatter.format(vendorsData
+                  .reduce((acc, data) => acc + data.currentOutStanding, 0))}
               </p>
             </div>
           </div>
@@ -1079,14 +1078,13 @@ export default function VendorManagement({
                     <td className="py-2">{vendor.contactPerson}</td>
                     <td className="py-2">{vendor.vehicles.length}</td>
                     <td className="py-2">
-                      INR {vendor.currentOutStanding.toFixed(2)}
+                      {formatter.format(vendor.currentOutStanding)}
                     </td>
                     <td className="py-2">
-                      INR{" "}
-                      {vendor.FM?.reduce(
+                      {formatter.format(vendor.FM?.reduce(
                         (acc, data) => acc + parseFloat(data.netBalance || "0"),
                         0,
-                      )}
+                      ))}
                     </td>
                     <td className="py-2">{vendor.TDS}</td>
                   </tr>

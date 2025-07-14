@@ -269,7 +269,7 @@ export default function FMList({
       `Total Advance Pending - INR ${totalAdvancePending}`;
     worksheet.getCell("D10").value = `Total Outstanding - INR ${pendingAmount}`;
     worksheet.getCell("K3").value = "Vendor summary";
-    worksheet.getCell("O9").value = "Pending LRs to be billed ";
+    worksheet.getCell("O9").value = "LR waiting for POD Generation"; 
     worksheet.getCell("O11").value = `Total freight amount - INR ${lrTotal}`;
     worksheet.getCell("O6").value = `${branchName}`;
     // Add headers
