@@ -145,8 +145,6 @@ export default function VendorManagement({
     getVendorForPage(currentPage, itemsPerPage);
   }, []);
 
-
-
   const {
     handleSubmit,
     control,
@@ -427,7 +425,7 @@ export default function VendorManagement({
   }, []);
 
   return (
-    <div className="flex flex-col gap-5 ">
+    <div className="flex flex-col gap-5">
       <div className="flex gap-10">
         <div className="flex w-full rounded-xl bg-white p-5">
           <div className="flex items-center gap-5">
@@ -448,8 +446,12 @@ export default function VendorManagement({
             <div className="font-medium">
               <p className="text-muted text-sm">Total outstanding payment</p>
               <p className="text-xl">
-                {formatter.format(vendorsData
-                  .reduce((acc, data) => acc + data.currentOutStanding, 0))}
+                {formatter.format(
+                  vendorsData.reduce(
+                    (acc, data) => acc + data.currentOutStanding,
+                    0,
+                  ),
+                )}
               </p>
             </div>
           </div>
@@ -469,7 +471,7 @@ export default function VendorManagement({
       </div>
 
       {
-        <section className="flex flex-col gap-5 rounded-md bg-white p-5 max-h-[73vh] overflow-y-auto">
+        <section className="flex max-h-[73vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
           <div className="flex items-center justify-between">
             <p className="text-xl font-medium">
               {showVehicles ? "All Vechiles" : "All Vendors"}
@@ -726,7 +728,7 @@ export default function VendorManagement({
                           <AntSelect
                             {...field}
                             showSearch
-                            options={extractVendorNameOptions(vendors)}
+                            options={extractVendorNameOptions(vendorsData)}
                             placeholder="Select Vendor Name"
                             className="outline-primary w-full rounded-md outline"
                             size="large"
@@ -975,15 +977,17 @@ export default function VendorManagement({
                   </div>
                 </form>
               </Modal>
-              {!showVehicles && <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
-                <LuSearch size={18} />
-                <input
-                  placeholder="Search"
-                  className="outline-none placeholder:font-medium"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>}
+              {!showVehicles && (
+                <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                  <LuSearch size={18} />
+                  <input
+                    placeholder="Search"
+                    className="outline-none placeholder:font-medium"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              )}
 
               <Button
                 className="bg-secondary hover:bg-muted/30 cursor-pointer rounded-xl text-black"
@@ -1081,10 +1085,13 @@ export default function VendorManagement({
                       {formatter.format(vendor.currentOutStanding)}
                     </td>
                     <td className="py-2">
-                      {formatter.format(vendor.FM?.reduce(
-                        (acc, data) => acc + parseFloat(data.netBalance || "0"),
-                        0,
-                      ))}
+                      {formatter.format(
+                        vendor.FM?.reduce(
+                          (acc, data) =>
+                            acc + parseFloat(data.netBalance || "0"),
+                          0,
+                        ),
+                      )}
                     </td>
                     <td className="py-2">{vendor.TDS}</td>
                   </tr>
