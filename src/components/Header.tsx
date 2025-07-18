@@ -1113,7 +1113,7 @@ export default function Header({
                           View details
                         </DialogTrigger>
                         <DialogContent
-                          className={`${notification.data === null ? "" : "min-w-3xl"}`}
+                          className={`${notification.data === null ? "" : "min-w-3xl"} h-[80%] overflow-y-auto`}
                         >
                           <DialogHeader>
                             <DialogTitle>
@@ -1123,7 +1123,7 @@ export default function Header({
                               )}
                             </DialogTitle>
                             <DialogDescription></DialogDescription>
-                            <div className="font-medium text-black">
+                            <div className="font-medium text-black ">
                               {getDescriptionText(
                                 notification.title,
                                 notification.requestId,
@@ -1231,7 +1231,7 @@ export default function Header({
                         View details
                       </DialogTrigger>
                       <DialogContent
-                        className={`${notification.data === null ? "" : "min-w-3xl"}`}
+                        className={`${notification.data === null ? "" : "min-w-3xl"} h-[80%] overflow-y-auto`}
                       >
                         <DialogHeader>
                           <DialogTitle>

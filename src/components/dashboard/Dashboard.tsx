@@ -327,10 +327,13 @@ export default function Dashboard() {
   };
 
   async function fetchDashboardData() {
+    const time1 = new Date().getTime();
     const response = await getDashboardDataApi();
     if (response?.status === 200) {
       setDashboardData(response.data.data);
     }
+    const time2 = new Date().getTime();
+    console.log("Dashboard Data Fetched in " + (time2 - time1) / 1000 + " seconds");
   }
 
   async function fetchDashboardDataForBranch(branchId: string) {

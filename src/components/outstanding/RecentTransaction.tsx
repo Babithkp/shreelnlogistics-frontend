@@ -93,7 +93,7 @@ export default function RecentTransaction() {
   useEffect(() => {
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
-    } else {
+    } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
   }, [currentPage, itemsPerPage]);
@@ -101,7 +101,7 @@ export default function RecentTransaction() {
   useEffect(() => {
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
-    } else {
+    } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
   }, [admin]);
@@ -114,7 +114,7 @@ export default function RecentTransaction() {
         setFilteredTransactions(transactions);
         return;
       }
-      
+
       if (admin.isAdmin) {
         filterRecordPaymentByName(text);
       } else {
@@ -148,7 +148,7 @@ export default function RecentTransaction() {
     }
   }, []);
   return (
-    <section className="flex h-fit w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5 max-h-[73vh]">
+    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full items-center justify-between">
         <p className="text-lg font-medium">Recent Transactions</p>
         <div className="flex items-center gap-5">
