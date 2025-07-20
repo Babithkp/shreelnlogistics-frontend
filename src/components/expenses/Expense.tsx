@@ -1,4 +1,3 @@
-import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import { Button } from "../ui/button";
 import {
@@ -24,11 +23,9 @@ import {
 } from "@/lib/utils";
 import { getGeneralSettingsApi } from "@/api/settings";
 import {
-  createCreditApi,
   createExpenseApi,
   deleteExpenseApi,
   filterExpensesByTitleApi,
-  getCreditByPageApi,
   getExpenseByPageApi,
   updateExpenseDetailsApi,
 } from "@/api/expense";
@@ -60,7 +57,6 @@ import {
 } from "@/components/ui/popover";
 import { TbCopy } from "react-icons/tb";
 import {
-  CreditInputs,
   ExpensesInputs,
   generalSettings,
   VendorInputs,
