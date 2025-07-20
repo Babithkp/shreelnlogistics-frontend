@@ -125,6 +125,14 @@ export const getExpenseIdApi = async () => {
     console.log(error);
   }
 };
+export const getCreditIdApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/getCreditId`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const getBillIdApi = async () => {
   try {

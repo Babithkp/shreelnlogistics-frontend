@@ -27,7 +27,7 @@ import Settings, {
   BankDetailsInputs,
   ProfileInputs,
 } from "./components/settings/Settings";
-import Expenses from "./components/expenses/Expenses";
+import Expenses from "./components/expenses/ExpensePage";
 import {
   getBankDetailsApi,
   getCompanyProfileApi,

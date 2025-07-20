@@ -1,4 +1,3 @@
-import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
 import { Button } from "../ui/button";
 import {
@@ -14,7 +13,7 @@ import { getAllVendorsApi } from "@/api/partner";
 import {
   createNotificationApi,
   getAllClientsApi,
-  getExpenseIdApi,
+  getCreditIdApi,
 } from "@/api/admin";
 import {
   convertToINRWords,
@@ -24,11 +23,11 @@ import {
 } from "@/lib/utils";
 import { getGeneralSettingsApi } from "@/api/settings";
 import {
-  createExpenseApi,
-  deleteExpenseApi,
-  filterExpensesByTitleApi,
-  getExpenseByPageApi,
-  updateExpenseDetailsApi,
+  createCreditApi,
+  deleteClientApi,
+  filterCreditsApi,
+  getCreditByPageApi,
+  updateCreditDetailsApi,
 } from "@/api/expense";
 import { toast } from "react-toastify";
 
@@ -57,21 +56,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TbCopy } from "react-icons/tb";
-import { ExpensesInputs, generalSettings, VendorInputs } from "@/types";
+import { CreditInputs, generalSettings, VendorInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
 
-export default function Expenses() {
+export default function Credit({ setSection }: { setSection: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMembers] = useState<VendorInputs[]>([]);
   const [linkTo, setLinkTo] = useState<string>("");
   const [generalSettings, setGeneralSettings] = useState<generalSettings>();
-  const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<ExpensesInputs[]>(
-    [],
-  );
-  const [selectedExpense, setSelectedExpense] = useState<ExpensesInputs | null>(
+  const [credits, setCredits] = useState<CreditInputs[]>([]);
+  const [filteredCredits, setFilteredCredits] = useState<CreditInputs[]>([]);
+  const [selectedCredit, setSelectedCredit] = useState<CreditInputs | null>(
     null,
   );
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -111,7 +108,7 @@ export default function Expenses() {
     reset,
     watch,
     formState: { errors },
-  } = useForm<ExpensesInputs>();
+  } = useForm<CreditInputs>();
 
   const amount = watch("amount");
 
@@ -129,10 +126,10 @@ export default function Expenses() {
     if (branchId) {
       branchIdToBeUsed = branchId;
     }
-    const response = await filterExpensesByTitleApi(text, branchIdToBeUsed);
+    const response = await filterCreditsApi(text, branchIdToBeUsed);
     if (response?.status === 200) {
       const allExpenses = response.data.data;
-      setFilteredExpenses(allExpenses);
+      setFilteredCredits(allExpenses);
     }
   }
 
@@ -141,7 +138,7 @@ export default function Expenses() {
       const text = search.trim().toLowerCase();
 
       if (!text) {
-        setFilteredExpenses(expenses);
+        setFilteredCredits(credits);
         return;
       }
 
@@ -153,63 +150,62 @@ export default function Expenses() {
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search, expenses]);
+  }, [search, credits]);
 
-  const onSubmit = async (data: ExpensesInputs) => {
+  const onSubmit = async (data: CreditInputs) => {
     if (branch.isAdmin) {
       data.adminId = branch.id;
     } else {
       data.branchesId = branch.id;
     }
     setIsLoading(true);
-    if (formStatus === "New" && !selectedExpense) {
-      const response = await createExpenseApi(data);
+    if (formStatus === "New" && !selectedCredit) {
+      const response = await createCreditApi(data);
       if (response?.status === 200) {
-        toast.success("Expense Created");
+        toast.success("Credit Created");
         reset();
         setIsOpen(false);
 
         if (isAdmin) {
-          fetchExpense();
+          fetchCredit();
         } else if (!isAdmin && branch.id) {
-          fetchExpense(branch.id);
+          fetchCredit(branch.id);
         }
       } else if (response?.status === 201) {
         toast.warning("Expense Id already exists, please try another one");
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
-    } else if (formStatus === "editing" && selectedExpense) {
+    } else if (formStatus === "editing" && selectedCredit) {
       if (!branch.isAdmin) {
         setIsOpen(false);
         setNotificationData(
           filterOnlyCompletePrimitiveDiffs(
-            getUnmatchingFields(data, selectedExpense!),
+            getUnmatchingFields(data, selectedCredit!),
           ),
         );
         setIsLoading(false);
         setNotificationAlertOpen(true);
         return;
       }
-      const response = await updateExpenseDetailsApi(selectedExpense?.id, data);
+      const response = await updateCreditDetailsApi(selectedCredit?.id, data);
       if (response?.status === 200) {
-        toast.success("Expense Updated");
+        toast.success("Credit Updated");
         reset();
         setIsOpen(false);
         if (isAdmin) {
-          fetchExpense();
+          fetchCredit();
         } else if (!isAdmin && branch.id) {
-          fetchExpense(branch.id);
+          fetchCredit(branch.id);
         }
       }
     }
     setIsLoading(false);
   };
-
-  const onExpensesEditNotificationSubmit = async () => {
+  const onCreditEditNotificationSubmit = async () => {
     const data = {
-      requestId: selectedExpense?.expenseId,
-      title: "Expense edit",
+      requestId: selectedCredit?.creditId,
+      title: "Credit edit",
       message: branch.branchName,
       description: branch.id,
       status: "editable",
@@ -219,23 +215,16 @@ export default function Expenses() {
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
       setNotificationAlertOpen(false);
-      if (isAdmin) {
-        fetchExpense();
-      } else if (!isAdmin && branch.id) {
-        fetchExpense(branch.id);
-      }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
     setNotificationAlertOpen(false);
   };
 
-  const onDeleteExpenseHandlerOnNotification = async (
-    expenses: ExpensesInputs,
-  ) => {
+  const onDeleteCreditHandlerOnNotification = async (credit: CreditInputs) => {
     const data = {
-      requestId: expenses.expenseId,
-      title: "Expense delete",
+      requestId: credit.creditId,
+      title: "Credit delete",
       message: branch?.branchName,
       description: branch.id,
       status: "delete",
@@ -243,20 +232,33 @@ export default function Expenses() {
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
-      if (isAdmin) {
-        fetchExpense();
-      } else if (!isAdmin && branch.id) {
-        fetchExpense(branch.id);
-      }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
   };
 
-  const setExpenseDetails = (data: ExpensesInputs) => {
-    setValue("expenseId", data.expenseId);
+  async function fetchCredit(branchId?: string) {
+    let branchIdToBeUsed = null;
+    if (branchId) {
+      branchIdToBeUsed = branchId;
+    }
+    const response = await getCreditByPageApi(
+      currentPage,
+      itemsPerPage,
+      branchIdToBeUsed,
+    );
+    if (response?.status === 200) {
+      const allExpenses = response.data.data;
+      setFilteredCredits(allExpenses.creditData);
+      setCredits(allExpenses.creditData);
+      setTotalItems(allExpenses.creditCount);
+    }
+  }
+
+  const setCreditDetails = (data: CreditInputs) => {
+    setValue("creditId", data.creditId);
     setValue("description", data.description);
-    setValue("date", new Date(data.date).toLocaleDateString());
+    setValue("date", data.date);
     setValue("category", data.category);
     setValue("customerName", data.customerName);
     setValue("linkTo", data.linkTo);
@@ -268,6 +270,23 @@ export default function Expenses() {
     setValue("transactionNumber", data.transactionNumber);
     setValue("title", data.title);
   };
+  async function deleteCredit() {
+    if (!selectedCredit) {
+      return;
+    }
+    const response = await deleteClientApi(selectedCredit?.id);
+    if (response?.status === 200) {
+      toast.success("Expense Deleted");
+      setIsDetailsModalOpen(false);
+      if (isAdmin) {
+        fetchCredit();
+      } else if (!isAdmin && branch.id) {
+        fetchCredit(branch.id);
+      }
+    } else {
+      toast.error("Failed to Delete Expense");
+    }
+  }
 
   async function fetchVendors() {
     const responseVendors = await getAllVendorsApi();
@@ -283,65 +302,28 @@ export default function Expenses() {
     }
   }
 
-  async function deleteExpense() {
-    if (!selectedExpense) {
-      return;
-    }
-    const response = await deleteExpenseApi(selectedExpense?.id);
-    if (response?.status === 200) {
-      toast.success("Expense Deleted");
-      setIsDetailsModalOpen(false);
-      if (isAdmin) {
-        fetchExpense();
-      } else if (!isAdmin && branch.id) {
-        fetchExpense(branch.id);
-      }
-    } else {
-      toast.error("Failed to Delete Expense");
-    }
-  }
-
   async function getExpenseId() {
-    const response = await getExpenseIdApi();
+    const response = await getCreditIdApi();
     if (response?.status === 200) {
-      setValue("expenseId", response.data.data.expenseId);
-    }
-  }
-
-  async function fetchExpense(branchId?: string) {
-    let branchIdToBeUsed = null;
-    if (branchId) {
-      branchIdToBeUsed = branchId;
-    }
-    const response = await getExpenseByPageApi(
-      currentPage,
-      itemsPerPage,
-      branchIdToBeUsed,
-    );
-    if (response?.status === 200) {
-      const allExpenses = response.data.data;
-      setFilteredExpenses(allExpenses.ExpenseData);
-      setExpenses(allExpenses.ExpenseData);
-      setTotalItems(allExpenses.ExpenseCount);
+      setValue("creditId", response.data.data.creditId);
     }
   }
 
   useEffect(() => {
     if (isAdmin) {
-      fetchExpense();
+      fetchCredit();
     } else if (!isAdmin && branch.id) {
-      fetchExpense(branch.id);
+      fetchCredit(branch.id);
     }
   }, [startIndex, endIndex]);
 
   useEffect(() => {
     if (isAdmin) {
-      fetchExpense();
+      fetchCredit();
     } else if (!isAdmin && branch.id) {
-      fetchExpense(branch.id);
+      fetchCredit(branch.id);
     }
   }, [isAdmin, branch.id]);
-
 
   useEffect(() => {
     fetchVendors();
@@ -352,7 +334,7 @@ export default function Expenses() {
       const branchDetails = JSON.parse(branch);
       if (branchDetails) {
         if (isAdmin === "true") {
-          setIsAdmin(true)
+          setIsAdmin(true);
           setValue("adminId", branchDetails.id);
           setBranch({
             id: branchDetails.id,
@@ -360,7 +342,7 @@ export default function Expenses() {
             isAdmin: true,
           });
         } else {
-          setIsAdmin(false)
+          setIsAdmin(false);
           setValue("branchesId", branchDetails.id);
           setBranch({
             id: branchDetails.id,
@@ -373,41 +355,10 @@ export default function Expenses() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex justify-between gap-5">
-        <div className="flex w-full rounded-xl bg-white p-5">
-          <div className="flex items-center gap-5">
-            <div className="rounded-full bg-[#F4F7FE] p-3">
-              <HiOutlineCurrencyRupee size={30} color="#2196F3" />
-            </div>
-            <div className="font-medium">
-              <p className="text-muted text-xs">Total Expenses</p>
-              <p className="text-xl">
-                {formatter.format(
-                  expenses.reduce(
-                    (acc, data) => acc + (parseFloat(data.amount) || 0),
-                    0,
-                  ),
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex w-full rounded-xl bg-white p-5">
-          <div className="flex items-center gap-5">
-            <div className="rounded-full bg-[#F4F7FE] p-3">
-              <HiOutlineCurrencyRupee size={30} color="#2196F3" />
-            </div>
-            <div className="font-medium">
-              <p className="text-muted text-sm">Total expense count</p>
-              <p className="text-xl">{expenses.length}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <>
       <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
-          <p className="text-xl font-medium">All Expenses</p>
+          <p className="text-xl font-medium">All Credits</p>
           <div className="flex items-center gap-5">
             <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
               <LuSearch size={18} />
@@ -419,22 +370,34 @@ export default function Expenses() {
               />
             </div>
             <Button
+              className="border-primary cursor-pointer rounded-2xl p-5"
+              variant={"outline"}
+              onClick={() => [
+                setSection({
+                  expenses: true,
+                  credits: false,
+                }),
+              ]}
+            >
+              View Expenses
+            </Button>
+            <Button
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
               onClick={() => [
                 setIsOpen(true),
                 reset(),
-                setSelectedExpense(null),
+                setSelectedCredit(null),
                 setFormStatus("New"),
                 getExpenseId(),
               ]}
             >
               <MdOutlineAdd size={34} />
-              Record Expense
+              Record Credit
             </Button>
             {!search && (
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <p>
-                  {startIndex}-{endIndex}
+                  {endIndex}-{startIndex}
                 </p>
                 <p>of</p>
                 <p>{totalItems}</p>
@@ -462,7 +425,7 @@ export default function Expenses() {
           <thead>
             <tr>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Expenses ID</p>
+                <p>Credit ID</p>
               </th>
               <th className="text-start font-[400] text-[#797979]">
                 <div className="flex items-center gap-2">
@@ -480,16 +443,16 @@ export default function Expenses() {
             </tr>
           </thead>
           <tbody>
-            {filteredExpenses?.map((expense) => (
+            {filteredCredits?.map((expense) => (
               <tr
-                key={expense.expenseId}
+                key={expense.creditId}
                 className="hover:bg-accent cursor-pointer"
                 onClick={() => [
-                  setSelectedExpense(expense),
+                  setSelectedCredit(expense),
                   setIsDetailsModalOpen(true),
                 ]}
               >
-                <td className="py-2">{expense.expenseId}</td>
+                <td className="py-2">{expense.creditId}</td>
                 <td className="py-2">{expense.title}</td>
                 <td className="py-2">
                   {new Date(expense.date).toLocaleDateString()}
@@ -529,30 +492,30 @@ export default function Expenses() {
           </p>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Expense ID</label>
+              <label>Credit ID</label>
               <input
                 type="text"
                 className={
                   "border-primary cursor-not-allowed rounded-md border p-2"
                 }
-                {...register("expenseId", { required: true })}
+                {...register("creditId", { required: true })}
                 readOnly
               />
-              {errors.expenseId && (
-                <p className="text-red-500">Expense ID is required</p>
+              {errors.creditId && (
+                <p className="text-red-500">Credit ID is required</p>
               )}
             </div>
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Expense Title</label>
+              <label>Credit Title</label>
               <input
                 type="text"
                 className="border-primary rounded-md border p-2"
                 {...register("title", { required: true })}
               />
               {errors.title && (
-                <p className="text-red-500">Expense Title is required</p>
+                <p className="text-red-500">Credit Title is required</p>
               )}
             </div>
           </div>
@@ -796,9 +759,9 @@ export default function Expenses() {
               {isLoading ? (
                 <VscLoading size={24} className="animate-spin" />
               ) : formStatus === "New" ? (
-                "Record Expenses"
+                "Record Credit"
               ) : (
-                "Update Expenses"
+                "Update Credit"
               )}
             </Button>
           </div>
@@ -809,7 +772,7 @@ export default function Expenses() {
         <DialogContent className="min-w-7xl">
           <DialogHeader className="flex flex-row items-start justify-between">
             <DialogTitle className="text-2xl">
-              Expense ID - {selectedExpense?.expenseId}
+              Credit ID - {selectedCredit?.creditId}
             </DialogTitle>
             <div className="mr-10 flex gap-3">
               <button
@@ -818,7 +781,7 @@ export default function Expenses() {
                   setFormStatus("editing"),
                   setIsDetailsModalOpen(false),
                   setIsOpen(true),
-                  setExpenseDetails(selectedExpense!),
+                  setCreditDetails(selectedCredit!),
                 ]}
               >
                 <RiEditBoxLine size={20} />
@@ -841,7 +804,7 @@ export default function Expenses() {
                       <AlertDialogAction
                         className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
                         onClick={() =>
-                          onDeleteExpenseHandlerOnNotification(selectedExpense!)
+                          onDeleteCreditHandlerOnNotification(selectedCredit!)
                         }
                       >
                         Proceed
@@ -867,7 +830,7 @@ export default function Expenses() {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                        onClick={deleteExpense}
+                        onClick={deleteCredit}
                       >
                         Delete
                       </AlertDialogAction>
@@ -880,39 +843,39 @@ export default function Expenses() {
           <DialogDescription></DialogDescription>
           <div className="grid grid-cols-3 gap-5">
             <div className="flex items-center gap-5">
-              <label className="font-medium">Expense ID</label>
-              <p>{selectedExpense?.expenseId}</p>
+              <label className="font-medium">Credit ID</label>
+              <p>{selectedCredit?.creditId}</p>
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Category</label>
-              <p>{selectedExpense?.category}</p>
+              <p>{selectedCredit?.category}</p>
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Recording Branch</label>
-              {selectedExpense?.Branches && (
-                <p>{selectedExpense?.Branches?.branchName}</p>
+              {selectedCredit?.Branches && (
+                <p>{selectedCredit?.Branches?.branchName}</p>
               )}
-              {selectedExpense?.Admin && (
-                <p>{selectedExpense?.Admin.branchName}</p>
+              {selectedCredit?.Admin && (
+                <p>{selectedCredit?.Admin.branchName}</p>
               )}
             </div>
-            {selectedExpense?.linkTo && (
+            {selectedCredit?.linkTo && (
               <div className="flex items-center gap-5">
                 <label className="font-medium">Linked to</label>
-                <p>{selectedExpense?.linkTo}</p>
+                <p>{selectedCredit?.linkTo}</p>
               </div>
             )}
-            {selectedExpense?.billNumber && (
+            {selectedCredit?.billNumber && (
               <div className="col-span-2 flex items-center gap-2">
                 <label className="font-medium">Bill#</label>
-                <p>{selectedExpense?.billNumber}</p>
+                <p>{selectedCredit?.billNumber}</p>
                 <Popover>
                   <PopoverTrigger className="cursor-pointer">
                     <TbCopy
                       size={20}
                       onClick={() =>
                         navigator.clipboard.writeText(
-                          selectedExpense!.billNumber.toString(),
+                          selectedCredit!.billNumber.toString(),
                         )
                       }
                     />
@@ -921,17 +884,17 @@ export default function Expenses() {
                 </Popover>
               </div>
             )}
-            {selectedExpense?.fmNumber && (
+            {selectedCredit?.fmNumber && (
               <div className="col-span-2 flex items-start gap-2">
                 <label className="font-medium">FM#</label>
-                <p>{selectedExpense?.fmNumber}</p>
+                <p>{selectedCredit?.fmNumber}</p>
                 <Popover>
                   <PopoverTrigger className="cursor-pointer">
                     <TbCopy
                       size={20}
                       onClick={() =>
                         navigator.clipboard.writeText(
-                          selectedExpense!.fmNumber.toString(),
+                          selectedCredit!.fmNumber.toString(),
                         )
                       }
                     />
@@ -943,19 +906,19 @@ export default function Expenses() {
 
             <div className="flex items-start gap-5">
               <label className="font-medium">Amount</label>
-              <p>INR {selectedExpense?.amount}</p>
+              <p>INR {selectedCredit?.amount}</p>
             </div>
             <div className="flex items-start gap-5">
               <label className="font-medium">Payment Type</label>
-              <p>{selectedExpense?.paymentType}</p>
+              <p>{selectedCredit?.paymentType}</p>
             </div>
             <div className="flex items-start gap-5">
               <label className="font-medium">Transaction ID</label>
-              <p>{selectedExpense?.transactionNumber}</p>
+              <p>{selectedCredit?.transactionNumber}</p>
             </div>
             <div className="col-span-3 flex flex-col items-start gap-2 capitalize">
               <label className="font-medium">Amount in words</label>
-              <p>{selectedExpense?.amountInWords}</p>
+              <p>{selectedCredit?.amountInWords}</p>
             </div>
           </div>
         </DialogContent>
@@ -975,12 +938,12 @@ export default function Expenses() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onExpensesEditNotificationSubmit}>
+            <AlertDialogAction onClick={onCreditEditNotificationSubmit}>
               Proceed
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

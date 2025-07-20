@@ -13,16 +13,18 @@ import ExcelJS from "exceljs";
 import {
   billInputs,
   ClientInputs,
+  CreditInputs,
   ExpensesInputs,
   LrInputs,
   PaymentRecord,
   VendorInputs,
 } from "@/types";
-import { getAllExpensesApi } from "@/api/expense";
+import { getAllCreditApi, getAllExpensesApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: any;
+  creditId: any;
   fMId: any;
   branchesId: string;
   Admin?: {
@@ -265,6 +267,7 @@ export default function Statements() {
 
   async function fetchTransactions(branchId?: string) {
     const recordResponse = await getAllRecordPaymentApi();
+    const creditResponse = await getAllCreditApi();
     const vendorResponse = await getAllVendorsApi();
     const clientResponse = await getAllClientsApi();
     const expensesResposne = await getAllExpensesApi();
@@ -272,19 +275,34 @@ export default function Statements() {
       recordResponse?.status === 200 &&
       clientResponse?.status === 200 &&
       vendorResponse?.status === 200 &&
+      creditResponse?.status === 200 &&
       expensesResposne?.status === 200
     ) {
       setClientsData(clientResponse.data.data);
       setVendor(vendorResponse.data.data);
       setExpenses(expensesResposne.data.data);
       const allTransactions: ExtendedPaymentRecord[] = recordResponse.data.data;
+      const allCredits: CreditInputs[] = creditResponse.data.data;
       const filteredTransactions = branchId
         ? allTransactions.filter(
             (transaction) => transaction.branchesId === branchId,
           )
         : allTransactions;
-      setTransactions(filteredTransactions);
-      setPaymentTotals(summarizePayments(filteredTransactions));
+      const filteredCredits = branchId
+        ? allCredits.filter((credit) => credit.branchesId === branchId)
+        : allCredits;
+
+      const combinedTransactions = [
+        ...filteredTransactions,
+        ...filteredCredits,
+      ];
+      const sortedTransactions = combinedTransactions.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+      setTransactions(sortedTransactions as ExtendedPaymentRecord[]);
+      setPaymentTotals(
+        summarizePayments(sortedTransactions as ExtendedPaymentRecord[]),
+      );
     }
   }
 
@@ -489,14 +507,17 @@ export default function Statements() {
                     <td className="py-2">
                       {new Date(record.date).toLocaleDateString()}
                     </td>
-                    <td className="py-2">{record.IDNumber}</td>
+                    <td className="py-2">
+                      {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
+                      {record.IDNumber ?? record.creditId}
+                    </td>
                     <td className="py-2">
                       {record.Admin?.branchName || record.Branches?.branchName}
                     </td>
                     <td className="py-2">
                       {formatter.format(parseFloat(record.amount))}
                     </td>
-                    {record.billId ? (
+                    {record.billId || record.creditId ? (
                       <td className="py-2">
                         {formatter.format(parseFloat(record.amount))}
                       </td>

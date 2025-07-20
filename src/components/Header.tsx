@@ -47,7 +47,9 @@ import {
   updateBillRecordByNotificationApi,
 } from "@/api/billing";
 import {
+  deleteCreditByNotificationApi,
   deleteExpenseByNotificationApi,
+  updateCreditByNotificationApi,
   updateExpenseByNotificationApi,
 } from "@/api/expense";
 import {
@@ -237,15 +239,26 @@ export default function Header({
       notification.title === "POD deleted"
     ) {
       return `Request to delete the POD of (LR No. ${notification.requestId}) `;
+    } else if (
+      notification.title === "Credit delete" ||
+      notification.title === "Credit deleted"
+    ) {
+      return `Request to delete the Credit of (Credit No. ${notification.requestId}) `;
+    } else if (
+      notification.title === "Credit edit" ||
+      notification.title === "Credit edited"
+    ) {
+      return `Request to edit  Credit of (Credit No. ${notification.requestId}) `;
+    } else {
+      return "Invalid description";
     }
-
-    return "Invalid description";
   }
 
   async function fetchAdminNotifications() {
     const response = await getAllAdminNotificationsApi();
     if (response?.status === 200) {
       setNotifications(response.data.data);
+      console.log(response.data.data);
       const oneTimeMessages = response.data.data.filter(
         (message: Notification) => message.status !== "read",
       );
@@ -679,6 +692,21 @@ export default function Header({
     setIsLoading(false);
   };
 
+  const updateCreditByNotification = async (notification: Notification) => {
+    const data = formatForUpdate(notification.data);
+    setIsLoading(true);
+    const response = await updateCreditByNotificationApi(
+      notification.requestId,
+      data,
+    );
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
   const updateExpensesByNotification = async (notification: Notification) => {
     const data = formatForUpdate(notification.data);
     setIsLoading(true);
@@ -695,6 +723,28 @@ export default function Header({
     setIsLoading(false);
   };
 
+  const updateCreditDeclineByNotification = async (
+    notification: Notification,
+  ) => {
+    const data = {
+      requestId: notification.requestId,
+      title: "Credit",
+      message: "",
+      data: null,
+      status: "declined",
+      branchId: notification.description,
+      description: "declined",
+    };
+    setIsLoading(true);
+    const response = await createNotificationForBranchApi(data);
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
   const updateExpensesDeclineByNotification = async (
     notification: Notification,
   ) => {
@@ -718,6 +768,19 @@ export default function Header({
     setIsLoading(false);
   };
 
+  const deleteCreditByNotification = async (notification: Notification) => {
+    setIsLoading(true);
+    const response = await deleteCreditByNotificationApi(
+      notification.requestId,
+    );
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
   const deleteExpenseByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await deleteExpenseByNotificationApi(
@@ -732,6 +795,27 @@ export default function Header({
     setIsLoading(false);
   };
 
+  const deleteCreditDeclineByNotification = async (
+    notification: Notification,
+  ) => {
+    const data = {
+      requestId: notification.requestId,
+      title: "Credit deleted",
+      message: "",
+      status: "declined",
+      branchId: notification.description,
+      description: "declined",
+    };
+    setIsLoading(true);
+    const response = await createNotificationForBranchApi(data);
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
   const deleteExpenseDeclineByNotification = async (
     notification: Notification,
   ) => {
@@ -840,6 +924,8 @@ export default function Header({
       notification.title === "POD delete" ||
       notification.title === "POD deleted" ||
       notification.title === "Expense deleted" ||
+      notification.title === "Credit delete" ||
+      notification.title === "Credit edit" ||
       notification.title === "Expense"
     ) {
       return notification.message ?? "Admin";
@@ -877,6 +963,9 @@ export default function Header({
       title === "Vehicle delete" ||
       title === "Expense deleted" ||
       title === "POD deleted" ||
+      title === "Credit deleted" ||
+      title === "Credit edited" || 
+      title === "Credit" || 
       title === "FM record" ||
       title === "POD" ||
       title === "Expense"
@@ -912,6 +1001,9 @@ export default function Header({
       title !== "FM Decline" &&
       title !== "Expense" &&
       title !== "Expense deleted" &&
+      title !== "Credit deleted" &&
+      title !== "Credit edited" &&
+      title !== "Credit" &&
       title !== "POD deleted" &&
       title !== "POD" &&
       title !== "FM record"
@@ -928,6 +1020,8 @@ export default function Header({
       title === "POD edit"
     ) {
       return `Change Request for ${title.split(" ")[0] === "POD" ? "LR" : title.split(" ")[0]} No. #${requestId}`;
+    } else if(title === "Credit edit"){
+      return `Change Request for Credit No. #${requestId}`;
     } else {
       return "Alert!";
     }
@@ -954,7 +1048,9 @@ export default function Header({
       return `Are you sure you want to remove this Expense ${requestId}? This action is permanent and cannot be undone.`;
     } else if (title === "POD delete") {
       return `Are you sure you want to remove this POD of LR No. ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "LR edit") {
+    } else if (title === "Credit delete") {
+      return `Are you sure you want to remove this Credit of ID ${requestId}? This action is permanent and cannot be undone.`;
+    } else if (title === "LR edit" || title === "Credit edit") {
       return "";
     } else {
       return description;
@@ -973,6 +1069,8 @@ export default function Header({
     "Bill record delete": deleteBillRecordDeclineByNotification,
     "Expense edit": updateExpensesDeclineByNotification,
     "Expense delete": deleteExpenseDeclineByNotification,
+    "Credit delete": deleteCreditDeclineByNotification,
+    "Credit edit": updateCreditDeclineByNotification,
     "POD edit": updatePodDeclineByNotification,
     "POD delete": deletePodDeclineByNotification,
   };
@@ -1011,8 +1109,12 @@ export default function Header({
       deleteBillRecordByNotification(notification);
     } else if (notification.title === "Expense edit") {
       updateExpensesByNotification(notification);
+    } else if (notification.title === "Credit edit") {
+      updateCreditByNotification(notification);
     } else if (notification.title === "Expense delete") {
       deleteExpenseByNotification(notification);
+    } else if (notification.title === "Credit delete") {
+      deleteCreditByNotification(notification);
     } else if (notification.title === "POD edit") {
       updatePodByNotification(notification);
     } else if (notification.title === "POD delete") {
@@ -1113,7 +1215,7 @@ export default function Header({
                           View details
                         </DialogTrigger>
                         <DialogContent
-                          className={`${notification.data === null ? "" : "min-w-3xl"} h-[80%] overflow-y-auto`}
+                          className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
                         >
                           <DialogHeader>
                             <DialogTitle>
@@ -1123,7 +1225,7 @@ export default function Header({
                               )}
                             </DialogTitle>
                             <DialogDescription></DialogDescription>
-                            <div className="font-medium text-black ">
+                            <div className="font-medium text-black">
                               {getDescriptionText(
                                 notification.title,
                                 notification.requestId,
@@ -1195,6 +1297,7 @@ export default function Header({
                               notification.title === "Bill record edit" ||
                               notification.title === "Bill edit" ||
                               notification.title === "POD edit" ||
+                              notification.title === "Credit edit" ||
                               notification.title === "Expense edit"
                                 ? "Decline"
                                 : "Cancel"}
@@ -1208,6 +1311,7 @@ export default function Header({
                               notification.title === "Bill record edit" ||
                               notification.title === "Bill edit" ||
                               notification.title === "POD edit" ||
+                              notification.title === "Credit edit" ||
                               notification.title === "Expense edit"
                                 ? "Approve"
                                 : notification.title === "FM delete" ||
@@ -1217,6 +1321,7 @@ export default function Header({
                                       "Bill record delete" ||
                                     notification.title === "FM record delete" ||
                                     notification.title === "POD delete" ||
+                                    notification.title === "Credit delete" ||
                                     notification.title === "Expense delete"
                                   ? "Delete"
                                   : "Noted!"}
@@ -1231,7 +1336,7 @@ export default function Header({
                         View details
                       </DialogTrigger>
                       <DialogContent
-                        className={`${notification.data === null ? "" : "min-w-3xl"} h-[80%] overflow-y-auto`}
+                        className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
                       >
                         <DialogHeader>
                           <DialogTitle>

@@ -4,7 +4,10 @@ const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createExpenseApi = async (data: any) => {
   try {
-    const response = await axios.post(`${BASE_URL}/api/v1/expenses/create`, data);
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/expenses/create`,
+      data,
+    );
     return response;
   } catch (error) {
     console.log(error);
@@ -22,7 +25,9 @@ export const getAllExpensesApi = async () => {
 
 export const deleteExpenseApi = async (id: string) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/api/v1/expenses/delete/${id}`);
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/expenses/delete/${id}`,
+    );
     return response;
   } catch (error) {
     console.log(error);
@@ -41,7 +46,6 @@ export const updateExpenseDetailsApi = async (id: string, data: any) => {
   }
 };
 
-
 export const updateExpenseByNotificationApi = async (id: string, data: any) => {
   try {
     const response = await axios.patch(
@@ -52,8 +56,7 @@ export const updateExpenseByNotificationApi = async (id: string, data: any) => {
   } catch (error) {
     console.log(error);
   }
-}
-
+};
 
 export const deleteExpenseByNotificationApi = async (id: string) => {
   try {
@@ -64,9 +67,13 @@ export const deleteExpenseByNotificationApi = async (id: string) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
-export const getExpenseByPageApi = async (page: number, limit: number, branchId?: any) => {
+export const getExpenseByPageApi = async (
+  page: number,
+  limit: number,
+  branchId?: any,
+) => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/expenses/getByPage?page=${page}&limit=${limit}&branchId=${branchId}`,
@@ -77,12 +84,104 @@ export const getExpenseByPageApi = async (page: number, limit: number, branchId?
   }
 };
 
-
 export const filterExpensesByTitleApi = async (text: string, branchId: any) => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/expenses/filterByTitle/${text}/${branchId}`,
     );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createCreditApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/expenses/credits/create`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getCreditByPageApi = async (
+  page: number,
+  limit: number,
+  branchId?: any,
+) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/credits/getByPage?page=${page}&limit=${limit}&branchId=${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateCreditDetailsApi = async (id: string, data: any) => {
+  try {
+    const response = await axios.patch(
+      `${BASE_URL}/api/v1/credit/update/${id}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteClientApi = async (id: string) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/credit/delete/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterCreditsApi = async (text: string, branchId: any) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/credits/filterByTitle/${text}/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteCreditByNotificationApi = async (id: string) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/api/v1/credit/deleteByNotification/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateCreditByNotificationApi = async (id: string, data: any) => {
+  try {
+    const response = await axios.patch(
+      `${BASE_URL}/api/v1/credit/updateByNotification/${id}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getAllCreditApi = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/credits/getAll`);
     return response;
   } catch (error) {
     console.log(error);

@@ -339,3 +339,27 @@ export interface ExpensesInputs {
     branchName: string;
   };
 }
+export interface CreditInputs {
+  id: string;
+  creditId: string;
+  description: string;
+  date: string;
+  category: string;
+  customerName: string;
+  linkTo: string;
+  billNumber: string;
+  fmNumber: string;
+  amount: string;
+  amountInWords: string;
+  paymentType: string;
+  transactionNumber: string;
+  title: string;
+  branchesId: string;
+  adminId: string;
+  Branches: {
+    branchName: string;
+  };
+  Admin: {
+    branchName: string;
+  };
+}

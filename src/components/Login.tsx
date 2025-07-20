@@ -39,9 +39,10 @@ export default function Login() {
       return;
     }
     setIsLoading(true);
-
+    
     if (selectedValue === "") {
       toast.warn("Please select a Branch");
+      setIsLoading(false);
       return;
     } else if (selectedValue === "admin") {
       const response = await adminLoginApi(userName, password);
