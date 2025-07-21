@@ -75,12 +75,14 @@ export default function Settings({ data }: { data?: Setting }) {
   const [otherSettings, setOtherSettings] = useState({
     billId: "",
     expenseId: "",
+    creditId: "",
   });
   const [isOtherSettingsModalOpen, setIsOtherSettingsModalOpen] =
     useState(false);
   const [othersError, setOthersError] = useState({
     billId: false,
     expenseId: false,
+    creditId: false,
   });
 
   const addExpenseType = () => {
@@ -260,27 +262,27 @@ export default function Settings({ data }: { data?: Setting }) {
   }
 
   const onOtherSettingsSubmit = async () => {
-    setIsLoading(true);
+    const keys = ["billId", "expenseId", "creditId"] as const;
+
+    for (const key of keys) {
+      if (!otherSettings[key]) {
+        setOthersError({
+          billId: false,
+          expenseId: false,
+          creditId: false,
+          [key]: true,
+        });
+        return;
+      }
+    }
+
     setOthersError({
       billId: false,
       expenseId: false,
+      creditId: false,
     });
-    if (!otherSettings.billId) {
-      setOthersError({
-        billId: true,
-        expenseId: false,
-      });
-      setIsLoading(false);
-      return;
-    }
-    if (!otherSettings.expenseId) {
-      setOthersError({
-        billId: false,
-        expenseId: true,
-      });
-      setIsLoading(false);
-      return;
-    }
+
+    setIsLoading(true);
     if (otherSettings.billId && otherSettings.expenseId) {
       const response = await updateOtherSettingsApi(otherSettings);
       if (response?.status === 200) {
@@ -291,7 +293,6 @@ export default function Settings({ data }: { data?: Setting }) {
         toast.error("Something Went Wrong, Check All Fields");
       }
     }
-
     setIsLoading(false);
   };
 
@@ -334,6 +335,7 @@ export default function Settings({ data }: { data?: Setting }) {
       setOtherSettings({
         billId: data.billId,
         expenseId: data.expenseId,
+        creditId: data.creditId,
       });
     }
   }
@@ -459,14 +461,18 @@ export default function Settings({ data }: { data?: Setting }) {
                 className="cursor-pointer"
               />
             </div>
-            <div className="flex">
-              <div className="flex w-1/2 gap-3">
+            <div className="flex justify-between pr-25">
+              <div className="flex  gap-3">
                 <label className="font-medium">Currect Bill Number:</label>
                 <p>{otherSettings.billId}</p>
               </div>
               <div className="flex gap-3">
                 <label className="font-medium">Current Expense ID:</label>
                 <p>{otherSettings.expenseId}</p>
+              </div>
+              <div className="flex gap-3">
+                <label className="font-medium">Credit ID:</label>
+                <p>{otherSettings.creditId}</p>
               </div>
             </div>
           </div>
@@ -696,7 +702,7 @@ export default function Settings({ data }: { data?: Setting }) {
         onCancel={() => setIsGeneralSettingsModalOpen(false)}
         className="max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex flex-col gap-3 ">
+        <div className="flex flex-col gap-3">
           <p className="w-full text-xl font-semibold">Expense types</p>
           <div className="flex items-start gap-10">
             <div className="grid grid-cols-3 gap-10">
@@ -863,6 +869,25 @@ export default function Settings({ data }: { data?: Setting }) {
             </div>
             {othersError.expenseId && (
               <p className="text-red-500">Expense ID is required</p>
+            )}
+          </div>
+          <div className="w-[49%]">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Credit ID</label>
+              <input
+                type="text"
+                className="border-primary rounded-md border p-1 py-2 pl-2"
+                onChange={(e) =>
+                  setOtherSettings((prev) => ({
+                    ...prev,
+                    creditId: e.target.value,
+                  }))
+                }
+                value={otherSettings.creditId}
+              />
+            </div>
+            {othersError.creditId && (
+              <p className="text-red-500">Credit ID is required</p>
             )}
           </div>
 
