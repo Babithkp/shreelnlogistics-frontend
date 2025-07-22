@@ -3,7 +3,7 @@ import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { useEffect, useState } from "react";
 
 import { formatter } from "@/lib/utils";
-import { getAllExpensesApi } from "@/api/expense";
+import { getAllCreditApi, getAllExpensesApi } from "@/api/expense";
 
 import Expense from "./Expense";
 import Credit from "./Credit";
@@ -15,6 +15,7 @@ export default function Expenses() {
     credits: false,
   });
   const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
+  const [credits, setCredits] = useState<ExpensesInputs[]>([]);
 
   async function fetchExpenses() {
     const response = await getAllExpensesApi();
@@ -23,8 +24,18 @@ export default function Expenses() {
       setExpenses(allExpenses);
     }
   }
+
+  async function fetchCredits() {
+    const response = await getAllCreditApi();
+    if (response?.status === 200) {
+      const allCredits = response.data.data;
+      setCredits(allCredits);
+    }
+  }
+
   useEffect(() => {
     fetchExpenses();
+    fetchCredits()
   }, []);
 
   return (
@@ -54,8 +65,13 @@ export default function Expenses() {
               <HiOutlineCurrencyRupee size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className="text-muted text-sm">Total expense count</p>
-              <p className="text-xl">{expenses.length}</p>
+              <p className="text-muted text-sm">Total Credit</p>
+              <p className="text-xl">{formatter.format(
+                  credits.reduce(
+                    (acc, data) => acc + (parseFloat(data.amount) || 0),
+                    0,
+                  ),
+                )}</p>
             </div>
           </div>
         </div>
