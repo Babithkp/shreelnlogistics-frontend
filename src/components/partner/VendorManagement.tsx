@@ -1141,7 +1141,7 @@ export default function VendorManagement({
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogTrigger className="hidden"></DialogTrigger>
         {modalStatus === "vendor" && (
-          <DialogContent className="min-w-7xl">
+          <DialogContent className="min-w-7xl max-h-140 overflow-auto">
             <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">Vendor Details</DialogTitle>
               <div className="mr-10 flex gap-3">
