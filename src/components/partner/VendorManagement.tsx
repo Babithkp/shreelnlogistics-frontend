@@ -1320,7 +1320,7 @@ export default function VendorManagement({
           </DialogContent>
         )}
         {modalStatus === "vehicle" && (
-          <DialogContent className="min-w-7xl">
+          <DialogContent className="min-w-7xl max-h-140 overflow-auto">
             <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">
                 Vehicle List - {selectedVendor?.name}
