@@ -60,7 +60,7 @@ import { ProfileInputs } from "@/components/settings/Settings";
 import { getCompanyProfileApi } from "@/api/settings";
 import { Controller, useForm } from "react-hook-form";
 import {
-  convertToINRWords,
+  numberToIndianWords,
   filterOnlyCompletePrimitiveDiffs,
   formatter,
   getUnmatchingFields,
@@ -173,8 +173,11 @@ export default function FMList({
     if (response?.status === 200) {
       const allFMs = response.data.data;
       setFMData(allFMs.FMData);
-      setFilteredFMs(allFMs.FMData);
-      setTotalItems(allFMs.FMCount);
+      // Only update filteredFMs if there's no active search
+      if (!search.trim()) {
+        setFilteredFMs(allFMs.FMData);
+      }
+      setTotalItems(allFMs.FMCount);      
     }
   }
 
@@ -187,7 +190,10 @@ export default function FMList({
     if (response?.status === 200) {
       const allFMs = response.data.data;
       setFMData(allFMs.FMData);
-      setFilteredFMs(allFMs.FMData);
+      // Only update filteredFMs if there's no active search
+      if (!search.trim()) {
+        setFilteredFMs(allFMs.FMData);
+      }
       setTotalItems(allFMs.FMCount);
     }
   }
@@ -207,6 +213,7 @@ export default function FMList({
       fetchFMDataForPageForBranch();
     }
   }, [isAdmin, branch.branchId]);
+  
 
   const onFilterHandler = async () => {
     if (!filterInputs.name) {
@@ -402,7 +409,7 @@ export default function FMList({
     }
     if (amount && selectedFM) {
       const totalAmount = Number(amount);
-      const amountInWords = convertToINRWords(totalAmount);
+      const amountInWords = numberToIndianWords(totalAmount);
       const pendingAmount =
         parseFloat(selectedFM?.outStandingBalance) - totalAmount;
 
@@ -412,7 +419,7 @@ export default function FMList({
         (totalPending || 0) + parseFloat(pendingAmount.toFixed(2)),
       );
     } else {
-      setValue("amountInWords", convertToINRWords(0));
+      setValue("amountInWords", numberToIndianWords(0));
       setValue("pendingAmount", 0);
     }
   }, [amount, setValue]);
@@ -438,7 +445,10 @@ export default function FMList({
       const text = search.trim().toLowerCase();
 
       if (!text) {
-        setFilteredFMs(FMData);
+        // Only set filteredFMs to FMData if FMData actually has content
+        if (FMData.length > 0) {
+          setFilteredFMs(FMData);
+        }
         return;
       }
       if (isAdmin) {
@@ -449,7 +459,14 @@ export default function FMList({
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [search]);
+  }, [search, FMData]);
+
+  // Ensure filteredFMs is updated when FMData changes and there's no search
+  useEffect(() => {
+    if (!search.trim() && FMData.length > 0) {
+      setFilteredFMs(FMData);
+    }
+  }, [FMData, search]);
 
   const onSubmit = async (data: PaymentRecord) => {
     if (data.pendingAmount < 0) {

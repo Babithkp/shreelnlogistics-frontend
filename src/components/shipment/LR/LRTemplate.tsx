@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { ProfileInputs } from "@/components/settings/Settings";
-import { convertToINRWords } from "@/lib/utils";
+import { numberToIndianWords } from "@/lib/utils";
 import { LrInputs } from "@/types";
 // Define styles
 const styles = StyleSheet.create({
@@ -343,7 +343,7 @@ const LRTemplate = ({
         >
           <Text style={{ width: "50%", textTransform: "capitalize" }}>
             Amount in words{" "}
-            {LRData?.totalAmt && convertToINRWords(LRData?.totalAmt)}
+            {LRData?.totalAmt && numberToIndianWords(LRData?.totalAmt)}
           </Text>
           <Text>Total INR {LRData?.totalAmt.toFixed(2)}</Text>
         </View>

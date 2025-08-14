@@ -9,6 +9,7 @@ import { BranchDetails } from "./FMPage";
 import {
   getUnmatchingFields,
   filterOnlyCompletePrimitiveDiffs,
+  numberToIndianWords,
 } from "@/lib/utils";
 import { FMInputs, LrInputs, VendorInputs } from "@/types";
 import {
@@ -120,6 +121,7 @@ export default function FMCreate({
       tds: tds.toFixed(2), // optional: format to 2 decimals
       balance: balance.toFixed(2),
       netBalance: netBalance.toFixed(2),
+      amountInwords: numberToIndianWords(netBalance),
     }));
   }, [
     fmData.hire,
@@ -655,8 +657,7 @@ export default function FMCreate({
           </div>
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Amount in words</label>
-            <input
-              type="text"
+            <textarea
               placeholder="Type here..."
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               value={fmData?.amountInwords}

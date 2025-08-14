@@ -16,7 +16,7 @@ import {
   getCreditIdApi,
 } from "@/api/admin";
 import {
-  convertToINRWords,
+  numberToIndianWords,
   filterOnlyCompletePrimitiveDiffs,
   formatter,
   getUnmatchingFields,
@@ -114,7 +114,7 @@ export default function Credit({ setSection }: { setSection: any }) {
 
   useEffect(() => {
     if (amount) {
-      const amountInWords = convertToINRWords(Number(amount));
+      const amountInWords = numberToIndianWords(Number(amount));
       setValue("amountInWords", amountInWords);
     } else {
       setValue("amountInWords", "");

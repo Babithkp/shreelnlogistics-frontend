@@ -74,7 +74,7 @@ export default function Pod() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const [client, setClient] = useState<ClientInputs[]>([]);
   const [isError, setIsError] = useState(false);
-  const [file, setFile] = useState<File>();
+  const [file, setFile] = useState<File | null>();
   const [pods, setPods] = useState<PODInputs[]>([]);
   const [filteredPods, setFilteredPods] = useState<PODInputs[]>([]);
   const [selectedPOD, setSelectedPOD] = useState<PODInputs | null>(null);
@@ -167,6 +167,10 @@ export default function Pod() {
     if (lr) {
       setValue("from", lr.from);
       setValue("to", lr.to);
+      setValue("clientName", lr.client.name);
+      setValue("date", lr.date);
+      setValue("clientGSTIN", lr.client.GSTIN);
+      console.log(lr.client.GSTIN);
     }
   };
 
@@ -177,7 +181,11 @@ export default function Pod() {
     control,
     reset,
     formState: { errors },
-  } = useForm<PODInputs>();
+  } = useForm<PODInputs>({
+    defaultValues: {
+      receivingDate: new Date().toISOString().split("T")[0],
+    },
+  });
 
   const onSubmit = async (data: PODInputs) => {
     setIsLoading(true);
@@ -256,9 +264,12 @@ export default function Pod() {
         const response = await createPODApi(data);
         if (response?.status === 200) {
           toast.success("POD has been created");
-          reset();
           setIsOpen(false);
           fetchPods();
+          setFile(null);
+          reset({
+            receivingBranch: branch.branchName,
+          });
         } else {
           toast.error("Something Went Wrong, Check All Fields");
         }
@@ -397,6 +408,12 @@ export default function Pod() {
       getPODByPage(currentPage, itemsPerPage, branch.branchId);
     }
   }, [isAdmin, branch.branchId]);
+
+  useEffect(() => {
+    if (branch?.branchName) {
+      setValue("receivingBranch", branch.branchName);
+    }
+  }, [branch, setValue]);
 
   useEffect(() => {
     fetchClients();
@@ -677,8 +694,8 @@ export default function Pod() {
               <input
                 className="border-primary cursor-not-allowed rounded-md border p-2"
                 {...register("receivingBranch", { required: true })}
-                value={branch.branchName}
                 disabled
+                value={branch.branchName}
               />
               {errors.receivingBranch && (
                 <p className="text-red-500">Receiving Branch is required</p>

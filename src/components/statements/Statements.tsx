@@ -1,25 +1,22 @@
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { TbRadar2 } from "react-icons/tb";
-import { RiTruckLine } from "react-icons/ri";
 
 import { Button } from "../ui/button";
 import { getAllRecordPaymentApi } from "@/api/branch";
 import { useEffect, useState } from "react";
 import { getAllClientsApi } from "@/api/admin";
 import { Select } from "antd";
-import { filterBillByClientApi, getAllVendorsApi } from "@/api/partner";
+import { filterBillByClientApi } from "@/api/partner";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import {
   billInputs,
   ClientInputs,
   CreditInputs,
-  ExpensesInputs,
   LrInputs,
   PaymentRecord,
-  VendorInputs,
 } from "@/types";
-import { getAllCreditApi, getAllExpensesApi } from "@/api/expense";
+import { getAllCreditApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
@@ -58,8 +55,6 @@ export default function Statements() {
     totalCr: 0,
     totalDr: 0,
   });
-  const [vendor, setVendor] = useState<VendorInputs[]>([]);
-  const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
 
   const exportToExcelWithImage = async (
     data: any[],
@@ -181,7 +176,7 @@ export default function Statements() {
       To: bill.lrData[0].to,
       Amount: bill.subTotal,
       Received: bill.subTotal - bill.pendingAmount,
-      Tax: bill.cgstRate + bill.sgstRate + bill.igstRate,
+      Tax: bill.subTotal * (bill.tds ? bill.tds / 100 : 1),
       Pending: bill.pendingAmount,
       "0-30": bill.zeroToThirty,
       "30-60": bill.thirtyToSixty,
@@ -266,21 +261,16 @@ export default function Statements() {
   }
 
   async function fetchTransactions(branchId?: string) {
+    const time1 = new Date().getTime();
     const recordResponse = await getAllRecordPaymentApi();
     const creditResponse = await getAllCreditApi();
-    const vendorResponse = await getAllVendorsApi();
     const clientResponse = await getAllClientsApi();
-    const expensesResposne = await getAllExpensesApi();
     if (
       recordResponse?.status === 200 &&
       clientResponse?.status === 200 &&
-      vendorResponse?.status === 200 &&
-      creditResponse?.status === 200 &&
-      expensesResposne?.status === 200
+      creditResponse?.status === 200
     ) {
       setClientsData(clientResponse.data.data);
-      setVendor(vendorResponse.data.data);
-      setExpenses(expensesResposne.data.data);
       const allTransactions: ExtendedPaymentRecord[] = recordResponse.data.data;
       const allCredits: CreditInputs[] = creditResponse.data.data;
       const filteredTransactions = branchId
@@ -304,6 +294,10 @@ export default function Statements() {
         summarizePayments(sortedTransactions as ExtendedPaymentRecord[]),
       );
     }
+    const time2 = new Date().getTime();
+    console.log(
+      "Transaction Fetched in " + (time2 - time1) / 1000 + " seconds",
+    );
   }
 
   useEffect(() => {
@@ -345,51 +339,8 @@ export default function Statements() {
               <TbRadar2 size={30} color="#2196F3" />
             </div>
             <div className="font-medium">
-              <p className="text-muted text-sm">Expenses</p>
-              <p className="text-xl">
-                {formatter.format(
-                  expenses.reduce(
-                    (acc, data) => acc + parseFloat(data.amount),
-                    0,
-                  ),
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex w-full rounded-xl bg-white p-5">
-          <div className="flex items-center gap-5">
-            <div className="rounded-full bg-[#F4F7FE] p-3">
-              <RiTruckLine size={30} color="#2196F3" />
-            </div>
-            <div className="font-medium">
-              <p className="text-muted text-sm">Vendor Outstanding</p>
-              <p className="text-xl">
-                {formatter.format(
-                  vendor?.reduce(
-                    (acc, data) => acc + data.currentOutStanding,
-                    0,
-                  ),
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex w-full rounded-xl bg-white p-5">
-          <div className="flex items-center gap-5">
-            <div className="rounded-full bg-[#F4F7FE] p-3">
-              <HiOutlineCurrencyRupee size={30} color="#2196F3" />
-            </div>
-            <div className="font-medium">
-              <p className="text-muted text-sm">Client Receivables</p>
-              <p className="text-xl">
-                {formatter.format(
-                  clientsData.reduce(
-                    (acc, data) => acc + parseFloat(data.pendingPayment),
-                    0,
-                  ),
-                )}
-              </p>
+              <p className="text-muted text-sm">Total Transaction</p>
+              <p className="text-xl">{transactions.length}</p>
             </div>
           </div>
         </div>
@@ -618,9 +569,7 @@ export default function Statements() {
                       {bill.subTotal - bill.pendingAmount}
                     </td>
                     <td className="py-2">
-                      {(bill.cgstRate + bill.sgstRate + bill.igstRate).toFixed(
-                        2,
-                      )}
+                      {bill.subTotal * (bill.tds ? bill.tds / 100 : 1)}
                     </td>
                     <td className="py-2">{bill.pendingAmount}</td>
                     <td className="py-2">{bill.zeroToThirty ?? 0}</td>

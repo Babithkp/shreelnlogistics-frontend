@@ -222,6 +222,7 @@ export type ClientInputs = {
 export interface billInputs {
   id: string;
   billNumber: string;
+  tds: number;
   date: string;
   dueDate: string;
   hsnSacCode: string;

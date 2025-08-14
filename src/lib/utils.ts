@@ -1,26 +1,10 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { toWords } from "number-to-words";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function convertToINRWords(amount: number): string {
-  const [rupees, paise] = amount.toFixed(2).split(".");
-
-  let words = "";
-
-  if (parseInt(rupees, 10) > 0) {
-    words += `${toWords(parseInt(rupees))} rupees`;
-  }
-
-  if (parseInt(paise, 10) > 0) {
-    words += ` and ${toWords(parseInt(paise))} paise`;
-  }
-
-  return words ? `${words} only` : "Zero rupees only";
-}
 
 export function formatDateTimeByAgo(date: Date): string {
   const now = new Date();
@@ -150,3 +134,63 @@ export const formatter = new Intl.NumberFormat("en-IN", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+
+export function numberToIndianWords(amount: number): string {
+  const ones: string[] = [
+    "", "One", "Two", "Three", "Four", "Five", "Six",
+    "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
+    "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"
+  ];
+
+  const tens: string[] = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty",
+    "Sixty", "Seventy", "Eighty", "Ninety"
+  ];
+
+  const numToWords = (num: number): string => {
+    if (num === 0) return "";
+    if (num < 20) return ones[num];
+    if (num < 100) {
+      return tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "");
+    }
+    if (num < 1000) {
+      return (
+        ones[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 ? " " + numToWords(num % 100) : "")
+      );
+    }
+    return "";
+  };
+
+  const convertIndian = (num: number): string => {
+    if (num === 0) return "Zero";
+    let str = "";
+
+    const crore = Math.floor(num / 10000000);
+    num %= 10000000;
+    const lakh = Math.floor(num / 100000);
+    num %= 100000;
+    const thousand = Math.floor(num / 1000);
+    num %= 1000;
+    const hundred = num;
+
+    if (crore) str += numToWords(crore) + " Crore ";
+    if (lakh) str += numToWords(lakh) + " Lakh ";
+    if (thousand) str += numToWords(thousand) + " Thousand ";
+    if (hundred) str += numToWords(hundred);
+
+    return str.trim();
+  };
+
+  const rupees: number = Math.floor(amount);
+  const paise: number = Math.round((amount - rupees) * 100);
+
+  let result = convertIndian(rupees) + " Rupees Only";
+  if (paise > 0) {
+    result += " and " + convertIndian(paise) + " Paise Only";
+  }
+
+  return result;
+}

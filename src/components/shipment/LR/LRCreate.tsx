@@ -763,7 +763,7 @@ export default function LRCreate({
                       />
                       <p>x</p>
                       <input
-                        placeholder="W"
+                        placeholder="H"
                         className="w-[30%] rounded border p-1 outline-none"
                         {...register("sizeH", {
                           required: size === "LxWxH",

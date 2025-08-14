@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { numberToIndianWords } from "@/lib/utils";
 
 type Option = { value: string; label: string };
 
@@ -166,6 +167,7 @@ export default function GenerateBIll({
         cgstRate,
         sgstRate,
         total,
+        totalInWords: numberToIndianWords(subTotal),
       }));
     } else if (totalAmounts.billedin === "OutsideKarnataka") {
       const igstRate = subTotal * 0.05;
@@ -178,6 +180,7 @@ export default function GenerateBIll({
         cgstRate: 0,
         sgstRate: 0,
         total,
+        totalInWords: numberToIndianWords(subTotal),
       }));
     }
   }, [
@@ -1338,8 +1341,7 @@ export default function GenerateBIll({
                 <p>Total INR {totalAmounts.subtotal.toFixed(2)}</p>
                 <div className="flex items-center gap-2 capitalize">
                   Total in words -
-                  <input
-                    type="text"
+                  <textarea
                     className="border-primary w-100 rounded-md border p-1 px-2"
                     value={totalAmounts.totalInWords}
                     onChange={(e) =>

@@ -12,6 +12,7 @@ import {
   getBillByPageForBranchApi,
   getBillDetailsApi,
   sendBillEmailApi,
+  updateTdsOfBillApi,
 } from "@/api/billing";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
 
@@ -63,7 +64,7 @@ import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
 import { Controller, useForm } from "react-hook-form";
 import { PiRecord } from "react-icons/pi";
 import {
-  convertToINRWords,
+  numberToIndianWords,
   filterOnlyCompletePrimitiveDiffs,
   formatter,
   getUnmatchingFields,
@@ -133,6 +134,7 @@ export default function ViewBills({
   };
 
   async function fetchBillDataForPage() {
+    const time1 = new Date().getTime();
     const response = await getBillByPageApi(currentPage, itemsPerPage);
     if (response?.status === 200) {
       const allBills = response.data.data;
@@ -140,6 +142,7 @@ export default function ViewBills({
       setFilteredBills(allBills.BillData);
       setTotalItems(allBills.BillCount);
     }
+    console.log("Time taken to fetch Bill Data", (new Date().getTime() - time1) /1000 );
   }
 
   async function fetchBillDataForPageForBranch() {
@@ -209,7 +212,7 @@ export default function ViewBills({
     }
     if (amount && selectedBill) {
       const totalAmount = Number(amount);
-      const amountInWords = convertToINRWords(totalAmount);
+      const amountInWords = numberToIndianWords(totalAmount);
       const pendingAmount = selectedBill?.pendingAmount - totalAmount;
       setValue("amountInWords", amountInWords);
       setValue(
@@ -217,7 +220,7 @@ export default function ViewBills({
         (totalPending || 0) + parseFloat(pendingAmount.toFixed(2)),
       );
     } else {
-      setValue("amountInWords", convertToINRWords(0));
+      setValue("amountInWords", numberToIndianWords(0));
       setValue("pendingAmount", 0);
     }
   }, [amount, setValue]);
@@ -255,6 +258,24 @@ export default function ViewBills({
 
     return () => clearTimeout(delay);
   }, [search, billData]);
+
+  const updateTdsvalue = async (value: string) => {
+    const response = await updateTdsOfBillApi({
+      id: selectedBill?.id,
+      tds: value,
+    });
+    if (response?.status === 200) {
+      toast.success("TDS Updated");
+      setShowPreview(false);
+      if (isAdmin) {
+        getBillDetails();
+      } else {
+        getBillDetails(branch.branchId);
+      }
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+  };
 
   const setRecordDataToInputBox = async (data: PaymentRecord) => {
     setValue("IDNumber", data.IDNumber);
@@ -593,7 +614,7 @@ export default function ViewBills({
                 <th className="font-[400] text-[#797979]">Pending Amt</th>
                 {!showPreview && (
                   <>
-                    <th className="font-[400] text-[#797979]">Tax</th>
+                    <th className="font-[400] text-[#797979]">TDS</th>
                     <th className="font-[400] text-[#797979]">0-30</th>
                     <th className="font-[400] text-[#797979]">30-60</th>
                     <th className="font-[400] text-[#797979]">&gt;60</th>
@@ -624,7 +645,10 @@ export default function ViewBills({
                     <>
                       <td className="py-2">
                         {formatter.format(
-                          data.igstRate + data.cgstRate + data.sgstRate,
+                          data.subTotal *
+                            (selectedBill?.tds
+                              ? selectedBill?.tds / 100
+                              : 0.01),
                         )}
                       </td>
                       <td className="py-2">
@@ -839,58 +863,73 @@ export default function ViewBills({
                 </DialogContent>
               </Dialog>
             </div>
-            {!isAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Alert!</AlertDialogTitle>
-                    <AlertDialogDescription className="font-medium text-black">
-                      This will send the admin an delete request. Upon approval
-                      the FM will be deleted
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                      onClick={() =>
-                        onDeleteBillHandlerOnNotification(selectedBill!)
-                      }
-                    >
-                      Proceed
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            {isAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Alert!</AlertDialogTitle>
-                    <AlertDialogDescription className="font-medium text-black">
-                      Are you sure you want to delete this Customer Bill? This
-                      action is permanent and cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                      onClick={() => onDeleteBillHandler(selectedBill!.id)}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+            <div className="flex items-center gap-2">
+              <p className="font-medium">TDS</p>
+              <Select
+                value={selectedBill?.tds?.toString()}
+                onValueChange={updateTdsvalue}
+              >
+                <SelectTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
+                  <SelectValue placeholder="Select a TDS" />%
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                </SelectContent>
+              </Select>
+              {!isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger className="cursor-pointer">
+                    <RiDeleteBin6Line size={20} color="red" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Alert!</AlertDialogTitle>
+                      <AlertDialogDescription className="font-medium text-black">
+                        This will send the admin an delete request. Upon
+                        approval the FM will be deleted
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
+                        onClick={() =>
+                          onDeleteBillHandlerOnNotification(selectedBill!)
+                        }
+                      >
+                        Proceed
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger className="cursor-pointer">
+                    <RiDeleteBin6Line size={20} color="red" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Alert!</AlertDialogTitle>
+                      <AlertDialogDescription className="font-medium text-black">
+                        Are you sure you want to delete this Customer Bill? This
+                        action is permanent and cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
+                        onClick={() => onDeleteBillHandler(selectedBill!.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
           <PDFViewer className="h-full w-full">
             <BillTemplate

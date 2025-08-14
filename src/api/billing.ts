@@ -159,7 +159,10 @@ export const filterBillBymonthApi = async (data: any) => {
   }
 };
 
-export const filterBillBymonthForBranchApi = async (data: any, branchId: string) => {
+export const filterBillBymonthForBranchApi = async (
+  data: any,
+  branchId: string,
+) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/billing/filterBillBymonthForBranch/${branchId}`,
@@ -171,7 +174,10 @@ export const filterBillBymonthForBranchApi = async (data: any, branchId: string)
   }
 };
 
-export const filterBillDetailsForBranchApi = async (branchId: string, text: string) => {
+export const filterBillDetailsForBranchApi = async (
+  branchId: string,
+  text: string,
+) => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/billing/filterBillDetailsForBranch/${branchId}/${text}`,
@@ -233,6 +239,17 @@ export const deleteBillRecordByNotificationApi = async (id: string) => {
   try {
     const response = await axios.delete(
       `${BASE_URL}/api/v1/billing/deleteBillRecordByNotification/${id}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateTdsOfBillApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/billing/tds-update/${data.id}/${data.tds}`,
     );
     return response;
   } catch (error) {
