@@ -78,10 +78,10 @@ export default function VendorManagement({
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [vendors, setVendors] = useState<VendorInputs[]>([]);
-  const [filteredVendors, setFilteredVendors] = useState<VendorInputs[]>([]);
+  const [vendors, setVendors] = useState<VendorInputs[]>(vendorsData.slice(0,50));
+  const [filteredVendors, setFilteredVendors] = useState<VendorInputs[]>(vendorsData);
   // const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
-  const [filteredVehicles, setFilteredVehicles] = useState<VehicleInputs[]>([]);
+  const [filteredVehicles, setFilteredVehicles] = useState<VehicleInputs[]>(vehiclesData.slice(0,50));
   const [vendorSortOrder, setVendorSortOrder] = useState<SortOrder>("asc");
   const [showVehicles, setShowVehicles] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -100,7 +100,7 @@ export default function VendorManagement({
   const [search, setSearch] = useState("");
   const [isVehicleNameMatched, setIsVehicleNameMatched] = useState(false);
   const [isVendorNameMatched, setIsVendorNameMatched] = useState(false);
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(vendorsData.length);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 50;
@@ -109,6 +109,7 @@ export default function VendorManagement({
   const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
 
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);

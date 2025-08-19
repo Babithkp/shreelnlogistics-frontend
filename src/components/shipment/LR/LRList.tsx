@@ -53,10 +53,15 @@ const defaultGreeting =
   "Greetings from Shree LN Logistics, \nPlease find attached the Lorry Receipt (LR) for the following shipment.";
 
 export default function LRList({
+  data,
   sectionChangeHandler,
   setSelectedLRDataToEdit,
   setFormStatus,
 }: {
+  data: {
+    data: LrInputs[];
+    count: number;
+  };
   sectionChangeHandler: (section: Sections) => void;
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
@@ -68,8 +73,8 @@ export default function LRList({
     };
     mailBody?: string;
   }
-  const [LRData, setLRData] = useState<ExtendedLRInputs[]>([]);
-  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>([]);
+  const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data.data);
+  const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data.data);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedLR, setSelectedLR] = useState<ExtendedLRInputs>();
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +86,7 @@ export default function LRList({
   const [branchId, setBranchId] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [search, setSearch] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 50;

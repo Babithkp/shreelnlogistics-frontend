@@ -1,11 +1,8 @@
-
-
 import { useEffect, useState } from "react";
 import FMCreate from "./FMCreate";
 import FMList from "./FMList";
 import { getLRApi } from "@/api/shipment";
 import { FMInputs, LrInputs } from "@/types";
-
 
 export type FMSection = "FMList" | "createNew";
 type SectionState = Record<FMSection, boolean>;
@@ -21,10 +18,17 @@ export interface BranchDetails {
   username: string;
   password: string;
   employeeCount: string;
-  email:string
+  email: string;
 }
 
-export default function FMPage() {
+export default function FMPage({
+  FMData,
+}:  {
+  FMData: {
+    data: FMInputs[];
+    count: number;
+  };
+}) {
   const [selectedForm, setSelectedForm] = useState({
     FMList: true,
     createNew: false,
@@ -74,7 +78,6 @@ export default function FMPage() {
     }
   }
 
-
   useEffect(() => {
     const id = localStorage.getItem("id");
     if (!id) {
@@ -83,17 +86,15 @@ export default function FMPage() {
     const branch = localStorage.getItem("branchDetails");
     if (!branch) {
       return;
-    }    
+    }
     const branchDetails = JSON.parse(branch);
     setBranchDetails(branchDetails);
-    if(branchDetails){
+    if (branchDetails) {
       fetchLRs(branchDetails.id);
-    }else{
+    } else {
       fetchLRs();
     }
   }, []);
-
-
 
   return (
     <>
@@ -103,6 +104,7 @@ export default function FMPage() {
           setSelectedFMDataToEdit={setSelectedFMDataToEdit}
           setFormStatus={setFormStatus}
           branchDetails={branchDetails}
+          data={FMData}
         />
       )}
       {selectedForm.createNew && (

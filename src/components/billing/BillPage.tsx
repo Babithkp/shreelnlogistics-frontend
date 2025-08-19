@@ -11,7 +11,7 @@ export default function BillPage({
 }: {
   bankDetails?: BankDetailsInputs;
   clientData: ClientInputs[];
-  billData?: billInputs[];
+  billData: billInputs[];
 }) {
   const [selectedForm, setSelectedForm] = useState({
     billList: true,

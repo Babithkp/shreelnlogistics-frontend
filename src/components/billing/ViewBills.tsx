@@ -87,12 +87,12 @@ export default function ViewBills({
   sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs) => void;
   bankDetails?: BankDetailsInputs;
-  data?: billInputs[];
+  data: billInputs[];
   setSupplementary: (data: boolean) => void;
 }) {
   const [showPreview, setShowPreview] = useState(false);
-  const [billData, setBillData] = useState<billInputs[]>(data || []);
-  const [filteredBills, setFilteredBills] = useState<billInputs[]>(data || []);
+  const [billData, setBillData] = useState<billInputs[]>(data.slice(0,50));
+  const [filteredBills, setFilteredBills] = useState<billInputs[]>(data.slice(0,50));
   const [selectedBill, setSelectedBill] = useState<billInputs>();
   const [isOpen, setIsOpen] = useState(false);
   const [mailGreeting, setMailGreeting] = useState(defaultMailGreeting);
@@ -115,7 +115,7 @@ export default function ViewBills({
     useState<Record<string, { obj1: any; obj2: any }>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.length);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 50;

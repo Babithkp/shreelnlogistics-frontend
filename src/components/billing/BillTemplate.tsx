@@ -419,7 +419,7 @@ const BillTemplate = ({
                   <Text>Others</Text>
                   <Text>({billInputs?.others?.lrnumber})</Text>
                 </View>
-                <Text>{billInputs?.others?.amount.toFixed(2)}</Text>
+                <Text>{billInputs?.others?.amount?.toFixed(2)}</Text>
               </View>
             )}
             {billInputs?.otherCharges && (
@@ -434,7 +434,7 @@ const BillTemplate = ({
                   <Text>{billInputs?.otherCharges?.name}</Text>
                   <Text>({billInputs?.otherCharges?.lrnumber})</Text>
                 </View>
-                <Text>{billInputs?.otherCharges?.amount.toFixed(2)}</Text>
+                <Text>{billInputs?.otherCharges?.amount?.toFixed(2)}</Text>
               </View>
             )}
           </View>

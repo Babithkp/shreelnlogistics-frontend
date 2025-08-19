@@ -94,18 +94,23 @@ const statusColorMap: Record<string, string> = {
 };
 
 export default function FMList({
+  data,
   sectionChangeHandler,
   setSelectedFMDataToEdit,
   setFormStatus,
   branchDetails,
 }: {
+  data:{
+    data: FMInputs[];
+    count: number;
+  },
   sectionChangeHandler: (section: FMSection) => void;
   setSelectedFMDataToEdit: (data: FMInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
   branchDetails?: BranchDetails;
 }) {
-  const [FMData, setFMData] = useState<FMInputs[]>([]);
-  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>([]);
+  const [FMData, setFMData] = useState<FMInputs[]>(data.data);
+  const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>(data.data);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFM, setSelectedFM] = useState<ExtendedFmInputs | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -150,8 +155,9 @@ export default function FMList({
     [],
   );
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
+  
 
   const itemsPerPage = 50;
 

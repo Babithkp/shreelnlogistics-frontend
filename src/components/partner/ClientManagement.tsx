@@ -55,8 +55,8 @@ import { formatter } from "@/lib/utils";
 export default function ClientManagement({data}: {data: ClientInputs[]}) {
   const [isloading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [clients, setClients] = useState<ClientInputs[]>([]);
-  const [filteredClients, setFilteredClients] = useState<ClientInputs[]>([]);
+  const [clients, setClients] = useState<ClientInputs[]>(data.slice(0,50));
+  const [filteredClients, setFilteredClients] = useState<ClientInputs[]>(data.slice(0,50));
   const [isClientNameAvailable, setIsClientNameAvailable] = useState(true);
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] =
     useState(false);
@@ -71,7 +71,7 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
     (bill) => bill.PaymentRecords || [],
   );
   const [search, setSearch] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.length);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 50;
