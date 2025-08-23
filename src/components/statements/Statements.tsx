@@ -2,7 +2,7 @@ import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { TbRadar2 } from "react-icons/tb";
 
 import { Button } from "../ui/button";
-import { getAllRecordPaymentApi } from "@/api/branch";
+import { getAllRecordPaymentApi, getAllStatementsApi } from "@/api/branch";
 import { useEffect, useState } from "react";
 import { getAllClientsApi } from "@/api/admin";
 import { Select } from "antd";
@@ -55,6 +55,19 @@ export default function Statements() {
     totalCr: 0,
     totalDr: 0,
   });
+  const [exportDate, setExportDate] = useState("");
+
+  const onExportDateHandler = async (e: any) => {
+    setExportDate(e.target.value);
+    const response = await getAllStatementsApi(e.target.value);
+    if (response?.status === 200) {
+      const combinedTransactions = [
+        ...response.data.data.payments,
+        ...response.data.data.credits,
+      ];
+      setTransactions(combinedTransactions as ExtendedPaymentRecord[]);
+    }
+  };
 
   const exportToExcelWithImage = async (
     data: any[],
@@ -135,7 +148,7 @@ export default function Statements() {
 
     // Add image to workbook
     const imageBuffer = await fetch(
-      "https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png",
+      "https://shreeln-bucket.s3.ap-south-1.amazonaws.com/logo.png",
     ).then((res) => res.arrayBuffer());
 
     const imageId = workbook.addImage({
@@ -425,7 +438,20 @@ export default function Statements() {
       {statementSection.cashStatement && (
         <section className="flex w-full flex-col justify-between gap-5 rounded-md bg-white p-5">
           <div className="h-[55Vh] overflow-y-auto">
-            <p className="pb-2 text-lg font-medium">Cash Statement</p>
+            <div className="flex justify-between pr-2">
+              <p className="pb-2 text-lg font-medium">Cash Statement</p>
+              <div className="flex gap-2">
+                <div className="rounded-md bg-blue-50 p-1 pr-3">
+                  <input
+                    type="date"
+                    className="ml-2 w-full bg-transparent outline-none"
+                    onChange={onExportDateHandler}
+                    value={exportDate}
+                  />
+                </div>
+                <Button onClick={()=>exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)}>Export</Button>
+              </div>
+            </div>
             <table className="w-full">
               <thead>
                 <tr>

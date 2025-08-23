@@ -50,6 +50,7 @@ import {
 } from "@/lib/utils";
 import { LuSearch } from "react-icons/lu";
 import { getLRApi } from "@/api/shipment";
+import axios from "axios";
 
 export interface PODInputs {
   id: string;
@@ -242,7 +243,11 @@ export default function Pod() {
         toast.success("POD has been updated");
         reset();
         setIsOpen(false);
-        fetchPods();
+        if (branch.isAdmin) {
+          fetchPods();
+        } else {
+          fetchPods(branch.branchId);
+        }
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
@@ -256,22 +261,32 @@ export default function Pod() {
       }
       const formData = new FormData();
       formData.append("file", file);
-
-      const uploadResponse = await uploadLRFileApi(formData);
+      const uploadResponse = await uploadLRFileApi(file);
       if (uploadResponse?.status === 200) {
-        toast.success("File has been uploaded successfully");
-        data.documentLink = uploadResponse.data.data[0].url;
-        const response = await createPODApi(data);
-        if (response?.status === 200) {
-          toast.success("POD has been created");
-          setIsOpen(false);
-          fetchPods();
-          setFile(null);
-          reset({
-            receivingBranch: branch.branchName,
-          });
-        } else {
-          toast.error("Something Went Wrong, Check All Fields");
+        const upload = await axios.put(
+          uploadResponse.data.data.uploadUrl,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+        if (upload.status === 200) {
+          toast.success("File has been uploaded successfully");
+          data.documentLink = uploadResponse?.data.data.fileUrl;
+          const response = await createPODApi(data);
+          if (response?.status === 200) {
+            toast.success("POD has been created");
+            setIsOpen(false);
+            fetchPods();
+            setFile(null);
+            reset({
+              receivingBranch: branch.branchName,
+            });
+          } else {
+            toast.error("Something Went Wrong, Check All Fields");
+          }
         }
       }
     }
@@ -342,7 +357,11 @@ export default function Pod() {
     const response = await deletePODApi(id);
     if (response?.status === 200) {
       toast.success("POD Deleted");
-      fetchPods();
+      if (branch.isAdmin) {
+        fetchPods();
+      } else {
+        fetchPods(branch.branchId);
+      }
       setIsDetailsModalOpen(false);
     } else {
       toast.error("Failed to Delete POD");
@@ -461,9 +480,12 @@ export default function Pod() {
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
               onClick={() => [
                 setIsOpen(true),
-                reset(),
+                reset({
+                  receivingBranch: branch.branchName,
+                }),
                 setSelectedPOD(null),
                 setFormStatus("New"),
+                setFile(null),
               ]}
             >
               <MdOutlineAdd size={34} />

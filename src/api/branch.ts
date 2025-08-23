@@ -1,6 +1,6 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = "http://localhost:3000";
+// const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const branchLoginApi = async (branchName: string, password: string) => {
   try {
@@ -172,6 +172,18 @@ export const filterRecordPaymentByNameForBranchApi = async (
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/filterRecordPaymentByNameForBranch/${name}/${branchId}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const getAllStatementsApi = async (date: string) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/v1/getStatementsToExport/${date}`,
     );
     return response;
   } catch (error) {

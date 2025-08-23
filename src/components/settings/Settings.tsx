@@ -17,9 +17,22 @@ import {
   updateCompanyProfileApi,
   updateGeneralSettingsApi,
 } from "@/api/settings";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "react-toastify";
 import { Setting } from "@/Home";
-import { getOtherSettingsApi, updateOtherSettingsApi } from "@/api/admin";
+import {
+  changeAdminPasswordApi,
+  getOtherSettingsApi,
+  updateOtherSettingsApi,
+} from "@/api/admin";
+import { EditBranchPassword } from "../branch/Branch";
 
 export interface ProfileInputs {
   id: string;
@@ -72,6 +85,7 @@ export default function Settings({ data }: { data?: Setting }) {
   });
   const [bankDetailsData, setBankDetailsData] = useState<BankDetailsInputs>();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
   const [otherSettings, setOtherSettings] = useState({
     billId: "",
     expenseId: "",
@@ -84,6 +98,15 @@ export default function Settings({ data }: { data?: Setting }) {
     expenseId: false,
     creditId: false,
   });
+  const [isloading, setIsloading] = useState(false);
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    watch,
+    formState: { errors: passwordErrors },
+  } = useForm<EditBranchPassword>();
 
   const addExpenseType = () => {
     setGeneralData((prev) => ({
@@ -121,6 +144,25 @@ export default function Settings({ data }: { data?: Setting }) {
     setValue: bankSettingsSetValue,
     formState: { errors: bankSettingsErrors },
   } = useForm<BankDetailsInputs>();
+
+  const onChangePasswordSubmit: SubmitHandler<EditBranchPassword> = async (
+    data,
+  ) => {
+    const finalInput = {
+      adminPassword: data.adminPassword,
+      newPassword: data.newPassword,
+    };
+    setIsloading(true);
+    const response = await changeAdminPasswordApi(finalInput);
+    if (response?.status === 200) {
+      toast.success("Password Changed");
+      setIsEditPasswordModalOpen(false);
+      resetPassword();
+    } else {
+      toast.error("Failed to Change Password");
+    }
+    setIsloading(false);
+  };
 
   const onSubmit: SubmitHandler<ProfileInputs> = async (
     data: ProfileInputs,
@@ -462,7 +504,7 @@ export default function Settings({ data }: { data?: Setting }) {
               />
             </div>
             <div className="flex justify-between pr-25">
-              <div className="flex  gap-3">
+              <div className="flex gap-3">
                 <label className="font-medium">Currect Bill Number:</label>
                 <p>{otherSettings.billId}</p>
               </div>
@@ -503,6 +545,104 @@ export default function Settings({ data }: { data?: Setting }) {
                 </div>
               </div>
             </div>
+          </div>
+          <div>
+            <Dialog
+              open={isEditPasswordModalOpen}
+              onOpenChange={setIsEditPasswordModalOpen}
+            >
+              <DialogTrigger className="cursor-pointer border-primary border p-2 rounded-md text-sm text-primary" >
+                Change Admin Password
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Password</DialogTitle>
+                </DialogHeader>
+                <DialogDescription className="text-base text-black">
+                  This will update the password for admin.
+                </DialogDescription>
+                <form
+                  className="flex flex-col gap-5"
+                  onSubmit={handlePasswordSubmit(onChangePasswordSubmit)}
+                >
+                  <div className="">
+                    <div className="flex flex-col gap-2">
+                      <label>Enter admin password</label>
+                      <input
+                        type="password"
+                        className="border-primary rounded-md border p-1 py-2 pl-2"
+                        {...registerPassword("adminPassword", {
+                          required: true,
+                        })}
+                      />
+                    </div>
+                    {passwordErrors.adminPassword && (
+                      <p className="mt-1 text-sm text-red-500">
+                        Admin password is required
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex flex-col gap-2">
+                      <label>Enter new password</label>
+                      <input
+                        type="password"
+                        className="border-primary rounded-md border p-1 py-2 pl-2"
+                        {...registerPassword("newPassword", {
+                          required: true,
+                        })}
+                      />
+                    </div>
+                    {passwordErrors.newPassword && (
+                      <p className="mt-1 text-sm text-red-500">
+                        Password is required
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex flex-col gap-2">
+                      <label>Confirm new password</label>
+                      <input
+                        type="password"
+                        className="border-primary rounded-md border p-1 py-2 pl-2"
+                        {...registerPassword("confirmNewPassword", {
+                          required: "Please confirm your password",
+                          validate: (value) =>
+                            value === watch("newPassword") ||
+                            "Passwords do not match",
+                        })}
+                      />
+                    </div>
+                    {passwordErrors.confirmNewPassword && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {passwordErrors.confirmNewPassword.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-5">
+                    <Button
+                      variant={"outline"}
+                      className="border-primary px-7"
+                      onClick={() => [
+                        resetPassword(),
+                        setIsEditPasswordModalOpen(false),
+                      ]}
+                      disabled={isloading}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button className="bg-primary px-7" disabled={isloading}>
+                      {isloading ? (
+                        <VscLoading size={24} className="animate-spin" />
+                      ) : (
+                        "Update"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </section>

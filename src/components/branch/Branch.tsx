@@ -52,7 +52,7 @@ import { LuSearch } from "react-icons/lu";
 import { getAllExpensesApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 
-type EditBranchPassword = {
+export type EditBranchPassword = {
   adminPassword: string;
   newPassword: string;
   confirmNewPassword: string;

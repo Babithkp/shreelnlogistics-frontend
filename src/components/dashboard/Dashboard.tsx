@@ -331,6 +331,8 @@ export default function Dashboard() {
     const response = await getDashboardDataApi();
     if (response?.status === 200) {
       setDashboardData(response.data.data);
+      console.log(response.data.data);
+      
     }
     const time2 = new Date().getTime();
     console.log("Dashboard Data Fetched in " + (time2 - time1) / 1000 + " seconds");
