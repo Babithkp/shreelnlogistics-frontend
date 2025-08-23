@@ -558,10 +558,10 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
             </tr>
           </thead>
           <tbody>
-            {filteredClients?.map((client) => (
+            {filteredClients?.map((client,i) => (
               <tr
                 className="hover:bg-accent cursor-pointer"
-                key={client.id}
+                key={i}
                 onClick={() => [
                   setSelectedClient(client),
                   setIsClientDetailsModalOpen(true),

@@ -47,6 +47,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     border: "1px solid #000000",
     padding: "3px",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   detailsRow: {
     flexDirection: "row",
@@ -159,7 +161,11 @@ const BillTemplate = ({
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Billing Summary</Text>
+        <View style={styles.sectionTitle}>
+          <Text></Text>
+          <Text>Billing Summary</Text>
+          <Text>ORIGINAL</Text>
+        </View>
 
         <View style={styles.detailsRow}>
           <View style={[styles.detailsColumn, { gap: 5 }]}>
