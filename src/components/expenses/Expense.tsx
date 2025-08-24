@@ -63,16 +63,19 @@ import {
 } from "@/types";
 import { LuSearch } from "react-icons/lu";
 
-export default function Expense({ setSection }: { setSection: any }) {
+export default function Expense({ setSection,data }: { setSection: any,data: {
+  data: ExpensesInputs[];
+  count: number;
+}}) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMembers] = useState<VendorInputs[]>([]);
   const [linkTo, setLinkTo] = useState<string>("");
   const [generalSettings, setGeneralSettings] = useState<generalSettings>();
-  const [expenses, setExpenses] = useState<ExpensesInputs[]>([]);
+  const [expenses, setExpenses] = useState<ExpensesInputs[]>(data.data);
   const [filteredExpenses, setFilteredExpenses] = useState<ExpensesInputs[]>(
-    [],
+    data.data
   );
 
   const [selectedExpense, setSelectedExpense] = useState<ExpensesInputs | null>(
@@ -89,7 +92,7 @@ export default function Expense({ setSection }: { setSection: any }) {
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
   const [search, setSearch] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAdmin, setIsAdmin] = useState(false);
 

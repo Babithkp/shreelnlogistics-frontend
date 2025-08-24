@@ -9,7 +9,10 @@ import Expense from "./Expense";
 import Credit from "./Credit";
 import { ExpensesInputs } from "@/types";
 
-export default function Expenses() {
+export default function Expenses({expenseData}: {expenseData: {
+  data: ExpensesInputs[];
+  count: number;
+}}) {
   const [section, setSection] = useState({
     expenses: true,
     credits: false,
@@ -76,7 +79,7 @@ export default function Expenses() {
           </div>
         </div>
       </section>
-      {section.expenses && <Expense setSection={setSection} />}
+      {section.expenses && <Expense setSection={setSection} data={expenseData} />}
       {section.credits && <Credit setSection={setSection} />}
     </div>
   );

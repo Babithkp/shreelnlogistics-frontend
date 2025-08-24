@@ -68,7 +68,14 @@ export interface PODInputs {
 }
 type Option = { value: string; label: string };
 
-export default function Pod() {
+export default function Pod({
+  data,
+}: {
+  data: {
+    data: PODInputs[];
+    count: number;
+  };
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [isLoading, setIsLoading] = useState(false);
@@ -76,8 +83,8 @@ export default function Pod() {
   const [client, setClient] = useState<ClientInputs[]>([]);
   const [isError, setIsError] = useState(false);
   const [file, setFile] = useState<File | null>();
-  const [pods, setPods] = useState<PODInputs[]>([]);
-  const [filteredPods, setFilteredPods] = useState<PODInputs[]>([]);
+  const [pods, setPods] = useState<PODInputs[]>(data.data);
+  const [filteredPods, setFilteredPods] = useState<PODInputs[]>(data.data);
   const [selectedPOD, setSelectedPOD] = useState<PODInputs | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [branch, setBranch] = useState({
@@ -90,7 +97,7 @@ export default function Pod() {
     useState<Record<string, any>>();
   const [search, setSearch] = useState("");
   const [LRList, setLRList] = useState<LrInputs[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAdmin, setIsAdmin] = useState(false);
 

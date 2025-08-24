@@ -59,7 +59,7 @@ const COLORS = [
   "#DA70D6",
 ];
 
-interface DashboardData {
+export interface DashboardData {
   clientData: ClientInputs[];
   vendorCount: string;
   overAllBranchData: BranchInputs[];
@@ -68,10 +68,12 @@ interface DashboardData {
   branchData: BranchInputs[];
 }
 
-export default function Dashboard() {
+export default function Dashboard({data}:{data?: DashboardData}) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [branchId, setBranchId] = useState("");
-  const [dashboardData, setDashboardData] = useState<DashboardData>();
+  const [dashboardData, setDashboardData] = useState<DashboardData | undefined>(data);
+  
+
   const totalInvoice = dashboardData?.billData
     .reduce((acc, bill) => acc + bill.subTotal, 0)
     .toFixed(2);
@@ -317,7 +319,7 @@ export default function Dashboard() {
       );
 
       setDashboardData((prevState) => {
-        if (!prevState) return undefined;
+        if (!prevState) return undefined
         return {
           ...prevState,
           branchData: branch,
@@ -331,8 +333,6 @@ export default function Dashboard() {
     const response = await getDashboardDataApi();
     if (response?.status === 200) {
       setDashboardData(response.data.data);
-      console.log(response.data.data);
-      
     }
     const time2 = new Date().getTime();
     console.log("Dashboard Data Fetched in " + (time2 - time1) / 1000 + " seconds");
