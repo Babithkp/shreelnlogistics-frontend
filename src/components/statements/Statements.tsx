@@ -213,7 +213,7 @@ export default function Statements() {
       Date: new Date(record.date).toLocaleDateString(),
       Description: record.IDNumber,
       Branch: record.Admin?.branchName || record.Branches?.branchName,
-      "Billed value": record.transactionNumber,
+      "Billed value": record.amount,
       "Cr.": record.billId ? record.amount : "-",
       "Dr.": record.fMId ? record.amount : "-",
     }));
