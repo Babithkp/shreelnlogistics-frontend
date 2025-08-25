@@ -32,6 +32,7 @@ interface ExtendedPaymentRecord extends PaymentRecord {
   };
 }
 export default function Statements() {
+  const [branchId, setBranchId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
   const [billData, setBillData] = useState<billInputs[]>([]);
   const [LRs, setLRs] = useState<LrInputs[]>([]);
@@ -68,6 +69,17 @@ export default function Statements() {
       setTransactions(combinedTransactions as ExtendedPaymentRecord[]);
     }
   };
+
+  const exportFilteredRecordExcel = async () => {
+    exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)    
+    if (!branchId) {
+      fetchTransactions();
+    } else if(branchId) {
+      fetchTransactions(branchId);
+    }
+    setExportDate("");
+  }
+
 
   const exportToExcelWithImage = async (
     data: any[],
@@ -324,6 +336,7 @@ export default function Statements() {
         fetchTransactions();
       } else {
         fetchTransactions(branchDetails.id);
+        setBranchId(branchDetails.id);
       }
     }
   }, []);
@@ -449,7 +462,7 @@ export default function Statements() {
                     value={exportDate}
                   />
                 </div>
-                <Button onClick={()=>exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)}>Export</Button>
+                <Button onClick={exportFilteredRecordExcel}>Export</Button>
               </div>
             </div>
             <table className="w-full">
