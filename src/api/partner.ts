@@ -107,7 +107,19 @@ export const filterBillByClientApi = async (data: any) => {
   }
 };
 
-export const filterFMLRByVendorApi = async (data: any, branchId?: string) => {
+export const filterFMLRByVendorApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/partner/filterFMLRByVendor`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterFMLRByVendorForBranchApi = async (data: any, branchId?: string) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/partner/filterFMLRByVendor/${branchId}`,

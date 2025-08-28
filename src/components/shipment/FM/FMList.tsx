@@ -76,7 +76,11 @@ import {
 import { Select as AntSelect } from "antd";
 import { FMInputs, LrInputs, PaymentRecord, VendorInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
-import { filterFMLRByVendorApi, getAllVendorsApi } from "@/api/partner";
+import {
+  filterFMLRByVendorApi,
+  filterFMLRByVendorForBranchApi,
+  getAllVendorsApi,
+} from "@/api/partner";
 import { LuSearch } from "react-icons/lu";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
@@ -100,10 +104,10 @@ export default function FMList({
   setFormStatus,
   branchDetails,
 }: {
-  data:{
+  data: {
     data: FMInputs[];
     count: number;
-  },
+  };
   sectionChangeHandler: (section: FMSection) => void;
   setSelectedFMDataToEdit: (data: FMInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
@@ -157,7 +161,6 @@ export default function FMList({
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
   const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
-  
 
   const itemsPerPage = 50;
 
@@ -183,7 +186,7 @@ export default function FMList({
       if (!search.trim()) {
         setFilteredFMs(allFMs.FMData);
       }
-      setTotalItems(allFMs.FMCount);      
+      setTotalItems(allFMs.FMCount);
     }
   }
 
@@ -219,7 +222,6 @@ export default function FMList({
       fetchFMDataForPageForBranch();
     }
   }, [isAdmin, branch.branchId]);
-  
 
   const onFilterHandler = async () => {
     if (!filterInputs.name) {
@@ -228,18 +230,37 @@ export default function FMList({
     }
     setPendingLRs([]);
     setFilterLoading(true);
-    const response = await filterFMLRByVendorApi(filterInputs, branch.branchId);
-    if (response?.status === 200) {
-      const AllFM = response.data.data;
+    if (isAdmin) {
+      const response = await filterFMLRByVendorApi(filterInputs);
+      if (response?.status === 200) {
+        const AllFM = response.data.data;
+        console.log(AllFM);
 
-      setFMStatement(AllFM.FMs);
-      setFilteredFMStatement(AllFM.FMs);
-      setPendingLRs(AllFM.LRs);
+        setFMStatement(AllFM.FMs);
+        setFilteredFMStatement(AllFM.FMs);
+        setPendingLRs(AllFM.LRs);
 
-      setSection({
-        FMList: false,
-        vendorStatement: true,
-      });
+        setSection({
+          FMList: false,
+          vendorStatement: true,
+        });
+      }
+    } else if (branch.branchId) {
+      const response = await filterFMLRByVendorForBranchApi(
+        filterInputs,
+        branch.branchId,
+      );
+      if (response?.status === 200) {
+        const AllFM = response.data.data;
+        setFMStatement(AllFM.FMs);
+        setFilteredFMStatement(AllFM.FMs);
+        setPendingLRs(AllFM.LRs);
+
+        setSection({
+          FMList: false,
+          vendorStatement: true,
+        });
+      }
     }
     setFilterLoading(false);
   };
@@ -260,7 +281,7 @@ export default function FMList({
 
     // Add image to workbook
     const imageBuffer = await fetch(
-      "https://shreelnlogistics-bucket.s3.ap-south-1.amazonaws.com/logo.png",
+      "https://shreeln-bucket.s3.ap-south-1.amazonaws.com/logo.png",
     ).then((res) => res.arrayBuffer());
 
     const imageId = workbook.addImage({
@@ -282,7 +303,7 @@ export default function FMList({
       `Total Advance Pending - INR ${totalAdvancePending}`;
     worksheet.getCell("D10").value = `Total Outstanding - INR ${pendingAmount}`;
     worksheet.getCell("K3").value = "Vendor summary";
-    worksheet.getCell("O9").value = "LR waiting for POD Generation"; 
+    worksheet.getCell("O9").value = "LR waiting for POD Generation";
     worksheet.getCell("O11").value = `Total freight amount - INR ${lrTotal}`;
     worksheet.getCell("O6").value = `${branchName}`;
     // Add headers
@@ -352,6 +373,10 @@ export default function FMList({
   };
 
   const exportFMExcelHandler = () => {
+    if (FilteredFMStatement.length === 0) {
+      toast.error("No FMs to export");
+      return;
+    }
     exportToExcelWithImage(
       formatFMData(FilteredFMStatement),
       "Vendor Statement",
@@ -366,6 +391,7 @@ export default function FMList({
       formatLRData(pendingLRs),
       pendingLRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
+    toast.success("File Downloaded");
   };
 
   const onCategoryFilterHandler = (value: string) => {
@@ -773,7 +799,7 @@ export default function FMList({
 
   return (
     <>
-      <div className="relative mb-5 flex gap-5 rounded-lg bg-white p-2">
+      <div className="relative mb-5 flex gap-5 rounded-lg bg-white p-2 flex-wrap justify-between">
         <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <LuSearch size={18} />
           <input
@@ -798,7 +824,7 @@ export default function FMList({
           value={filterInputs.name}
           size="large"
           placeholder="Select a vendor"
-          className="w-full bg-transparent"
+          className="w-[48%] bg-transparent"
         />
         <AntSelect
           showSearch
@@ -813,7 +839,7 @@ export default function FMList({
           }}
           size="large"
           placeholder="Select a category"
-          className="w-full bg-transparent"
+          className="w-[49%] bg-transparent"
         />
         <div className="flex w-[20%] items-center gap-2">
           <p>From:</p>

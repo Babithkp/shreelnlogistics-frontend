@@ -18,6 +18,7 @@ import {
 } from "@/types";
 import { getAllCreditApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
+import { toast } from "react-toastify";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: any;
@@ -78,6 +79,7 @@ export default function Statements() {
       fetchTransactions(branchId);
     }
     setExportDate("");
+    toast.success("File Downloaded");
   }
 
 
@@ -233,6 +235,7 @@ export default function Statements() {
 
   const recordPaymentsExporthandler = () => {
     exportRecordExcel(formatRecordData(transactions), "Payment Records");
+    toast.success("File Downloaded");
   };
 
   const BillExporthandler = () => {
@@ -245,6 +248,7 @@ export default function Statements() {
       formatLRData(LRs),
       LRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
+    toast.success("File Downloaded");
   };
 
   const filterButtonHandler = async () => {

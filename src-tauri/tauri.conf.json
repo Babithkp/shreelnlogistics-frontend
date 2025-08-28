@@ -29,8 +29,28 @@
     "createUpdaterArtifacts": true,
     "targets": [
       "nsis",
-      "msi"
+      "msi",
+      "app",
+      "dmg"
     ],
+    "macOS": {
+      "minimumSystemVersion": "10.13",
+      "dmg": {
+        "background": "./resources/dmg-bg.png",
+        "windowSize": {
+          "width": 1400,
+          "height": 700
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 220
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 220
+        }
+      }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
