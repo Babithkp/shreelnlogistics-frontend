@@ -2,6 +2,8 @@ name: Tauri Build and Release (macOS)
 
 on:
   push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
