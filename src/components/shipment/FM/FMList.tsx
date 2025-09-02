@@ -945,7 +945,7 @@ export default function FMList({
             >
               <thead>
                 <tr>
-                  <th className="flex items-center gap-2 border text-start font-[400] text-[#797979]">
+                  <th className="flex items-center gap-2  text-start font-[400] text-[#797979]">
                     <p>FM#</p>
                   </th>
                   <th className="border text-center font-[400] text-[#797979]">
@@ -954,7 +954,7 @@ export default function FMList({
                   <th className="border text-center font-[400] text-[#797979]">
                     <p>Date</p>
                   </th>
-                  <th className="flex items-center gap-2 border text-center font-[400] text-[#797979]">
+                  <th className="flex items-center gap-2 text-center font-[400] text-[#797979]">
                     Hire Value
                   </th>
                   <th className="border text-center font-[400] text-[#797979]">
@@ -1032,7 +1032,7 @@ export default function FMList({
                                 parseFloat(data.netBalance) * 0.01,
                               )}
                         </td>
-                        <td className="border py-2">INR {data.zeroToThirty}</td>
+                        <td className="border py-2">{formatter.format(parseInt(data.zeroToThirty))}</td>
                         <td className="border py-2">
                           {formatter.format(parseInt(data.thirtyToSixty))}
                         </td>
