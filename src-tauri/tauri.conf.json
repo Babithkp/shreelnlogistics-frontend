@@ -36,7 +36,6 @@
     "macOS": {
       "minimumSystemVersion": "10.13",
       "dmg": {
-        "background": "./resources/dmg-bg.png",
         "windowSize": {
           "width": 1400,
           "height": 700
