@@ -492,6 +492,13 @@ export default function GenerateBIll({
       setClient(clientResponse.data.data);
       setValue("hsnSacCode", companyProfileResponse.data.data.HSN);
       setCompanyBankDetails(bankDetailsResponse.data.data);
+      if (selectedBillToEdit) {
+        const client = clientResponse.data.data.find(
+          (client: ClientInputs) =>
+            client.name === selectedBillToEdit.Client.name,
+        );
+        setLRData(client.LR);
+      }
     }
   }
 
@@ -778,8 +785,15 @@ export default function GenerateBIll({
                           );
                           return;
                         }
-
-                        if (selectedLR) {
+                        if (
+                          selectLrData.find(
+                            (lr: LrInputs) =>
+                              lr.lrNumber === selectedLR?.lrNumber,
+                          )
+                        ) {
+                          toast.warning("LR already added");
+                          return;
+                        } else if (selectedLR) {
                           setSelectLrData((prev) => [...prev, selectedLR]);
                         }
                       }}
