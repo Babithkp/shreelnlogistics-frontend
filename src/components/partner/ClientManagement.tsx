@@ -211,14 +211,17 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
     if (response?.status === 200) {
       const allTransactions = response.data.data;
       setClients(allTransactions.clientData);
-      setFilteredClients(allTransactions.clientData);
+      if (!search.trim()) {
+        setFilteredClients(allTransactions.clientData);
+      }
       setTotalItems(allTransactions.clientCount);
     }
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     fetchTransactions(currentPage, itemsPerPage);
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");

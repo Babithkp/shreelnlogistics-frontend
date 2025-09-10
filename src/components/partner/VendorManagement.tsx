@@ -123,7 +123,9 @@ export default function VendorManagement({
     const response = await getVendorForPageApi(page, limit);
     if (response?.status === 200) {
       const allVendors = response.data.data;
-      setFilteredVendors(allVendors.vendorData);
+      if (!search.trim()) {
+        setFilteredVendors(allVendors.vendorData);
+      }
       setVendors(allVendors.vendorData);
       setTotalItems(allVendors.vendorCount);
     }
@@ -138,8 +140,9 @@ export default function VendorManagement({
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     getVendorForPage(currentPage, itemsPerPage);
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
     fetchVehicleType();
@@ -393,7 +396,9 @@ export default function VendorManagement({
     const response = await getAllVendorsApi();
     if (response?.status === 200) {
       setVendors(response.data.data);
-      setFilteredVendors(response.data.data);
+      if (!search.trim()) {
+        setFilteredVendors(response.data.data);
+      }
     }
   }
 

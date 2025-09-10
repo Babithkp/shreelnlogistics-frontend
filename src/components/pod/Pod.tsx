@@ -401,7 +401,9 @@ export default function Pod({
         ? allPods.filter((pod) => pod.branchesId === branchId)
         : allPods;
       setPods(filteredPods);
-      setFilteredPods(filteredPods);
+      if (!search.trim()) {
+        setFilteredPods(filteredPods);
+      }
     }
   }
 
@@ -413,27 +415,31 @@ export default function Pod({
     const response = await getPodByPageApi(page, limit, branchIdToBeUsed);
     if (response?.status === 200) {
       const allPods = response.data.data;
-      setFilteredPods(allPods.PODData);
       setPods(allPods.PODData);
+      if (!search.trim()) {
+        setFilteredPods(allPods.PODData);
+      }
       setTotalItems(allPods.PODCount);
     }
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       getPODByPage(currentPage, itemsPerPage);
     } else if (!isAdmin && branch.branchId) {
       getPODByPage(currentPage, itemsPerPage, branch.branchId);
     }
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       getPODByPage(currentPage, itemsPerPage);
     } else if (!isAdmin && branch.branchId) {
       getPODByPage(currentPage, itemsPerPage, branch.branchId);
     }
-  }, [isAdmin, branch.branchId]);
+  }, [isAdmin, branch.branchId, search]);
 
   useEffect(() => {
     if (branch?.branchName) {
@@ -882,6 +888,9 @@ export default function Pod({
               <a
                 className="rounded-md bg-slate-200 p-2 font-medium hover:bg-slate-100"
                 href={selectedPOD?.documentLink}
+                onClick={() => {
+                  toast.success("File has been downloaded successfully");
+                }}
               >
                 LR# {selectedPOD?.lrNumber}
                 <span className="ml-5 text-slate-400">(Click to Download)</span>

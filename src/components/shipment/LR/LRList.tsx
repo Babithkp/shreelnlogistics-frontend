@@ -4,7 +4,7 @@ import {
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
 } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   deleteLRApi,
   filterLRDetailsApi,
@@ -52,6 +52,14 @@ type Sections = "LRList" | "createNew";
 const defaultGreeting =
   "Greetings from Shree LN Logistics, \nPlease find attached the Lorry Receipt (LR) for the following shipment.";
 
+interface ExtendedLRInputs extends LrInputs {
+  admin?: {
+    branchName: string;
+    contactNumber: string;
+  };
+  mailBody?: string;
+}
+
 export default function LRList({
   data,
   sectionChangeHandler,
@@ -66,13 +74,7 @@ export default function LRList({
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
 }) {
-  interface ExtendedLRInputs extends LrInputs {
-    admin?: {
-      branchName: string;
-      contactNumber: string;
-    };
-    mailBody?: string;
-  }
+  const lastSearchRef = useRef<null | string>(null);
   const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data.data);
   const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data.data);
   const [showPreview, setShowPreview] = useState(false);
@@ -129,20 +131,13 @@ export default function LRList({
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchLRDataForPage();
     } else if (!isAdmin && branchId) {
       fetchLRDataForPageForBranch();
     }
-  }, [startIndex, endIndex]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchLRDataForPage();
-    } else if (!isAdmin && branchId) {
-      fetchLRDataForPageForBranch();
-    }
-  }, [isAdmin, branchId]);
+  }, [isAdmin, branchId, currentPage, search]);
 
   useEffect(() => {
     if (selectedLR) {
@@ -171,7 +166,9 @@ export default function LRList({
       setFilteredLRs(LRData);
       return;
     }
+
     const delay = setTimeout(() => {
+      if (lastSearchRef.current === search) return;
       if (isAdmin) {
         filterLRDetails(search);
       } else {

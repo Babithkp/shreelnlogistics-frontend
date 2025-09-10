@@ -551,7 +551,7 @@ export default function Settings({ data }: { data?: Setting }) {
               open={isEditPasswordModalOpen}
               onOpenChange={setIsEditPasswordModalOpen}
             >
-              <DialogTrigger className="cursor-pointer border-primary border p-2 rounded-md text-sm text-primary" >
+              <DialogTrigger className="cursor-pointer border-primary border p-2 font-medium rounded-md text-sm text-primary" >
                 Change Admin Password
               </DialogTrigger>
               <DialogContent>

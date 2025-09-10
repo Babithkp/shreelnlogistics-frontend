@@ -51,7 +51,9 @@ export default function RecentTransaction() {
     );
     if (response?.status === 200) {
       const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions.paymentRecord);
+      if (!search.trim()) {
+        setFilteredTransactions(allTransactions.paymentRecord);
+      }
       setTransactions(allTransactions.paymentRecord);
       setTotalItems(allTransactions.paymentCount);
     }
@@ -65,7 +67,9 @@ export default function RecentTransaction() {
     );
     if (response?.status === 200) {
       const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions.paymentRecord);
+      if (!search.trim()) {
+        setFilteredTransactions(allTransactions.paymentRecord);
+      }
       setTransactions(allTransactions.paymentRecord);
       setTotalItems(allTransactions.paymentCount);
     }
@@ -91,20 +95,22 @@ export default function RecentTransaction() {
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
     } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, search]);
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
     } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
-  }, [admin]);
+  }, [admin, search]);
 
   useEffect(() => {
     const delay = setTimeout(() => {

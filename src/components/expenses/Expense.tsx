@@ -318,27 +318,31 @@ export default function Expense({ setSection,data }: { setSection: any,data: {
     );
     if (response?.status === 200) {
       const allExpenses = response.data.data;
-      setFilteredExpenses(allExpenses.ExpenseData);
       setExpenses(allExpenses.ExpenseData);
+      if (!search.trim()) {
+        setFilteredExpenses(allExpenses.ExpenseData);
+      }
       setTotalItems(allExpenses.ExpenseCount);
     }
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchExpense();
     } else if (!isAdmin && branch.id) {
       fetchExpense(branch.id);
     }
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchExpense();
     } else if (!isAdmin && branch.id) {
       fetchExpense(branch.id);
     }
-  }, [isAdmin, branch.id]);
+  }, [isAdmin, branch.id, search]);
 
   useEffect(() => {
     fetchVendors();

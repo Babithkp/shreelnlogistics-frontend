@@ -6,11 +6,7 @@ import { toast } from "react-toastify";
 import { VscLoading } from "react-icons/vsc";
 import { getAllVendorsApi, getVehicleByIdApi } from "@/api/partner";
 import { BranchDetails } from "./FMPage";
-import {
-  getUnmatchingFields,
-  filterOnlyCompletePrimitiveDiffs,
-  numberToIndianWords,
-} from "@/lib/utils";
+import { numberToIndianWords } from "@/lib/utils";
 import { FMInputs, LrInputs, VendorInputs } from "@/types";
 import {
   AlertDialog,
@@ -288,11 +284,14 @@ export default function FMCreate({
       }
     } else if (formStatus === "edit") {
       if (branchId.branchId) {
-        setNotificationData(
-          filterOnlyCompletePrimitiveDiffs(
-            getUnmatchingFields(data, selectedFMDataToEdit!),
-          ),
-        );
+        data.fmNumber =
+          selectedFMDataToEdit?.fmNumber &&
+          selectedFMDataToEdit?.fmNumber !== ""
+            ? selectedFMDataToEdit?.fmNumber
+            : data.fmNumber;
+        setNotificationData(data);
+        console.log(data);
+
         setNotificationAlertOpen(true);
         setIsloading(false);
         return;

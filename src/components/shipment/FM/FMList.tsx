@@ -208,20 +208,22 @@ export default function FMList({
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchFMDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchFMDataForPageForBranch();
     }
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchFMDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchFMDataForPageForBranch();
     }
-  }, [isAdmin, branch.branchId]);
+  }, [isAdmin, branch.branchId, search]);
 
   const onFilterHandler = async () => {
     if (!filterInputs.name) {

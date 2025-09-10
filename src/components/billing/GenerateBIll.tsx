@@ -744,10 +744,10 @@ export default function GenerateBIll({
                     Invoice date
                   </th>
                   <th className="border-primary border p-1 px-3 text-start font-medium">
-                    Vechile Type
+                    Vehile Type
                   </th>
                   <th className="border-primary border p-1 px-3 text-start font-medium">
-                    Vechile No.
+                    Vehile No.
                   </th>
                   <th className="border-primary border p-1 px-3 text-start font-medium">
                     Weight

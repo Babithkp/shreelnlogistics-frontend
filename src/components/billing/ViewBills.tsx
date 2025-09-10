@@ -139,7 +139,9 @@ export default function ViewBills({
     if (response?.status === 200) {
       const allBills = response.data.data;
       setBillData(allBills.BillData);
-      setFilteredBills(allBills.BillData);
+      if (!search.trim()) {
+        setFilteredBills(allBills.BillData);
+      }
       setTotalItems(allBills.BillCount);
     }
     console.log("Time taken to fetch Bill Data", (new Date().getTime() - time1) /1000 );
@@ -154,26 +156,30 @@ export default function ViewBills({
     if (response?.status === 200) {
       const allBills = response.data.data;
       setBillData(allBills.BillData);
-      setFilteredBills(allBills.BillData);
+      if (!search.trim()) {
+        setFilteredBills(allBills.BillData);
+      }
       setTotalItems(allBills.BillCount);
     }
   }
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchBillDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchBillDataForPageForBranch();
     }
-  }, [startIndex, endIndex]);
+  }, [startIndex, endIndex, search]);
 
   useEffect(() => {
+    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchBillDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchBillDataForPageForBranch();
     }
-  }, [isAdmin, branch.branchId]);
+  }, [isAdmin, branch.branchId, search]);
 
   const getPdfFile = async () => {
     const pdfFile = await pdf(
