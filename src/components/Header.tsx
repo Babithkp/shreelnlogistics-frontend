@@ -1324,125 +1324,118 @@ export default function Header({
                         </DialogContent>
                       </Dialog>
                     )}
-                  {notification.title === "Bill edit" ||
-                    (notification.title === "FM edit" && (
-                      <Dialog>
-                        <DialogTrigger className="cursor-pointer rounded-lg p-1 px-2 text-sm outline">
-                          View details
-                        </DialogTrigger>
-                        <DialogContent
-                          className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
-                        >
-                          <DialogHeader>
-                            <DialogTitle>
-                              {getModalTitle(
-                                notification.title,
-                                notification.requestId,
-                              )}
-                            </DialogTitle>
-                            <DialogDescription></DialogDescription>
-                            <div className="font-medium text-black">
-                              {notification?.data && (
-                                <table className="w-full">
-                                  <thead className="">
-                                    <tr className="bg-black/60 text-white">
-                                      <th className="px-2 font-[500]">
-                                        Sl no.
-                                      </th>
-                                      <th className="p-2 text-center font-[500]">
-                                        Field name
-                                      </th>
-                                      <th className="text-center font-[500]">
-                                        Value
-                                      </th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {notification?.data &&
-                                      Object.entries(
-                                        notification.data as billInputs,
+                  {(notification.title === "Bill edit" ||
+                    notification.title === "FM edit") && (
+                    <Dialog>
+                      <DialogTrigger className="cursor-pointer rounded-lg p-1 px-2 text-sm outline">
+                        View details
+                      </DialogTrigger>
+                      <DialogContent
+                        className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
+                      >
+                        <DialogHeader>
+                          <DialogTitle>
+                            {getModalTitle(
+                              notification.title,
+                              notification.requestId,
+                            )}
+                          </DialogTitle>
+                          <DialogDescription></DialogDescription>
+                          <div className="font-medium text-black">
+                            {notification?.data && (
+                              <table className="w-full">
+                                <thead className="">
+                                  <tr className="bg-black/60 text-white">
+                                    <th className="px-2 font-[500]">Sl no.</th>
+                                    <th className="p-2 text-center font-[500]">
+                                      Field name
+                                    </th>
+                                    <th className="text-center font-[500]">
+                                      Value
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {notification?.data &&
+                                    Object.entries(
+                                      notification.data as billInputs,
+                                    )
+                                      .filter(
+                                        ([key]) =>
+                                          key !== "lrNumber" &&
+                                          key !== "branchId" &&
+                                          key !== "adminId",
                                       )
-                                        .filter(
-                                          ([key]) =>
-                                            key !== "lrNumber" &&
-                                            key !== "branchId" &&
-                                            key !== "adminId",
-                                        )
-                                        .map(([key, value], index) => (
-                                          <tr
-                                            key={key}
-                                            className="border-r border-b border-l border-black/40"
-                                          >
-                                            <td className="border-r border-black/40 p-2 text-center">
-                                              {index + 1}
-                                            </td>
-                                            <td className="border-r border-black/40 text-center capitalize">
-                                              {key}
-                                            </td>
-                                            <td className="border-r border-black/40 text-center">
-                                              {typeof value === "object"
-                                                ? Array.isArray(value)
-                                                  ? value.map(
-                                                      (
-                                                        item: any,
-                                                        idx: number,
-                                                      ) => (
-                                                        <div key={idx}>
-                                                          LR#
-                                                          {item.lrNumber ||
-                                                            JSON.stringify(
-                                                              item,
-                                                            )}
-                                                        </div>
-                                                      ),
+                                      .map(([key, value], index) => (
+                                        <tr
+                                          key={key}
+                                          className="border-r border-b border-l border-black/40"
+                                        >
+                                          <td className="border-r border-black/40 p-2 text-center">
+                                            {index + 1}
+                                          </td>
+                                          <td className="border-r border-black/40 text-center capitalize">
+                                            {key}
+                                          </td>
+                                          <td className="border-r border-black/40 text-center">
+                                            {typeof value === "object"
+                                              ? Array.isArray(value)
+                                                ? value.map(
+                                                    (
+                                                      item: any,
+                                                      idx: number,
+                                                    ) => (
+                                                      <div key={idx}>
+                                                        LR#
+                                                        {item.lrNumber ||
+                                                          JSON.stringify(item)}
+                                                      </div>
+                                                    ),
+                                                  )
+                                                : Object.entries(value)
+                                                    .map(
+                                                      ([k, v]) => `${k}: ${v}`,
                                                     )
-                                                  : Object.entries(value)
-                                                      .map(
-                                                        ([k, v]) =>
-                                                          `${k}: ${v}`,
-                                                      )
-                                                      .join(", ")
-                                                : String(value)}
-                                            </td>
-                                          </tr>
-                                        ))}
-                                  </tbody>
-                                </table>
-                              )}
-                            </div>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button
-                              variant={"outline"}
-                              onClick={() =>
-                                notification.title === "Bill edit"
-                                  ? updateBillDeclineByNotification(
-                                      notification,
-                                    )
-                                  : onFmEditDeclineHandler(notification)
-                              }
-                              disabled={isLoading}
-                            >
-                              Decline
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                notification.title === "Bill edit"
-                                  ? updateBillByNotification(notification)
-                                  : onFMEditUpdateHandler(
-                                      notification.requestId,
-                                      notification.data,
-                                      notification.id,
-                                    )
-                              }
-                              disabled={isLoading}
-                            >
-                              Approve
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    ))}
+                                                    .join(", ")
+                                              : String(value)}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant={"outline"}
+                            onClick={() =>
+                              notification.title === "Bill edit"
+                                ? updateBillDeclineByNotification(notification)
+                                : onFmEditDeclineHandler(notification)
+                            }
+                            disabled={isLoading}
+                          >
+                            Decline
+                          </Button>
+                          <Button
+                            onClick={() =>
+                              notification.title === "Bill edit"
+                                ? updateBillByNotification(notification)
+                                : onFMEditUpdateHandler(
+                                    notification.requestId,
+                                    notification.data,
+                                    notification.id,
+                                  )
+                            }
+                            disabled={isLoading}
+                          >
+                            Approve
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </div>
             ))}
