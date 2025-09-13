@@ -5,6 +5,7 @@ import { ClientInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
 import { filterClientByNameApi, getClientForPageApi } from "@/api/partner";
+import { LuSearch } from "react-icons/lu";
 
 type ClientSummary = {
   clientName: string;
@@ -49,19 +50,19 @@ export default function ClientPayments({
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    filterClientByName(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredTransactions(transactions);
-        return;
-      }
-      filterClientByName(text);
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, transactions]);
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+    }
+  }, [search]);
 
   function summarizeClients(data: ClientInputs[]): ClientSummary[] {
     return data.map((client) => {
@@ -138,6 +139,12 @@ export default function ClientPayments({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <Button
+            className="cursor-pointer rounded-xl p-5"
+            onClick={handleSearch}
+          >
+            <LuSearch size={30} className="mx-3 scale-125" />
+          </Button>
           <Button
             onClick={goBackHandler}
             className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"

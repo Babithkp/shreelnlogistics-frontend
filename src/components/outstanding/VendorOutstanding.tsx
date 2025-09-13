@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
-import {
-  filterVendorByNameApi,
-  getVendorForPageApi,
-} from "@/api/partner";
+import { filterVendorByNameApi, getVendorForPageApi } from "@/api/partner";
 import { formatter } from "@/lib/utils";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { LuSearch } from "react-icons/lu";
 
 type PaymentRecord = {
   amount: string;
@@ -68,18 +66,19 @@ export default function VendorOutstanding({
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    filterVendorByName(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredTransactions(transactions);
-        return;
-      }
-      filterVendorByName(text);
-    }, 300);
-
-    return () => clearTimeout(delay);
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
   }, [search]);
 
   function summarizeVendors(vendors: Vendor[]): VendorSummary[] {
@@ -144,6 +143,12 @@ export default function VendorOutstanding({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <Button
+            className="cursor-pointer rounded-xl p-5"
+            onClick={handleSearch}
+          >
+            <LuSearch size={30} className="mx-3 scale-125" />
+          </Button>
           <Button
             onClick={goBackHandler}
             className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"

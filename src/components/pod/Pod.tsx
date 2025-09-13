@@ -152,23 +152,19 @@ export default function Pod({
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredPods(pods);
+      return;
+    }
+    filterPODByText(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredPods(pods);
-        return;
-      }
-
-      if (isAdmin) {
-        filterPODByText(text);
-      } else {
-        filterPODByText(text, branch.branchId);
-      }
-    }, 300);
-    return () => clearTimeout(delay);
-  }, [search, pods]);
+    if (search.trim().length === 0) {
+      setFilteredPods(pods);
+    }
+  }, [search]);
 
   const setPODDetails = (data: string) => {
     const lr = LRList.find((lr) => lr.lrNumber === data);
@@ -401,9 +397,7 @@ export default function Pod({
         ? allPods.filter((pod) => pod.branchesId === branchId)
         : allPods;
       setPods(filteredPods);
-      if (!search.trim()) {
-        setFilteredPods(filteredPods);
-      }
+      setFilteredPods(filteredPods);
     }
   }
 
@@ -416,30 +410,26 @@ export default function Pod({
     if (response?.status === 200) {
       const allPods = response.data.data;
       setPods(allPods.PODData);
-      if (!search.trim()) {
-        setFilteredPods(allPods.PODData);
-      }
+      setFilteredPods(allPods.PODData);
       setTotalItems(allPods.PODCount);
     }
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       getPODByPage(currentPage, itemsPerPage);
     } else if (!isAdmin && branch.branchId) {
       getPODByPage(currentPage, itemsPerPage, branch.branchId);
     }
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       getPODByPage(currentPage, itemsPerPage);
     } else if (!isAdmin && branch.branchId) {
       getPODByPage(currentPage, itemsPerPage, branch.branchId);
     }
-  }, [isAdmin, branch.branchId, search]);
+  }, [isAdmin, branch.branchId]);
 
   useEffect(() => {
     if (branch?.branchName) {
@@ -476,14 +466,21 @@ export default function Pod({
 
   return (
     <div className="relative">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-        <LuSearch size={18} />
-        <input
-          placeholder="Search"
-          className="outline-none placeholder:font-medium"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+          <input
+            placeholder="Search"
+            className="outline-none placeholder:font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Button
+          className="cursor-pointer rounded-xl p-6"
+          onClick={handleSearch}
+        >
+          <LuSearch size={30} className="mx-3 scale-125" />
+        </Button>
       </div>
       <section className="relative flex h-fit max-h-[83vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>

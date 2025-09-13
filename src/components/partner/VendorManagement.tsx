@@ -78,10 +78,15 @@ export default function VendorManagement({
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [vendors, setVendors] = useState<VendorInputs[]>(vendorsData.slice(0,50));
-  const [filteredVendors, setFilteredVendors] = useState<VendorInputs[]>(vendorsData);
+  const [vendors, setVendors] = useState<VendorInputs[]>(
+    vendorsData.slice(0, 50),
+  );
+  const [filteredVendors, setFilteredVendors] =
+    useState<VendorInputs[]>(vendorsData);
   // const [vehicles, setVehicles] = useState<VehicleInputs[]>([]);
-  const [filteredVehicles, setFilteredVehicles] = useState<VehicleInputs[]>(vehiclesData.slice(0,50));
+  const [filteredVehicles, setFilteredVehicles] = useState<VehicleInputs[]>(
+    vehiclesData.slice(0, 50),
+  );
   const [vendorSortOrder, setVendorSortOrder] = useState<SortOrder>("asc");
   const [showVehicles, setShowVehicles] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -109,7 +114,6 @@ export default function VendorManagement({
   const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  
 
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
@@ -123,9 +127,7 @@ export default function VendorManagement({
     const response = await getVendorForPageApi(page, limit);
     if (response?.status === 200) {
       const allVendors = response.data.data;
-      if (!search.trim()) {
-        setFilteredVendors(allVendors.vendorData);
-      }
+      setFilteredVendors(allVendors.vendorData);
       setVendors(allVendors.vendorData);
       setTotalItems(allVendors.vendorCount);
     }
@@ -140,9 +142,8 @@ export default function VendorManagement({
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     getVendorForPage(currentPage, itemsPerPage);
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
     fetchVehicleType();
@@ -176,19 +177,19 @@ export default function VendorManagement({
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredVendors(vendors);
+      return;
+    }
+    filterVendorByName(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredVendors(vendors);
-        return;
-      }
-      filterVendorByName(text);
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, vendors]);
+    if (search.trim().length === 0) {
+      setFilteredVendors(vendors);
+    }
+  }, [search]);
 
   const onVehicleSubmit = async (data: VehicleInputs) => {
     setIsLoading(true);
@@ -396,9 +397,7 @@ export default function VendorManagement({
     const response = await getAllVendorsApi();
     if (response?.status === 200) {
       setVendors(response.data.data);
-      if (!search.trim()) {
-        setFilteredVendors(response.data.data);
-      }
+      setFilteredVendors(response.data.data);
     }
   }
 
@@ -984,14 +983,22 @@ export default function VendorManagement({
                 </form>
               </Modal>
               {!showVehicles && (
-                <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
-                  <LuSearch size={18} />
-                  <input
-                    placeholder="Search"
-                    className="outline-none placeholder:font-medium"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                <div className="flex items-center gap-5">
+                  <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                    <LuSearch size={18} />
+                    <input
+                      placeholder="Search"
+                      className="outline-none placeholder:font-medium"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    className="cursor-pointer rounded-xl p-5"
+                    onClick={handleSearch}
+                  >
+                    <LuSearch size={30} className="mx-3 scale-125" />
+                  </Button>
                 </div>
               )}
 
@@ -1147,7 +1154,7 @@ export default function VendorManagement({
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogTrigger className="hidden"></DialogTrigger>
         {modalStatus === "vendor" && (
-          <DialogContent className="min-w-7xl max-h-140 overflow-auto">
+          <DialogContent className="max-h-140 min-w-7xl overflow-auto">
             <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">Vendor Details</DialogTitle>
               <div className="mr-10 flex gap-3">
@@ -1326,7 +1333,7 @@ export default function VendorManagement({
           </DialogContent>
         )}
         {modalStatus === "vehicle" && (
-          <DialogContent className="min-w-7xl max-h-140 overflow-auto">
+          <DialogContent className="max-h-140 min-w-7xl overflow-auto">
             <DialogHeader className="flex flex-row items-start justify-between">
               <DialogTitle className="text-2xl">
                 Vehicle List - {selectedVendor?.name}

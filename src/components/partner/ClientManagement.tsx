@@ -36,10 +36,7 @@ import {
 import { IoMdAdd } from "react-icons/io";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import {
-  createClientApi,
-  createNotificationApi,
-} from "@/api/admin";
+import { createClientApi, createNotificationApi } from "@/api/admin";
 import { useEffect, useState } from "react";
 import { VscLoading } from "react-icons/vsc";
 import { PiUsersThree } from "react-icons/pi";
@@ -52,11 +49,13 @@ import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
 import { filterClientByNameApi, getClientForPageApi } from "@/api/partner";
 import { formatter } from "@/lib/utils";
 
-export default function ClientManagement({data}: {data: ClientInputs[]}) {
+export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   const [isloading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [clients, setClients] = useState<ClientInputs[]>(data.slice(0,50));
-  const [filteredClients, setFilteredClients] = useState<ClientInputs[]>(data.slice(0,50));
+  const [clients, setClients] = useState<ClientInputs[]>(data.slice(0, 50));
+  const [filteredClients, setFilteredClients] = useState<ClientInputs[]>(
+    data.slice(0, 50),
+  );
   const [isClientNameAvailable, setIsClientNameAvailable] = useState(true);
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] =
     useState(false);
@@ -105,19 +104,18 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredClients(clients);
+      return;
+    }
+    filterClientByName(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredClients(clients);
-        return;
-      }
-
-      filterClientByName(text);
-    }, 300);
-
-    return () => clearTimeout(delay);
+    if (search.trim().length === 0) {
+      setFilteredClients(clients);
+    }
   }, [search]);
 
   const onSubmit: SubmitHandler<ClientInputs> = async (data) => {
@@ -211,17 +209,14 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
     if (response?.status === 200) {
       const allTransactions = response.data.data;
       setClients(allTransactions.clientData);
-      if (!search.trim()) {
-        setFilteredClients(allTransactions.clientData);
-      }
+      setFilteredClients(allTransactions.clientData);
       setTotalItems(allTransactions.clientCount);
     }
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     fetchTransactions(currentPage, itemsPerPage);
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
@@ -258,17 +253,18 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
             <div className="font-medium">
               <p className="text-muted text-sm">Total pending payment</p>
               <p className="text-xl">
-                {formatter.format(data
-                  .reduce(
+                {formatter.format(
+                  data.reduce(
                     (acc, data) => acc + parseFloat(data.pendingPayment),
                     0,
-                  ))}
+                  ),
+                )}
               </p>
             </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 rounded-md bg-white p-5 max-h-[73vh] overflow-y-auto">
+      <div className="flex max-h-[73vh] flex-col gap-2 overflow-y-auto rounded-md bg-white p-5">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Clients</p>
           <div className="flex items-center gap-5">
@@ -281,6 +277,12 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button
+              className="cursor-pointer rounded-xl p-5"
+              onClick={handleSearch}
+            >
+              <LuSearch size={30} className="mx-3 scale-125" />
+            </Button>
             <button
               className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
               onClick={() => [setIsOpen(true), reset(), setFormStatus("New")]}
@@ -561,7 +563,7 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
             </tr>
           </thead>
           <tbody>
-            {filteredClients?.map((client,i) => (
+            {filteredClients?.map((client, i) => (
               <tr
                 className="hover:bg-accent cursor-pointer"
                 key={i}
@@ -573,7 +575,9 @@ export default function ClientManagement({data}: {data: ClientInputs[]}) {
                 <td className="py-2">{client.name}</td>
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
-                <td className="py-2">{formatter.format(parseInt(client.pendingPayment))}</td>
+                <td className="py-2">
+                  {formatter.format(parseInt(client.pendingPayment))}
+                </td>
                 <td className="py-2">
                   {new Date(client.createdAt).toLocaleDateString()}
                 </td>

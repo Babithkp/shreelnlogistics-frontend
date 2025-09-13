@@ -91,8 +91,10 @@ export default function ViewBills({
   setSupplementary: (data: boolean) => void;
 }) {
   const [showPreview, setShowPreview] = useState(false);
-  const [billData, setBillData] = useState<billInputs[]>(data.slice(0,50));
-  const [filteredBills, setFilteredBills] = useState<billInputs[]>(data.slice(0,50));
+  const [billData, setBillData] = useState<billInputs[]>(data.slice(0, 50));
+  const [filteredBills, setFilteredBills] = useState<billInputs[]>(
+    data.slice(0, 50),
+  );
   const [selectedBill, setSelectedBill] = useState<billInputs>();
   const [isOpen, setIsOpen] = useState(false);
   const [mailGreeting, setMailGreeting] = useState(defaultMailGreeting);
@@ -139,12 +141,13 @@ export default function ViewBills({
     if (response?.status === 200) {
       const allBills = response.data.data;
       setBillData(allBills.BillData);
-      if (!search.trim()) {
-        setFilteredBills(allBills.BillData);
-      }
+      setFilteredBills(allBills.BillData);
       setTotalItems(allBills.BillCount);
     }
-    console.log("Time taken to fetch Bill Data", (new Date().getTime() - time1) /1000 );
+    console.log(
+      "Time taken to fetch Bill Data",
+      (new Date().getTime() - time1) / 1000,
+    );
   }
 
   async function fetchBillDataForPageForBranch() {
@@ -156,30 +159,26 @@ export default function ViewBills({
     if (response?.status === 200) {
       const allBills = response.data.data;
       setBillData(allBills.BillData);
-      if (!search.trim()) {
-        setFilteredBills(allBills.BillData);
-      }
+      setFilteredBills(allBills.BillData);
       setTotalItems(allBills.BillCount);
     }
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchBillDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchBillDataForPageForBranch();
     }
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchBillDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchBillDataForPageForBranch();
     }
-  }, [isAdmin, branch.branchId, search]);
+  }, [isAdmin, branch.branchId]);
 
   const getPdfFile = async () => {
     const pdfFile = await pdf(
@@ -247,23 +246,24 @@ export default function ViewBills({
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredBills(billData);
+      return;
+    }
+    if (isAdmin) {
+      filterBillData(search);
+    } else {
+      filterBillDataForBranch(branch.branchId, search);
+    }
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredBills(billData);
-        return;
-      }
-      if (isAdmin) {
-        filterBillData(text);
-      } else {
-        filterBillDataForBranch(branch.branchId, text);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, billData]);
+    if (search.trim().length === 0) {
+      setFilteredBills(billData);
+      return;
+    }
+  }, [search]);
 
   const updateTdsvalue = async (value: string) => {
     const response = await updateTdsOfBillApi({
@@ -528,14 +528,21 @@ export default function ViewBills({
   return (
     <>
       <section className="relative flex gap-5">
-        <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+            <input
+              placeholder="Search"
+              className="outline-none placeholder:font-medium"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button
+            className="cursor-pointer rounded-xl p-6"
+            onClick={handleSearch}
+          >
+            <LuSearch size={30} className="mx-3 scale-125" />
+          </Button>
         </div>
         <motion.div
           animate={{ width: showPreview ? "50%" : "100%" }}

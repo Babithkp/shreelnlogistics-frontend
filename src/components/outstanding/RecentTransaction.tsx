@@ -9,6 +9,8 @@ import {
 import { FMInputs, PaymentRecord } from "@/types";
 import { formatter } from "@/lib/utils";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { Button } from "../ui/button";
+import { LuSearch } from "react-icons/lu";
 
 export interface ExtendedPaymentRecord extends PaymentRecord {
   billId: string;
@@ -51,9 +53,7 @@ export default function RecentTransaction() {
     );
     if (response?.status === 200) {
       const allTransactions = response.data.data;
-      if (!search.trim()) {
-        setFilteredTransactions(allTransactions.paymentRecord);
-      }
+      setFilteredTransactions(allTransactions.paymentRecord);
       setTransactions(allTransactions.paymentRecord);
       setTotalItems(allTransactions.paymentCount);
     }
@@ -67,9 +67,7 @@ export default function RecentTransaction() {
     );
     if (response?.status === 200) {
       const allTransactions = response.data.data;
-      if (!search.trim()) {
-        setFilteredTransactions(allTransactions.paymentRecord);
-      }
+      setFilteredTransactions(allTransactions.paymentRecord);
       setTransactions(allTransactions.paymentRecord);
       setTotalItems(allTransactions.paymentCount);
     }
@@ -95,41 +93,39 @@ export default function RecentTransaction() {
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
     } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
-  }, [currentPage, itemsPerPage, search]);
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (admin.isAdmin) {
       fetchPaymentRecordForPage();
     } else if (!admin.isAdmin && admin.branchId) {
       fetchPaymentRecordForBranchPage();
     }
-  }, [admin, search]);
+  }, [admin]);
+
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    if (admin.isAdmin) {
+      filterRecordPaymentByName(search);
+    } else {
+      filterRecordPaymentByNameForBranch(search);
+    }
+  };
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredTransactions(transactions);
-        return;
-      }
-
-      if (admin.isAdmin) {
-        filterRecordPaymentByName(text);
-      } else {
-        filterRecordPaymentByNameForBranch(text);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, transactions]);
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+  }, [search]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin");
@@ -165,6 +161,12 @@ export default function RecentTransaction() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <Button
+            className="cursor-pointer rounded-xl p-5"
+            onClick={handleSearch}
+          >
+            <LuSearch size={30} className="mx-3 scale-125" />
+          </Button>
           {!search && (
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <p>

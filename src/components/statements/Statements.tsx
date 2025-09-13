@@ -319,6 +319,7 @@ export default function Statements() {
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
       setTransactions(sortedTransactions as ExtendedPaymentRecord[]);
+      
       setPaymentTotals(
         summarizePayments(sortedTransactions as ExtendedPaymentRecord[]),
       );

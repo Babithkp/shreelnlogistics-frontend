@@ -182,10 +182,7 @@ export default function FMList({
     if (response?.status === 200) {
       const allFMs = response.data.data;
       setFMData(allFMs.FMData);
-      // Only update filteredFMs if there's no active search
-      if (!search.trim()) {
-        setFilteredFMs(allFMs.FMData);
-      }
+      setFilteredFMs(allFMs.FMData);
       setTotalItems(allFMs.FMCount);
     }
   }
@@ -199,31 +196,26 @@ export default function FMList({
     if (response?.status === 200) {
       const allFMs = response.data.data;
       setFMData(allFMs.FMData);
-      // Only update filteredFMs if there's no active search
-      if (!search.trim()) {
-        setFilteredFMs(allFMs.FMData);
-      }
+      setFilteredFMs(allFMs.FMData);
       setTotalItems(allFMs.FMCount);
     }
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchFMDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchFMDataForPageForBranch();
     }
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchFMDataForPage();
     } else if (!isAdmin && branch.branchId) {
       fetchFMDataForPageForBranch();
     }
-  }, [isAdmin, branch.branchId, search]);
+  }, [isAdmin, branch.branchId]);
 
   const onFilterHandler = async () => {
     if (!filterInputs.name) {
@@ -474,33 +466,27 @@ export default function FMList({
     }
   }
 
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        // Only set filteredFMs to FMData if FMData actually has content
-        if (FMData.length > 0) {
-          setFilteredFMs(FMData);
-        }
-        return;
-      }
-      if (isAdmin) {
-        filterFMDetails(search);
-      } else {
-        filterFMDetailsForBranch(branch.branchId, search);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, FMData]);
-
-  // Ensure filteredFMs is updated when FMData changes and there's no search
-  useEffect(() => {
-    if (!search.trim() && FMData.length > 0) {
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
       setFilteredFMs(FMData);
+      return;
     }
-  }, [FMData, search]);
+    if (isAdmin) {
+      filterFMDetails(search);
+    } else {
+      filterFMDetailsForBranch(branch.branchId, search);
+    }
+  };
+
+  useEffect(() => {
+    if (search.trim().length === 0) {
+      setFilteredFMs(FMData);
+      
+      return;
+    }
+  }, [search]);
+
+
 
   const onSubmit = async (data: PaymentRecord) => {
     if (data.pendingAmount < 0) {
@@ -801,15 +787,22 @@ export default function FMList({
 
   return (
     <>
-      <div className="relative mb-5 flex gap-5 rounded-lg bg-white p-2 flex-wrap justify-between">
-        <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <LuSearch size={18} />
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="relative mb-5 flex flex-wrap justify-between gap-5 rounded-lg bg-white p-2">
+        <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+            <input
+              placeholder="Search"
+              className="outline-none placeholder:font-medium"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button
+            className="cursor-pointer rounded-xl p-6"
+            onClick={handleSearch}
+          >
+            <LuSearch size={30} className="mx-3 scale-125" />
+          </Button>
         </div>
         <AntSelect
           showSearch
@@ -947,7 +940,7 @@ export default function FMList({
             >
               <thead>
                 <tr>
-                  <th className="flex items-center gap-2  text-start font-[400] text-[#797979]">
+                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
                     <p>FM#</p>
                   </th>
                   <th className="border text-center font-[400] text-[#797979]">
@@ -1034,7 +1027,9 @@ export default function FMList({
                                 parseFloat(data.netBalance) * 0.01,
                               )}
                         </td>
-                        <td className="border py-2">{formatter.format(parseInt(data.zeroToThirty))}</td>
+                        <td className="border py-2">
+                          {formatter.format(parseInt(data.zeroToThirty))}
+                        </td>
                         <td className="border py-2">
                           {formatter.format(parseInt(data.thirtyToSixty))}
                         </td>

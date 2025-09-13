@@ -56,17 +56,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TbCopy } from "react-icons/tb";
-import {
-  ExpensesInputs,
-  generalSettings,
-  VendorInputs,
-} from "@/types";
+import { ExpensesInputs, generalSettings, VendorInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
 
-export default function Expense({ setSection,data }: { setSection: any,data: {
-  data: ExpensesInputs[];
-  count: number;
-}}) {
+export default function Expense({
+  setSection,
+  data,
+}: {
+  setSection: any;
+  data: {
+    data: ExpensesInputs[];
+    count: number;
+  };
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +77,7 @@ export default function Expense({ setSection,data }: { setSection: any,data: {
   const [generalSettings, setGeneralSettings] = useState<generalSettings>();
   const [expenses, setExpenses] = useState<ExpensesInputs[]>(data.data);
   const [filteredExpenses, setFilteredExpenses] = useState<ExpensesInputs[]>(
-    data.data
+    data.data,
   );
 
   const [selectedExpense, setSelectedExpense] = useState<ExpensesInputs | null>(
@@ -144,24 +146,19 @@ export default function Expense({ setSection,data }: { setSection: any,data: {
     }
   }
 
+  const handleSearch = () => {
+    if (search.trim().length === 0) {
+      setFilteredExpenses(expenses);
+      return;
+    }
+    filterExpenseByTitle(search);
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredExpenses(expenses);
-        return;
-      }
-
-      if (branch.isAdmin) {
-        filterExpenseByTitle(text);
-      } else {
-        filterExpenseByTitle(text, branch.id);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, expenses]);
+    if (search.trim().length === 0) {
+      setFilteredExpenses(expenses);
+    }
+  }, [search]);
 
   const onSubmit = async (data: ExpensesInputs) => {
     if (branch.isAdmin) {
@@ -319,30 +316,26 @@ export default function Expense({ setSection,data }: { setSection: any,data: {
     if (response?.status === 200) {
       const allExpenses = response.data.data;
       setExpenses(allExpenses.ExpenseData);
-      if (!search.trim()) {
-        setFilteredExpenses(allExpenses.ExpenseData);
-      }
+      setFilteredExpenses(allExpenses.ExpenseData);
       setTotalItems(allExpenses.ExpenseCount);
     }
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchExpense();
     } else if (!isAdmin && branch.id) {
       fetchExpense(branch.id);
     }
-  }, [startIndex, endIndex, search]);
+  }, [startIndex, endIndex]);
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchExpense();
     } else if (!isAdmin && branch.id) {
       fetchExpense(branch.id);
     }
-  }, [isAdmin, branch.id, search]);
+  }, [isAdmin, branch.id]);
 
   useEffect(() => {
     fetchVendors();
@@ -388,6 +381,12 @@ export default function Expense({ setSection,data }: { setSection: any,data: {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button
+              className="cursor-pointer rounded-xl p-5"
+              onClick={handleSearch}
+            >
+              <LuSearch size={30} className="mx-3 scale-125" />
+            </Button>
             <Button
               className="border-primary cursor-pointer rounded-2xl p-5"
               variant={"outline"}

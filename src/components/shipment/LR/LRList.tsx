@@ -48,6 +48,7 @@ import { getCompanyProfileApi } from "@/api/settings";
 import { LrInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
+import { Search } from "lucide-react";
 type Sections = "LRList" | "createNew";
 const defaultGreeting =
   "Greetings from Shree LN Logistics, \nPlease find attached the Lorry Receipt (LR) for the following shipment.";
@@ -74,7 +75,6 @@ export default function LRList({
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
 }) {
-  const lastSearchRef = useRef<null | string>(null);
   const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data.data);
   const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data.data);
   const [showPreview, setShowPreview] = useState(false);
@@ -131,13 +131,12 @@ export default function LRList({
   }
 
   useEffect(() => {
-    if (search.trim().length > 0) return;
     if (isAdmin) {
       fetchLRDataForPage();
     } else if (!isAdmin && branchId) {
       fetchLRDataForPageForBranch();
     }
-  }, [isAdmin, branchId, currentPage, search]);
+  }, [isAdmin, branchId, currentPage]);
 
   useEffect(() => {
     if (selectedLR) {
@@ -161,22 +160,23 @@ export default function LRList({
     }
   }
 
+  const handleSearch = () =>{
+    if(search.trim().length === 0){
+      setFilteredLRs(LRData);
+      return;
+    }
+    if (isAdmin) {
+      filterLRDetails(search);
+    } else {
+      filterLRDetailsForBranch(branchId, search);
+    }
+  }
+
   useEffect(() => {
     if (search.trim().length === 0) {
       setFilteredLRs(LRData);
       return;
     }
-
-    const delay = setTimeout(() => {
-      if (lastSearchRef.current === search) return;
-      if (isAdmin) {
-        filterLRDetails(search);
-      } else {
-        filterLRDetailsForBranch(branchId, search);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
   }, [search]);
 
   const getPdfFile = async () => {
@@ -296,14 +296,18 @@ export default function LRList({
 
   return (
     <section className="relative flex gap-5">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-        <LuSearch size={18} />
-        <input
-          placeholder="Search"
-          className="outline-none placeholder:font-medium"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
+          <input
+            placeholder="Search"
+            className="outline-none placeholder:font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Button className="cursor-pointer rounded-xl p-6" onClick={handleSearch}>
+          <LuSearch size={30} className="mx-3 scale-125" />
+        </Button>
       </div>
       <motion.div
         animate={{ width: showPreview ? "50%" : "100%" }}

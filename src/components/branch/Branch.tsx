@@ -91,10 +91,12 @@ export default function Branch() {
   };
 
   async function getBranchDetails() {
+    const time1 = new Date().getTime();
     const response = await getAllBranchDetailsApi();
     if (response?.status === 200) {
       setFilteredBranches(response.data.data);
       setBranches(response.data.data);
+      console.log("Time taken to fetch Branch Data", (new Date().getTime() - time1) / 1000);
     } else {
       toast.error("Failed to fetch Branch Details");
     }
@@ -561,7 +563,7 @@ export default function Branch() {
                     setBranchDetails(branch),
                   ]}
                 >
-                  {formatter.format(branch?.bill?.reduce((acc, data) => acc + data.total, 0))}
+                  {formatter.format(branch?.bill?.reduce((acc, data) => acc + data.subTotal, 0))}
                 </td>
                 <td
                   className="py-3"
@@ -819,7 +821,7 @@ export default function Branch() {
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Total Billing value</label>
-              <p>{branchDetails?.bill?.reduce((acc, data) => acc + data.total, 0).toFixed(2)}</p>
+              <p>{branchDetails?.bill?.reduce((acc, data) => acc + data.subTotal, 0).toFixed(2)}</p>
             </div>
             {branchDetails?.PaymentRecords &&
               branchDetails?.PaymentRecords?.length > 0 && (
