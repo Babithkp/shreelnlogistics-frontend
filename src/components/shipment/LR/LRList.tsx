@@ -4,7 +4,7 @@ import {
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
 } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   deleteLRApi,
   filterLRDetailsApi,
@@ -48,7 +48,6 @@ import { getCompanyProfileApi } from "@/api/settings";
 import { LrInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
-import { Search } from "lucide-react";
 type Sections = "LRList" | "createNew";
 const defaultGreeting =
   "Greetings from Shree LN Logistics, \nPlease find attached the Lorry Receipt (LR) for the following shipment.";
