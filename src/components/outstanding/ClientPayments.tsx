@@ -131,7 +131,7 @@ export default function ClientPayments({
     <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full justify-between">
         <p className="text-lg font-medium">Client Pending Payments</p>
-        <div className="flex items-center gap-5">
+        <form className="flex items-center gap-5" onSubmit={handleSearch}>
           <input
             type="text"
             className="border-primary rounded-2xl border p-1 px-3"
@@ -141,11 +141,11 @@ export default function ClientPayments({
           />
           <Button
             className="cursor-pointer rounded-xl p-5"
-            onClick={handleSearch}
           >
             <LuSearch size={30} className="mx-3 scale-125" />
           </Button>
           <Button
+            type="button"
             onClick={goBackHandler}
             className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"
             variant={"outline"}
@@ -161,6 +161,7 @@ export default function ClientPayments({
               <p>{totalItems}</p>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handlePrev}
                   disabled={currentPage === 1}
                   className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
@@ -168,6 +169,7 @@ export default function ClientPayments({
                   <MdOutlineChevronLeft size={20} />
                 </button>
                 <button
+                  type="button"
                   className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
@@ -177,7 +179,7 @@ export default function ClientPayments({
               </div>
             </div>
           )}
-        </div>
+        </form>
       </div>
       <table className="w-full">
         <thead>

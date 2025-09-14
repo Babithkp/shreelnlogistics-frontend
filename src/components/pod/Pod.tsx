@@ -152,7 +152,8 @@ export default function Pod({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredPods(pods);
       return;
@@ -466,7 +467,7 @@ export default function Pod({
 
   return (
     <div className="relative">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+      <form className="absolute -top-18 right-[13vw] flex items-center gap-2" onSubmit={handleSearch}>
         <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <input
             placeholder="Search"
@@ -477,11 +478,10 @@ export default function Pod({
         </div>
         <Button
           className="cursor-pointer rounded-xl p-6"
-          onClick={handleSearch}
         >
           <LuSearch size={30} className="mx-3 scale-125" />
         </Button>
-      </div>
+      </form>
       <section className="relative flex h-fit max-h-[83vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">POD</p>

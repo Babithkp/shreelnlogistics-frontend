@@ -9,15 +9,27 @@ import { getAllClientsApi } from "@/api/admin";
 import { ClientInputs, VendorInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 
-export default function OutStandingPage() {
-  const [vendor, setVendor] = useState<VendorInputs[]>();
-  const [client, setClient] = useState<ClientInputs[]>();
+export default function OutStandingPage({
+  clients,
+  vendors,
+}: {
+  clients: ClientInputs[];
+  vendors: VendorInputs[];
+}) {
+  const [vendor, setVendor] = useState<VendorInputs[]>(vendors);
+  const [client, setClient] = useState<ClientInputs[]>(clients);
   const totalOutstanding = vendor?.reduce(
-    (acc, data) => acc + (Number(data.currentOutStanding) || 0),
+    (acc, data) =>
+      acc +
+      data.FM.reduce(
+        (acc, data) => acc + parseFloat(data.outStandingBalance),
+        0,
+      ),
     0,
   );
   const totalPendingPayment = client?.reduce(
-    (acc, data) => acc + parseFloat(data.pendingPayment),
+    (acc, data) =>
+      acc + data.bill.reduce((acc, bill) => acc + bill.pendingAmount, 0),
     0,
   );
 
@@ -55,7 +67,7 @@ export default function OutStandingPage() {
   }, []);
 
   return (
-    <div className="flex gap-5 flex-col">
+    <div className="flex flex-col gap-5">
       <div className="flex gap-10">
         <button
           className="flex w-full cursor-pointer rounded-xl bg-white p-5"

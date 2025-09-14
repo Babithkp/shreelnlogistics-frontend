@@ -146,7 +146,8 @@ export default function Expense({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredExpenses(expenses);
       return;
@@ -371,7 +372,7 @@ export default function Expense({
       <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">All Expenses</p>
-          <div className="flex items-center gap-5">
+          <form className="flex items-center gap-5" onSubmit={handleSearch}>
             <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
               <LuSearch size={18} />
               <input
@@ -382,13 +383,14 @@ export default function Expense({
               />
             </div>
             <Button
+            type="submit"
               className="cursor-pointer rounded-xl p-5"
-              onClick={handleSearch}
             >
               <LuSearch size={30} className="mx-3 scale-125" />
             </Button>
             <Button
               className="border-primary cursor-pointer rounded-2xl p-5"
+              type="button"
               variant={"outline"}
               onClick={() => [
                 setSection({
@@ -400,6 +402,7 @@ export default function Expense({
               View Credits
             </Button>
             <Button
+            type="button"
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
               onClick={() => [
                 setIsOpen(true),
@@ -428,6 +431,7 @@ export default function Expense({
                     <MdOutlineChevronLeft size={20} />
                   </button>
                   <button
+                    type="button"
                     className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
@@ -437,7 +441,7 @@ export default function Expense({
                 </div>
               </div>
             )}
-          </div>
+          </form>
         </div>
         <table className="w-full">
           <thead>

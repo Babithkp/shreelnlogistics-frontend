@@ -66,7 +66,8 @@ export default function VendorOutstanding({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredTransactions(transactions);
       return;
@@ -133,7 +134,7 @@ export default function VendorOutstanding({
 
   return (
     <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
-      <div className="flex w-full justify-between">
+      <form className="flex w-full justify-between" onSubmit={handleSearch}>
         <p className="text-lg font-medium">Vendor Outstanding</p>
         <div className="flex items-center gap-5">
           <input
@@ -145,11 +146,11 @@ export default function VendorOutstanding({
           />
           <Button
             className="cursor-pointer rounded-xl p-5"
-            onClick={handleSearch}
           >
             <LuSearch size={30} className="mx-3 scale-125" />
           </Button>
           <Button
+            type="button"
             onClick={goBackHandler}
             className="text-primary bg-primary/10 cursor-pointer rounded-3xl px-5"
             variant={"outline"}
@@ -165,6 +166,7 @@ export default function VendorOutstanding({
               <p>{totalItems}</p>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handlePrev}
                   disabled={currentPage === 1}
                   className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
@@ -172,6 +174,7 @@ export default function VendorOutstanding({
                   <MdOutlineChevronLeft size={20} />
                 </button>
                 <button
+                  type="button"
                   className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
@@ -182,7 +185,7 @@ export default function VendorOutstanding({
             </div>
           )}
         </div>
-      </div>
+      </form>
       <table className="w-full">
         <thead>
           <tr>

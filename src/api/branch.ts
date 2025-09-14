@@ -154,10 +154,10 @@ export const filterRecentPaymentsForBranchPageApi = async (
     console.log(error);
   }
 };
-export const filterRecordPaymentApi = async (name: any) => {
+export const GetRecentTransactionsApi = async () => {
   try {
     const response = await axios.get(
-      `${BASE_URL}/api/v1/filterRecordPaymentByName/${name}`,
+      `${BASE_URL}/api/v1/GetRecentTransactions`,
     );
     return response;
   } catch (error) {

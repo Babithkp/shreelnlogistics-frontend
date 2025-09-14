@@ -466,7 +466,8 @@ export default function FMList({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredFMs(FMData);
       return;
@@ -481,12 +482,10 @@ export default function FMList({
   useEffect(() => {
     if (search.trim().length === 0) {
       setFilteredFMs(FMData);
-      
+
       return;
     }
   }, [search]);
-
-
 
   const onSubmit = async (data: PaymentRecord) => {
     if (data.pendingAmount < 0) {
@@ -788,7 +787,10 @@ export default function FMList({
   return (
     <>
       <div className="relative mb-5 flex flex-wrap justify-between gap-5 rounded-lg bg-white p-2">
-        <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+        <form
+          className="absolute -top-18 right-[13vw] flex items-center gap-2"
+          onSubmit={handleSearch}
+        >
           <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
             <input
               placeholder="Search"
@@ -797,13 +799,10 @@ export default function FMList({
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button
-            className="cursor-pointer rounded-xl p-6"
-            onClick={handleSearch}
-          >
+          <Button className="cursor-pointer rounded-xl p-6">
             <LuSearch size={30} className="mx-3 scale-125" />
           </Button>
-        </div>
+        </form>
         <AntSelect
           showSearch
           options={vendors.map((vendor) => ({
@@ -1593,17 +1592,6 @@ export default function FMList({
                   >
                     Cancel
                   </Button>
-                  {formstate === "edit" && (
-                    <Button
-                      type="button"
-                      variant={"outline"}
-                      className="border-primary text-primary"
-                      onClick={resetData}
-                      disabled={isLoading}
-                    >
-                      Rest All
-                    </Button>
-                  )}
                   <Button className="rounded-xl px-7" disabled={isLoading}>
                     {isLoading ? (
                       <VscLoading size={24} className="animate-spin" />

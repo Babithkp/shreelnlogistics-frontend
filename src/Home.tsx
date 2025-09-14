@@ -354,7 +354,7 @@ export default function Home() {
         {sections.pod && <Pod data={pods} />}
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses expenseData={expenseData} />}
-        {sections.outstanding && <OutStandingPage />}
+        {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}
         {sections.statements && <Statements />}
       </div>
     </main>

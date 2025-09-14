@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
-import {
-  filterRecentPaymentsForBranchPageApi,
-  filterRecordPaymentApi,
-  filterRecordPaymentByNameForBranchApi,
-  getRecentPaymentsForPageApi,
-} from "@/api/branch";
 import { FMInputs, PaymentRecord } from "@/types";
 import { formatter } from "@/lib/utils";
-import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
-import { Button } from "../ui/button";
-import { LuSearch } from "react-icons/lu";
+import { GetRecentTransactionsApi } from "@/api/branch";
 
 export interface ExtendedPaymentRecord extends PaymentRecord {
   billId: string;
@@ -19,180 +11,23 @@ export interface ExtendedPaymentRecord extends PaymentRecord {
 }
 export default function RecentTransaction() {
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    ExtendedPaymentRecord[]
-  >([]);
-  const [admin, setAdmin] = useState({
-    isAdmin: false,
-    branchId: "",
-    adminId: "",
-  });
-  const [search, setSearch] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const itemsPerPage = 50;
-
-  const startIndex = (currentPage - 1) * itemsPerPage + 1;
-  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
-
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const handlePrev = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
-
-  async function fetchPaymentRecordForPage() {
-    const response = await getRecentPaymentsForPageApi(
-      currentPage,
-      itemsPerPage,
-    );
-    if (response?.status === 200) {
-      const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions.paymentRecord);
-      setTransactions(allTransactions.paymentRecord);
-      setTotalItems(allTransactions.paymentCount);
-    }
-  }
-
-  async function fetchPaymentRecordForBranchPage() {
-    const response = await filterRecentPaymentsForBranchPageApi(
-      currentPage,
-      itemsPerPage,
-      admin?.branchId,
-    );
-    if (response?.status === 200) {
-      const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions.paymentRecord);
-      setTransactions(allTransactions.paymentRecord);
-      setTotalItems(allTransactions.paymentCount);
-    }
-  }
-
-  async function filterRecordPaymentByName(search: string) {
-    const response = await filterRecordPaymentApi(search);
-    if (response?.status === 200) {
-      const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions);
-    }
-  }
-
-  async function filterRecordPaymentByNameForBranch(search: string) {
-    const response = await filterRecordPaymentByNameForBranchApi(
-      search,
-      admin?.branchId,
-    );
-    if (response?.status === 200) {
-      const allTransactions = response.data.data;
-      setFilteredTransactions(allTransactions);
-    }
-  }
 
   useEffect(() => {
-    if (admin.isAdmin) {
-      fetchPaymentRecordForPage();
-    } else if (!admin.isAdmin && admin.branchId) {
-      fetchPaymentRecordForBranchPage();
-    }
-  }, [currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    if (admin.isAdmin) {
-      fetchPaymentRecordForPage();
-    } else if (!admin.isAdmin && admin.branchId) {
-      fetchPaymentRecordForBranchPage();
-    }
-  }, [admin]);
-
-  const handleSearch = () => {
-    if (search.trim().length === 0) {
-      setFilteredTransactions(transactions);
-      return;
-    }
-    if (admin.isAdmin) {
-      filterRecordPaymentByName(search);
-    } else {
-      filterRecordPaymentByNameForBranch(search);
-    }
-  };
-
-  useEffect(() => {
-    if (search.trim().length === 0) {
-      setFilteredTransactions(transactions);
-      return;
-    }
-  }, [search]);
-
-  useEffect(() => {
-    const isAdmin = localStorage.getItem("isAdmin");
-    const branchDetailsRaw = localStorage.getItem("branchDetails");
-
-    if (branchDetailsRaw) {
-      const branchDetails = JSON.parse(branchDetailsRaw);
-
-      if (isAdmin === "true") {
-        setAdmin({
-          isAdmin: true,
-          branchId: "",
-          adminId: branchDetails.id,
-        });
-      } else {
-        setAdmin({
-          isAdmin: false,
-          branchId: branchDetails.id,
-          adminId: "",
-        });
+    async function fetchTransactions() {
+      const response = await GetRecentTransactionsApi();
+      if (response?.status === 200) {
+        const allTransactions = response.data.data;
+        setTransactions(allTransactions);
+        console.log(allTransactions.length);
       }
     }
+    fetchTransactions();
   }, []);
+
   return (
     <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
       <div className="flex w-full items-center justify-between">
         <p className="text-lg font-medium">Recent Transactions</p>
-        <div className="flex items-center gap-5">
-          <input
-            type="text"
-            className="border-primary rounded-2xl border p-1 px-3"
-            placeholder="Search Transaction"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button
-            className="cursor-pointer rounded-xl p-5"
-            onClick={handleSearch}
-          >
-            <LuSearch size={30} className="mx-3 scale-125" />
-          </Button>
-          {!search && (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <p>
-                {startIndex}-{endIndex}
-              </p>
-              <p>of</p>
-              <p>{totalItems}</p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentPage === 1}
-                  className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
-                >
-                  <MdOutlineChevronLeft size={20} />
-                </button>
-                <button
-                  className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages}
-                >
-                  <MdOutlineChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       <table className="w-full">
@@ -219,7 +54,7 @@ export default function RecentTransaction() {
           </tr>
         </thead>
         <tbody>
-          {filteredTransactions.map((transaction) => (
+          {transactions.map((transaction) => (
             <tr key={transaction.id}>
               <td className="py-2">
                 {new Date(transaction.date).toLocaleDateString()}

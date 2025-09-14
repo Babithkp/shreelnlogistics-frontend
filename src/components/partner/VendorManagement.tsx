@@ -177,7 +177,8 @@ export default function VendorManagement({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredVendors(vendors);
       return;
@@ -453,7 +454,13 @@ export default function VendorManagement({
               <p className="text-xl">
                 {formatter.format(
                   vendorsData.reduce(
-                    (acc, data) => acc + data.currentOutStanding,
+                    (acc, data) =>
+                      acc +
+                      data.FM.reduce(
+                        (acc, data) =>
+                          acc + parseFloat(data.outStandingBalance || "0"),
+                        0,
+                      ),
                     0,
                   ),
                 )}
@@ -983,7 +990,10 @@ export default function VendorManagement({
                 </form>
               </Modal>
               {!showVehicles && (
-                <div className="flex items-center gap-5">
+                <form
+                  className="flex items-center gap-5"
+                  onSubmit={handleSearch}
+                >
                   <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
                     <LuSearch size={18} />
                     <input
@@ -993,13 +1003,10 @@ export default function VendorManagement({
                       onChange={(e) => setSearch(e.target.value)}
                     />
                   </div>
-                  <Button
-                    className="cursor-pointer rounded-xl p-5"
-                    onClick={handleSearch}
-                  >
+                  <Button className="cursor-pointer rounded-xl p-5">
                     <LuSearch size={30} className="mx-3 scale-125" />
                   </Button>
-                </div>
+                </form>
               )}
 
               <Button
@@ -1095,13 +1102,24 @@ export default function VendorManagement({
                     <td className="py-2">{vendor.contactPerson}</td>
                     <td className="py-2">{vendor.vehicles.length}</td>
                     <td className="py-2">
-                      {formatter.format(vendor.currentOutStanding)}
+                      {formatter.format(
+                        vendor.FM.reduce(
+                          (acc, data) =>
+                            acc + parseFloat(data.outStandingBalance || "0"),
+                          0,
+                        ),
+                      )}
                     </td>
                     <td className="py-2">
                       {formatter.format(
                         vendor.FM?.reduce(
                           (acc, data) =>
-                            acc + parseFloat(data.netBalance || "0"),
+                            acc +
+                            parseFloat(data.hire || "0") +
+                            parseFloat(data.detentionCharges || "0") +
+                            parseFloat(data.rtoCharges || "0") +
+                            parseFloat(data.otherCharges || "0") -
+                            parseFloat(data.tds || "0"),
                           0,
                         ),
                       )}
@@ -1275,7 +1293,12 @@ export default function VendorManagement({
               </div>
               <div className="flex items-start gap-5">
                 <label className="font-medium">Current Outstanding</label>
-                <p>INR {selectedVendor?.currentOutStanding}</p>
+                <p>
+                  INR{" "}
+                  {selectedVendor?.FM.reduce((acc, data) => {
+                    return acc + parseFloat(data.outStandingBalance || "0");
+                  }, 0)}
+                </p>
               </div>
               <div className="flex items-start gap-5">
                 <label className="font-medium">Outstanding Limit</label>

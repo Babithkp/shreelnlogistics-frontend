@@ -159,8 +159,9 @@ export default function LRList({
     }
   }
 
-  const handleSearch = () =>{
-    if(search.trim().length === 0){
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (search.trim().length === 0) {
       setFilteredLRs(LRData);
       return;
     }
@@ -169,7 +170,7 @@ export default function LRList({
     } else {
       filterLRDetailsForBranch(branchId, search);
     }
-  }
+  };
 
   useEffect(() => {
     if (search.trim().length === 0) {
@@ -295,7 +296,10 @@ export default function LRList({
 
   return (
     <section className="relative flex gap-5">
-      <div className="absolute -top-18 right-[13vw] flex items-center gap-2">
+      <form
+        className="absolute -top-18 right-[13vw] flex items-center gap-2"
+        onSubmit={handleSearch}
+      >
         <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <input
             placeholder="Search"
@@ -304,10 +308,10 @@ export default function LRList({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button className="cursor-pointer rounded-xl p-6" onClick={handleSearch}>
+        <Button className="cursor-pointer rounded-xl p-6">
           <LuSearch size={30} className="mx-3 scale-125" />
         </Button>
-      </div>
+      </form>
       <motion.div
         animate={{ width: showPreview ? "50%" : "100%" }}
         transition={{ duration: 0.3 }}

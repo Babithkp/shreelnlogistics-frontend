@@ -66,6 +66,9 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     branchName: "",
     isAdmin: false,
   });
+
+  console.log(filteredClients);
+
   const allRecords = selectedClient?.bill?.flatMap(
     (bill) => bill.PaymentRecords || [],
   );
@@ -104,7 +107,8 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredClients(clients);
       return;
@@ -255,7 +259,12 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
               <p className="text-xl">
                 {formatter.format(
                   data.reduce(
-                    (acc, data) => acc + parseFloat(data.pendingPayment),
+                    (acc, data) =>
+                      acc +
+                      data.bill.reduce(
+                        (acc, bill) => acc + bill.pendingAmount,
+                        0,
+                      ),
                     0,
                   ),
                 )}
@@ -268,21 +277,20 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Clients</p>
           <div className="flex items-center gap-5">
-            <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
-              <LuSearch size={18} />
-              <input
-                placeholder="Search"
-                className="outline-none placeholder:font-medium"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Button
-              className="cursor-pointer rounded-xl p-5"
-              onClick={handleSearch}
-            >
-              <LuSearch size={30} className="mx-3 scale-125" />
-            </Button>
+            <form className="flex items-center gap-5" onSubmit={handleSearch}>
+              <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                <LuSearch size={18} />
+                <input
+                  placeholder="Search"
+                  className="outline-none placeholder:font-medium"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <Button className="cursor-pointer rounded-xl p-5">
+                <LuSearch size={30} className="mx-3 scale-125" />
+              </Button>
+            </form>
             <button
               className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
               onClick={() => [setIsOpen(true), reset(), setFormStatus("New")]}
@@ -576,7 +584,12 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 <td className="py-2">{client.city}</td>
                 <td className="py-2">{client.contactPerson}</td>
                 <td className="py-2">
-                  {formatter.format(parseInt(client.pendingPayment))}
+                  {formatter.format(
+                    client.bill.reduce(
+                      (acc, bill) => (acc += bill.pendingAmount),
+                      0,
+                    ),
+                  )}
                 </td>
                 <td className="py-2">
                   {new Date(client.createdAt).toLocaleDateString()}
