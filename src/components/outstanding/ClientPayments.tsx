@@ -50,7 +50,8 @@ export default function ClientPayments({
     }
   }
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (search.trim().length === 0) {
       setFilteredTransactions(transactions);
       return;
