@@ -698,7 +698,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             </div>
             <div className="flex items-center gap-5">
               <label className="font-medium">Pending payment</label>
-              <p>INR {selectedClient?.pendingPayment}</p>
+              <p>INR {selectedClient?.bill.reduce((acc, bill) => acc + bill.pendingAmount, 0)}</p>
             </div>
             <div className="col-span-2 flex items-center justify-end gap-5 pr-10">
               <label className="font-medium">Credit Limit</label>

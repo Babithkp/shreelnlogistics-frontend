@@ -159,6 +159,8 @@ export default function FMList({
     [],
   );
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
+  const [editingAmount, setEditingAmount] = useState("0");
+
   const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -428,10 +430,7 @@ export default function FMList({
   useEffect(() => {
     let totalPending;
     if (formstate === "edit") {
-      totalPending = selectedFM?.PaymentRecords?.reduce(
-        (acc, data) => acc + parseFloat(data.amount),
-        0,
-      );
+      totalPending = parseFloat(editingAmount);
     }
     if (amount && selectedFM) {
       const totalAmount = Number(amount);
@@ -526,6 +525,7 @@ export default function FMList({
         toast.success("Payment Record Added");
         setIsRecordModalOpen(false);
         reset();
+        resetData();
         setShowPreview(false);
         if (isAdmin) {
           fetchFMDataForPage();
@@ -1295,7 +1295,10 @@ export default function FMList({
               )}
             </PDFViewer>
           </motion.div>
-          <Dialog open={isRecordModalOpen} onOpenChange={setIsRecordModalOpen}>
+          <Dialog
+            open={isRecordModalOpen}
+            onOpenChange={() => [setIsRecordModalOpen, resetData()]}
+          >
             <DialogTrigger className="hidden"></DialogTrigger>
             <DialogContent className="min-w-7xl">
               <DialogHeader className="flex flex-row items-start justify-between">
@@ -1492,6 +1495,7 @@ export default function FMList({
                                           onClick={() => [
                                             setRecordDataToInputBox(record),
                                             setFormstate("edit"),
+                                            setEditingAmount(record.amount),
                                           ]}
                                         >
                                           <RiEditBoxLine size={20} />
@@ -1587,7 +1591,7 @@ export default function FMList({
                     type="button"
                     variant={"outline"}
                     className="border-primary text-primary"
-                    onClick={() => setIsRecordModalOpen(false)}
+                    onClick={() => [setIsRecordModalOpen(false), resetData()]}
                     disabled={isLoading}
                   >
                     Cancel

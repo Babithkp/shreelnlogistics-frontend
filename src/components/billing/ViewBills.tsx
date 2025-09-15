@@ -118,6 +118,7 @@ export default function ViewBills({
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [totalItems, setTotalItems] = useState(data.length);
+  const [recordEditValue, setRecordEditValue] = useState("0");
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 50;
@@ -210,10 +211,7 @@ export default function ViewBills({
   useEffect(() => {
     let totalPending;
     if (formstate === "edit") {
-      totalPending = selectedBill?.PaymentRecords?.reduce(
-        (acc, data) => acc + parseFloat(data.amount),
-        0,
-      );
+      totalPending = parseFloat(recordEditValue);
     }
     if (amount && selectedBill) {
       const totalAmount = Number(amount);
@@ -898,7 +896,7 @@ export default function ViewBills({
                       <AlertDialogTitle>Alert!</AlertDialogTitle>
                       <AlertDialogDescription className="font-medium text-black">
                         This will send the admin an delete request. Upon
-                        approval the FM will be deleted
+                        approval the Bill will be deleted
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -1143,6 +1141,7 @@ export default function ViewBills({
                                         onClick={() => [
                                           setRecordDataToInputBox(record),
                                           setFormstate("edit"),
+                                          setRecordEditValue(record.amount),
                                         ]}
                                       />
                                     </button>
