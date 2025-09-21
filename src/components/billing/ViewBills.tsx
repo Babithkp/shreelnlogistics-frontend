@@ -390,6 +390,10 @@ export default function ViewBills({
   };
 
   const onBulkSubmit = async (data: BulkRecord) => {
+    if(BillListForBulk.length === 0) {
+      toast.error("Please add at least one record");
+      return;
+    }
     const isvalidate = BillListForBulk.some(
       (FM) => parseFloat(FM.amount) <= 0 || FM.pendingAmount < 0,
     );
@@ -575,8 +579,6 @@ export default function ViewBills({
 
   const selectBillForPreview = (bill: billInputs) => {
     setSelectedBill(bill);
-    console.log(bill);
-
     setShowPreview(true);
   };
 
