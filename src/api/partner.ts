@@ -1,7 +1,6 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:3000";
-// const BASE_URL = "https://shreeln-backend.vercel.app";
-
+// const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://shreeln-backend.vercel.app";
 export const getAllVendorsApi = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/api/v1/partner/getAllvendors`);
