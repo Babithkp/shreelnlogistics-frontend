@@ -492,6 +492,14 @@ const BillTemplate = ({
               are to be made only via RTGS, NEFT, or IMPS in the name of SLNL.
             </Text>
           </View>
+          {billInputs?.WriteOff != null && (
+            <View style={{ flexDirection: "row", gap: 3 }}>
+              <Text style={{ fontWeight: 600 }}>Remarks:</Text>
+              <Text style={{ fontSize: 8 }}>
+                {billInputs?.WriteOff?.reason}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
       <View style={styles.remarks}>

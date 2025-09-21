@@ -71,15 +71,20 @@ type SortOrder = "asc" | "desc";
 export default function VendorManagement({
   vendorsData,
   vehiclesData,
+  onRefresh
 }: {
   vendorsData: VendorInputs[];
   vehiclesData: VehicleInputs[];
+  onRefresh: () => void;
 }) {
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [vendors, setVendors] = useState<VendorInputs[]>(
     vendorsData.slice(0, 50),
+  );
+  const [originalVendors, setOriginalVendors] = useState<VendorInputs[]>(
+    vendorsData,
   );
   const [filteredVendors, setFilteredVendors] =
     useState<VendorInputs[]>(vendorsData);
@@ -122,6 +127,10 @@ export default function VendorManagement({
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    setOriginalVendors(vendorsData);
+  }, [vendorsData]);
 
   async function getVendorForPage(page: number, limit: number) {
     const response = await getVendorForPageApi(page, limit);
@@ -253,6 +262,7 @@ export default function VendorManagement({
         fetchVendors();
         reset();
         setIsModalOpen(false);
+        onRefresh()
       } else if (response?.status === 201) {
         setIsVendorNameMatched(true);
         setTimeout(() => {
@@ -453,7 +463,7 @@ export default function VendorManagement({
               <p className="text-muted text-sm">Total outstanding payment</p>
               <p className="text-xl">
                 {formatter.format(
-                  vendorsData.reduce(
+                  originalVendors.reduce(
                     (acc, data) =>
                       acc +
                       data.FM.reduce(
@@ -740,7 +750,7 @@ export default function VendorManagement({
                           <AntSelect
                             {...field}
                             showSearch
-                            options={extractVendorNameOptions(vendorsData)}
+                            options={extractVendorNameOptions(originalVendors)}
                             placeholder="Select Vendor Name"
                             className="outline-primary w-full rounded-md outline"
                             size="large"

@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import {
   addPaymentRecordToBillApi,
+  createBulkPaymentApi,
   deleteBillApi,
   deletePaymentRecordFromBillApi,
   filterBillDataApi,
@@ -15,7 +16,7 @@ import {
   updateTdsOfBillApi,
 } from "@/api/billing";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
-
+import { Select as AntSelect, Checkbox, Modal } from "antd";
 import {
   Dialog,
   DialogContent,
@@ -69,13 +70,28 @@ import {
   formatter,
   getUnmatchingFields,
 } from "@/lib/utils";
-import { billInputs, PaymentRecord } from "@/types";
+import {
+  billInputs,
+  BulkRecord,
+  ClientInputs,
+  PaymentRecord,
+  WriteOffInputs,
+} from "@/types";
 import { createNotificationApi } from "@/api/admin";
 import { LuSearch } from "react-icons/lu";
+import { BiTrash } from "react-icons/bi";
+import { createBillWriteOffApi, deleteBillWriteOffApi } from "@/api/writeoff";
 
 const defaultMailGreeting = `Hope you're doing well.
 
 Please find attached the *invoice* for the recent shipment executed as per the details below`;
+
+type BulkBillList = {
+  billNumber: string;
+  amount: string;
+  amountInWords: string;
+  pendingAmount: number;
+};
 
 export default function ViewBills({
   sectionChangeHandler,
@@ -83,12 +99,16 @@ export default function ViewBills({
   bankDetails,
   data,
   setSupplementary,
+  clients,
+  onRefresh,
 }: {
   sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs) => void;
   bankDetails?: BankDetailsInputs;
   data: billInputs[];
   setSupplementary: (data: boolean) => void;
+  clients: ClientInputs[];
+  onRefresh: () => void;
 }) {
   const [showPreview, setShowPreview] = useState(false);
   const [billData, setBillData] = useState<billInputs[]>(data.slice(0, 50));
@@ -103,6 +123,7 @@ export default function ViewBills({
   const [isLoading, setIsLoading] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<ProfileInputs>();
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [isWriteOffModalOpen, setIsWriteOffModalOpen] = useState(false);
   const [branch, setBranch] = useState({
     branchId: "",
     adminId: "",
@@ -116,6 +137,9 @@ export default function ViewBills({
   const [editAbleData, setEditAbleData] =
     useState<Record<string, { obj1: any; obj2: any }>>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [BillList, setBillList] = useState<billInputs[]>([]);
+  const [BillListForBulk, setBillListForBulk] = useState<BulkBillList[]>([]);
   const [search, setSearch] = useState("");
   const [totalItems, setTotalItems] = useState(data.length);
   const [recordEditValue, setRecordEditValue] = useState("0");
@@ -201,6 +225,28 @@ export default function ViewBills({
     setValue,
     formState: { errors },
   } = useForm<PaymentRecord>({
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+    },
+  });
+  const {
+    handleSubmit: handleBulkSubmit,
+    register: registerBulk,
+    reset: resetBulk,
+    control: controlBulk,
+    formState: { errors: errorsBulk },
+  } = useForm<BulkRecord>({
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+    },
+  });
+  const {
+    handleSubmit: handleWriteOffSubmit,
+    register: registerWriteOff,
+    reset: resetWriteOff,
+    control: controlWriteOff,
+    formState: { errors: errorsWriteOff },
+  } = useForm<WriteOffInputs>({
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
     },
@@ -343,6 +389,90 @@ export default function ViewBills({
     setIsLoading(false);
   };
 
+  const onBulkSubmit = async (data: BulkRecord) => {
+    const isvalidate = BillListForBulk.some(
+      (FM) => parseFloat(FM.amount) <= 0 || FM.pendingAmount < 0,
+    );
+    if (isvalidate) {
+      toast.error("Pending Amount or Amount cannot be in negative");
+      return;
+    }
+    setIsLoading(true);
+    const finalData: any = data;
+    if (isAdmin) {
+      finalData.adminId = branch.adminId;
+    } else {
+      finalData.branchId = branch.branchId;
+    }
+    finalData.billData = BillListForBulk;
+    const response = await createBulkPaymentApi(finalData);
+    if (response?.status === 200) {
+      toast.success("Payment Record Added");
+      setIsBulkModalOpen(false);
+      resetBulk();
+      setBillList([]);
+      setBillListForBulk([]);
+      setShowPreview(false);
+      onRefresh();
+      if (isAdmin) {
+        fetchBillDataForPage();
+      } else if (!isAdmin && branch.branchId) {
+        fetchBillDataForPageForBranch();
+      }
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    try {
+    } catch (error) {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
+
+  const onWriteOff = async (data: WriteOffInputs) => {
+    setIsLoading(true);
+    try {
+      const finalData: any = data;
+      if (!isAdmin) {
+        finalData.branchId = branch.branchId;
+      }
+
+      const response = await createBillWriteOffApi(finalData);
+      if (response?.status === 200) {
+        if (isAdmin) {
+          getBillDetails();
+        } else {
+          getBillDetails(branch.branchId);
+        }
+        toast.success("Write Off Created");
+        setIsWriteOffModalOpen(false);
+        resetWriteOff();
+        setShowPreview(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsLoading(false);
+  };
+
+  const onDeleteWriteOff = async (id: string) => {
+    try {
+      const response = await deleteBillWriteOffApi(id);
+      if (response?.status === 200) {
+        toast.success("Write Off Deleted");
+        setShowPreview(false);
+        if (isAdmin) {
+          getBillDetails();
+        } else {
+          getBillDetails(branch.branchId);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to Delete Write Off");
+    }
+  };
+
   const editBillPaymentOnNotification = async () => {
     const data = {
       requestId: oldRecordData?.IDNumber,
@@ -445,6 +575,8 @@ export default function ViewBills({
 
   const selectBillForPreview = (bill: billInputs) => {
     setSelectedBill(bill);
+    console.log(bill);
+
     setShowPreview(true);
   };
 
@@ -553,17 +685,26 @@ export default function ViewBills({
             <div className="flex gap-5">
               <Button
                 variant={"outline"}
-                className="border-primary text-primary cursor-pointer rounded-2xl p-5"
-                onClick={() => [
-                  sectionChangeHandler({
-                    billList: false,
-                    createNew: true,
-                  }),
-                  setSupplementary(true),
-                ]}
+                className="border-primary text-primary cursor-pointer rounded-xl p-5"
+                onClick={() => setIsBulkModalOpen(true)}
               >
-                <MdOutlineAdd size={34} /> Add Supplementary
+                Bulk Record
               </Button>
+              {!showPreview && (
+                <Button
+                  variant={"outline"}
+                  className="border-primary text-primary cursor-pointer rounded-2xl p-5"
+                  onClick={() => [
+                    sectionChangeHandler({
+                      billList: false,
+                      createNew: true,
+                    }),
+                    setSupplementary(true),
+                  ]}
+                >
+                  <MdOutlineAdd size={34} /> Add Supplementary
+                </Button>
+              )}
               <Button
                 className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
                 onClick={() => [
@@ -690,6 +831,42 @@ export default function ViewBills({
               Bill# {selectedBill?.billNumber}
             </h3>
             <div className="flex items-center gap-2">
+              {selectedBill?.WriteOff != null && (
+                <AlertDialog>
+                  <AlertDialogTrigger className="cursor-pointer rounded-xl border border-red-500 p-2 text-sm font-medium text-red-500 hover:bg-slate-100 hover:text-black">
+                    Delete Write off
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Alert!</AlertDialogTitle>
+                      <AlertDialogDescription className="font-medium text-black">
+                        This action will delete the write off. Are you sure you
+                        want to delete this write off? This action is permanent
+                        and cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() =>
+                          onDeleteWriteOff(selectedBill!.billNumber)
+                        }
+                      >
+                        Proceed
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {selectedBill?.WriteOff == null && (
+                <Button
+                  variant={"outline"}
+                  className="border-primary text-primary cursor-pointer rounded-3xl"
+                  onClick={() => [setIsWriteOffModalOpen(true)]}
+                >
+                  Write off
+                </Button>
+              )}
               <Button
                 variant={"outline"}
                 className="border-primary text-primary cursor-pointer rounded-3xl"
@@ -784,7 +961,7 @@ export default function ViewBills({
                           <p className="w-[70%]">
                             :{" "}
                             {selectedBill?.lrData
-                              .map((lr) => lr.lrNumber)
+                              ?.map((lr) => lr.lrNumber)
                               .join(", ")}
                           </p>
                         </div>
@@ -949,6 +1126,368 @@ export default function ViewBills({
           </PDFViewer>
         </motion.div>
       </section>
+      <Modal
+        open={isBulkModalOpen}
+        width={1240}
+        centered={true}
+        footer={null}
+        onCancel={() => [
+          setIsBulkModalOpen(false),
+          setBillList([]),
+          setBillListForBulk([]),
+          resetBulk(),
+        ]}
+        className="max-h-[80vh] overflow-y-auto"
+      >
+        <div>
+          <p className="mb-5 text-xl font-semibold">FM Bulk Record</p>
+        </div>
+        <form
+          onSubmit={handleBulkSubmit(onBulkSubmit)}
+          className="flex flex-wrap justify-between gap-5"
+        >
+          <div className="flex w-[50%] flex-col gap-2">
+            <label>Client Name</label>
+            <Controller
+              name="vendorName"
+              control={controlBulk}
+              defaultValue={""}
+              render={({ field }) => (
+                <AntSelect
+                  onChange={(value) => {
+                    const selectedClient = clients.find(
+                      (client) => client.name === value,
+                    );
+                    const selectedBill = isAdmin
+                      ? selectedClient?.bill || []
+                      : selectedClient?.bill.filter(
+                          (bill) => bill.branchId === branch.branchId,
+                        ) || [];
+                    setBillList(selectedBill);
+                    field.onChange(value);
+                  }}
+                  value={field.value}
+                  options={clients.map((client) => ({
+                    value: client.name,
+                    label: client.name,
+                  }))}
+                  showSearch
+                  placeholder="Select clients"
+                  className="outline-primary w-full rounded-md outline"
+                  size="large"
+                />
+              )}
+            />
+          </div>
+          <div className="w-[48%]">
+            <div className="flex flex-col gap-2">
+              <label>Date</label>
+              <input
+                type="date"
+                className="border-primary rounded-md border p-2"
+                {...registerBulk("date", { required: true })}
+              />
+              {errorsBulk.date && (
+                <p className="text-red-500">Date is required</p>
+              )}
+            </div>
+          </div>
+          <div className="w-[49%]">
+            <div className="flex flex-col gap-2">
+              <label>Transaction ID/ Cheque Number</label>
+              <input
+                type="text"
+                className="border-primary rounded-md border p-2"
+                {...registerBulk("transactionNumber", { required: true })}
+              />
+              {errorsBulk.transactionNumber && (
+                <p className="text-red-500">Transaction Number is required</p>
+              )}
+            </div>
+          </div>
+          <div className="w-[49%]">
+            <div className="flex flex-col gap-2">
+              <label>Payment Mode</label>
+
+              <Controller
+                name="paymentMode"
+                control={controlBulk}
+                defaultValue={""}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <AntSelect
+                    {...field}
+                    value={field.value}
+                    options={[
+                      { value: "Cash", label: "Cash" },
+                      { value: "IMPS", label: "IMPS" },
+                      { value: "RTGS", label: "RTGS" },
+                      { value: "NEFT", label: "NEFT" },
+                      { value: "Cheque", label: "Cheque" },
+                      { value: "Nill", label: "Nill" },
+                    ]}
+                    placeholder="Select Payment mode"
+                    className="outline-primary w-full rounded-md outline"
+                    size="large"
+                  />
+                )}
+              />
+
+              {errorsBulk.paymentMode && (
+                <p className="text-red-500">Payment Method is required</p>
+              )}
+            </div>
+          </div>
+
+          <div className="w-full">
+            <div className="flex flex-col gap-2">
+              <label>Remarks</label>
+              <input
+                className="border-primary rounded-md border p-2"
+                {...registerBulk("remarks", { required: true })}
+              />
+            </div>
+            {errorsBulk.remarks && (
+              <p className="text-red-500">Remarks is required</p>
+            )}
+          </div>
+
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="border text-sm font-medium">SL NO.</th>
+                <th className="border text-sm font-medium">FM Number</th>
+                <th className="border text-sm font-medium">Amount</th>
+                <th className="border text-sm font-medium">Pending Amount</th>
+                <th className="border text-sm font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="text-sm">
+                <td className="border py-2"></td>
+                <td className="border py-2">
+                  <AntSelect
+                    onChange={(val) => {
+                      const bill = BillList.find((FM) => FM.billNumber === val);
+                      if (bill) {
+                        setBillListForBulk((prev) => [
+                          ...prev,
+                          {
+                            billNumber: bill.billNumber,
+                            amount: "0",
+                            amountInWords: "0",
+                            pendingAmount: bill.pendingAmount || 0,
+                          },
+                        ]);
+                      }
+                    }}
+                    allowClear
+                    options={BillList.map((bill) => ({
+                      value: bill.billNumber,
+                      label: bill.billNumber,
+                    }))}
+                    showSearch
+                    placeholder="Select Payment mode"
+                    className="outline-primary w-full rounded-md outline"
+                    size="large"
+                  />
+                </td>
+                <td className="border py-2"></td>
+                <td className="border py-2"></td>
+                <td className="border py-2"></td>
+              </tr>
+              {BillListForBulk.map((data, i) => (
+                <tr className="text-sm" key={i}>
+                  <td className="border py-2 text-center">{i + 1}</td>
+                  <td className="border py-2 text-center">{data.billNumber}</td>
+                  <td className="border py-2">
+                    <input
+                      value={data.amount}
+                      type="number"
+                      className="border-primary w-full rounded-md border p-2"
+                      onChange={(e) =>
+                        setBillListForBulk((prev) => {
+                          const updatedData = prev.map((item) => {
+                            if (item.billNumber === data.billNumber) {
+                              const originalFM = BillList.find(
+                                (fm) => fm.billNumber === data.billNumber,
+                              );
+                              const currentAmount =
+                                parseFloat(e.target.value) || 0;
+                              return {
+                                ...item,
+                                amount: e.target.value,
+                                amountInWords:
+                                  numberToIndianWords(currentAmount) || "0",
+                                pendingAmount:
+                                  (originalFM?.pendingAmount || 0) -
+                                  currentAmount,
+                              };
+                            }
+                            return item;
+                          });
+                          return updatedData;
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="border py-2 text-center">
+                    {data.pendingAmount}
+                  </td>
+                  <td className="cursor-pointer justify-items-center border py-2">
+                    <BiTrash
+                      size={20}
+                      color="red"
+                      onClick={() =>
+                        setBillListForBulk((prev) =>
+                          prev.filter(
+                            (item) => item.billNumber !== data.billNumber,
+                          ),
+                        )
+                      }
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex w-full justify-end gap-5">
+            <Button
+              type="button"
+              variant={"outline"}
+              className="border-primary text-primary"
+              onClick={() => [
+                setIsBulkModalOpen(false),
+                setBillList([]),
+                setBillListForBulk([]),
+                resetBulk(),
+              ]}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button className="rounded-xl px-7" disabled={isLoading}>
+              {isLoading ? (
+                <VscLoading size={24} className="animate-spin" />
+              ) : (
+                "Record Bulk"
+              )}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+      <Dialog open={isWriteOffModalOpen} onOpenChange={setIsWriteOffModalOpen}>
+        <DialogTrigger className="hidden"></DialogTrigger>
+        <DialogContent className="min-w-7xl">
+          <DialogHeader className="flex flex-row items-start justify-between">
+            <DialogTitle className="text-2xl">
+              Write off FM# {selectedBill?.billNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription></DialogDescription>
+          <form
+            onSubmit={handleWriteOffSubmit(onWriteOff)}
+            className="flex flex-wrap justify-between gap-5"
+          >
+            <div className="w-[50%]">
+              <div className="flex flex-col gap-2">
+                <label>FM#</label>
+                <input
+                  type="text"
+                  className="border-primary cursor-not-allowed rounded-md border p-2"
+                  {...registerWriteOff("IDNumber")}
+                  value={selectedBill?.billNumber}
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="w-[48%]">
+              <div className="flex flex-col gap-2">
+                <label>Date</label>
+                <input
+                  type="date"
+                  className="border-primary rounded-md border p-2"
+                  {...registerWriteOff("date", { required: true })}
+                />
+                {errorsWriteOff.date && (
+                  <p className="text-red-500">Date is required</p>
+                )}
+              </div>
+            </div>
+            <div className="w-[50%]">
+              <div className="flex flex-col gap-2">
+                <label>Vendor Name</label>
+                <input
+                  type="text"
+                  className="border-primary cursor-not-allowed rounded-md border p-2"
+                  {...registerWriteOff("vendorName")}
+                  value={selectedBill?.Client.name}
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="w-[48%]">
+              <div className="flex flex-col gap-2">
+                <label>Write off Amount</label>
+                <input
+                  type="text"
+                  className="border-primary cursor-not-allowed rounded-md border p-2"
+                  {...registerWriteOff("amount", { required: true })}
+                  value={selectedBill?.pendingAmount}
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div className="w-full">
+              <div className="flex flex-col gap-2">
+                <label>Write off reason</label>
+                <textarea
+                  className="border-primary rounded-md border p-2"
+                  {...registerWriteOff("reason")}
+                />
+              </div>
+            </div>
+            <div className="w-full">
+              <div className="flex items-end gap-2">
+                <Controller
+                  name="checked"
+                  control={controlWriteOff}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="checked"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    >
+                      Include reason in remarks
+                    </Checkbox>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="flex w-full justify-end gap-5">
+              <Button
+                type="button"
+                variant={"outline"}
+                className="border-primary text-primary"
+                onClick={() => setIsWriteOffModalOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button className="rounded-xl px-7" disabled={isLoading}>
+                {isLoading ? (
+                  <VscLoading size={24} className="animate-spin" />
+                ) : (
+                  "Write Off"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog open={isRecordModalOpen} onOpenChange={setIsRecordModalOpen}>
         <DialogTrigger className="hidden"></DialogTrigger>
         <DialogContent className="min-w-7xl">

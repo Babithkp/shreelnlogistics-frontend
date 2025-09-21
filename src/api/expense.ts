@@ -1,6 +1,6 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = "http://localhost:3000";
+// const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createExpenseApi = async (data: any) => {
   try {
@@ -182,6 +182,59 @@ export const updateCreditByNotificationApi = async (id: string, data: any) => {
 export const getAllCreditApi = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/api/v1/credits/getAll`);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterExpensesByDateApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/expenses/filterExpensesByDate`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const filterExpensesByDateForBranchApi = async (data: any, branchId: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/expenses/filterExpensesByDateForBranch/${branchId}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterCreditByDateApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/credit/filterCreditByDate`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const filterCreditByDateForBranchApi = async (
+  data: any,
+  branchId: any,
+) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/credit/filterCreditByDateForBranch/${branchId}`,
+      data,
+    );
     return response;
   } catch (error) {
     console.log(error);

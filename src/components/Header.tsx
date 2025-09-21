@@ -70,6 +70,7 @@ const sectionLabels: Record<keyof SectionsState, string> = {
   statements: "Statements",
   pod: "POD",
   settings: "Settings",
+  reports: "Reports",
 };
 
 export default function Header({
@@ -1161,6 +1162,7 @@ export default function Header({
                 vendor: false,
                 client: false,
                 pod: false,
+                reports: false,
                 settings: true,
               })
             }

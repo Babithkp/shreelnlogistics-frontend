@@ -29,12 +29,14 @@ export default function FMCreate({
   formStatus,
   lrData,
   branchDetails,
+  onRefresh
 }: {
   resetToDefault: () => void;
   selectedFMDataToEdit?: FMInputs;
   formStatus: "edit" | "create";
   lrData: LrInputs[];
   branchDetails?: BranchDetails;
+  onRefresh: () => void;
 }) {
   const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [vendors, setVendors] = useState<VendorInputs[]>([]);
@@ -273,6 +275,7 @@ export default function FMCreate({
       if (response?.status === 200) {
         toast.success("FM has been created");
         resetToDefault();
+        onRefresh()
       } else if (response?.status === 201) {
         toast.warning("FM Number already exists");
         setFMNumberAlreadyExists(true);
@@ -290,7 +293,6 @@ export default function FMCreate({
             ? selectedFMDataToEdit?.fmNumber
             : data.fmNumber;
         setNotificationData(data);
-        console.log(data);
 
         setNotificationAlertOpen(true);
         setIsloading(false);
@@ -300,6 +302,7 @@ export default function FMCreate({
       if (response?.status === 200) {
         toast.success("FM has been updated");
         resetToDefault();
+        onRefresh();
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
@@ -448,21 +451,29 @@ export default function FMCreate({
             onChange={(value) => {
               setLRDataToFM((prev) => ({ ...prev, vendorName: value }));
               const selectedVendor = vendors.find((v) => v.name === value);
+              
               if (selectedVendor) {
                 const allLRs: LrInputs[] = selectedVendor.vehicles.flatMap(
                   (vehicle) => vehicle.LR || [],
                 );
+                const filteredLR = allLRs.filter(
+                  (lr) =>
+                    !selectedVendor.FM.some((fm) =>
+                      fm.LRDetails.some((detail) => detail.lrNumber === lr.lrNumber)
+                    )
+                );                
                 if (branchId.branchId) {
                   setLRData(
-                    allLRs.filter((lr) => lr.branchId === branchId.branchId),
+                    filteredLR.filter((lr) => lr.branchId === branchId.branchId),
                   );
                 } else {
-                  setLRData(allLRs);
+                  setLRData(filteredLR);
                 }
                 setFMData({ ...fmData, vendorsId: value });
               }
             }}
             size="large"
+            allowClear
             style={{
               border: "1px solid #64BAFF",
               borderRadius: "10px",
@@ -531,6 +542,7 @@ export default function FMCreate({
                   }
                 }}
                 showSearch
+                allowClear
                 options={extractLRNumberOptions(LRData)}
                 style={{
                   border: "1px solid #64BAFF",

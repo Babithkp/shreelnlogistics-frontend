@@ -51,6 +51,7 @@ import {
 } from "./api/shipment";
 import { getExpenseByPageApi } from "./api/expense";
 import { getPodByPageApi } from "./api/pod";
+import ReportPage from "./components/reports/ReportPage";
 
 export interface Setting {
   ProfileInputs: ProfileInputs;
@@ -72,6 +73,7 @@ export default function Home() {
     statements: false,
     pod: false,
     settings: false,
+    reports: false,
   });
 
   const [clients, setClients] = useState<ClientInputs[]>([]);
@@ -338,16 +340,18 @@ export default function Home() {
         {sections.dashboard && <Dashboard data={dashboardData} />}
         {sections.branch && <Branch />}
         {sections.LR && <LRPage lrData={LRData} />}
-        {sections.FM && <FMPage FMData={FMData} />}
+        {sections.FM && <FMPage FMData={FMData} vendors={vendors} onRefresh={onRefresh}/>}
         {sections.client && <ClientManagement data={clients} />}
         {sections.vendor && (
-          <VendorManagement vendorsData={vendors} vehiclesData={vehicles} />
+          <VendorManagement vendorsData={vendors} vehiclesData={vehicles} onRefresh={onRefresh}/>
         )}
         {sections.Bill && (
           <BillPage
             bankDetails={settings?.bankDetails}
             clientData={clients}
             billData={billData}
+            clients={clients}
+            onRefresh={onRefresh}
           />
         )}
 
@@ -356,6 +360,7 @@ export default function Home() {
         {sections.expenses && <Expenses expenseData={expenseData} />}
         {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}
         {sections.statements && <Statements />}
+        {sections.reports && <ReportPage clients={clients} vendors={vendors} />} 
       </div>
     </main>
   );

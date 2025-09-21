@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getVersion } from "@tauri-apps/api/app";
 import { Section, SectionsState } from "./types";
+import { VscGraph } from "react-icons/vsc";
 
 type DropDowns = "shipment" | "partner" | "billing";
 
@@ -63,6 +64,7 @@ export default function Navbar({
       section !== "FM" &&
       section !== "vendor" &&
       section !== "client" &&
+      section !== "reports" &&
       section !== "Bill"
     ) {
       setDropDown({ shipment: false, partner: false });
@@ -256,6 +258,20 @@ export default function Navbar({
           />
           <p className={`${sections.pod ? "text-black" : ""}`}>POD</p>
         </button>
+        {branch.isAdmin && (
+          <button
+            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+            onClick={() => sectionChangeHandler("reports")}
+          >
+            <VscGraph
+              size={24}
+              color={`${sections.reports ? "#2196F3" : "#A3AED0"}`}
+            />
+            <p className={`${sections.reports ? "text-black" : ""}`}>
+              Reports
+            </p>
+          </button>
+        )}
         {branch.isAdmin && (
           <button
             className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"

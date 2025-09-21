@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import FMCreate from "./FMCreate";
 import FMList from "./FMList";
 import { getLRApi } from "@/api/shipment";
-import { FMInputs, LrInputs } from "@/types";
+import { FMInputs, LrInputs, VendorInputs } from "@/types";
 
 export type FMSection = "FMList" | "createNew";
 type SectionState = Record<FMSection, boolean>;
@@ -23,11 +23,15 @@ export interface BranchDetails {
 
 export default function FMPage({
   FMData,
-}:  {
+  vendors,
+  onRefresh,
+}: {
   FMData: {
     data: FMInputs[];
     count: number;
   };
+  vendors: VendorInputs[];
+  onRefresh: () => void;
 }) {
   const [selectedForm, setSelectedForm] = useState({
     FMList: true,
@@ -105,15 +109,18 @@ export default function FMPage({
           setFormStatus={setFormStatus}
           branchDetails={branchDetails}
           data={FMData}
-        />
-      )}
+          vendors={vendors}
+          onRefresh={onRefresh}
+          />
+        )}
       {selectedForm.createNew && (
         <FMCreate
-          resetToDefault={resetToDefault}
-          selectedFMDataToEdit={selectedFMData}
-          formStatus={formStatus}
-          lrData={LRData}
-          branchDetails={branchDetails}
+        resetToDefault={resetToDefault}
+        selectedFMDataToEdit={selectedFMData}
+        formStatus={formStatus}
+        lrData={LRData}
+        branchDetails={branchDetails}
+        onRefresh={onRefresh}
         />
       )}
     </>

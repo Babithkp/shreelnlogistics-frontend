@@ -1,6 +1,6 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = "http://localhost:3000";
+// const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createBillApi = async (data: any) => {
   try {
@@ -250,6 +250,19 @@ export const updateTdsOfBillApi = async (data: any) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/billing/tds-update/${data.id}/${data.tds}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export const createBulkPaymentApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/billing/createBulkPayment`,
+      data,
     );
     return response;
   } catch (error) {

@@ -774,8 +774,8 @@ export default function GenerateBIll({
                           (lr) => lr.lrNumber === value,
                         );
 
-                        if (selectLrData.length >= 8) {
-                          toast.warning("Only 8 LR can be added");
+                        if (selectLrData.length >= 6) {
+                          toast.warning("Only 6 LR can be added");
                           return;
                         }
 
@@ -1239,9 +1239,9 @@ export default function GenerateBIll({
                           id="others"
                         />
                         <Label htmlFor="others">Others</Label>
-                        <input
+                        <textarea
                           placeholder="LR#"
-                          className="w-15 outline-none"
+                          className="min-w-15 outline-none border p-1 rounded-md"
                           {...register("others.lrnumber", { required: value })}
                         />
                       </div>

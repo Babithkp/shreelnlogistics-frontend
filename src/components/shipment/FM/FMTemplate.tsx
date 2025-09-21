@@ -318,13 +318,16 @@ export const FMTemplate = ({
             </View>
             <View
               style={{
-                flexDirection: "row",
+                flexDirection: "column",
                 paddingHorizontal: 20,
                 padding: 5,
                 height: 100,
               }}
             >
               <Text>Remarks</Text>
+              {FmData?.WriteOff?.checked && (
+                <Text>{FmData?.WriteOff?.reason}</Text>
+              )}
             </View>
           </View>
           <View style={{ width: "40%" }}>

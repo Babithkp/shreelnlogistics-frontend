@@ -1,6 +1,6 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = "http://localhost:3000";
+// const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const createLRApi = async (data: any) => {
   try {
@@ -366,6 +366,18 @@ export const filterFMDetailsForBranchApi = async (branchId: string, text: string
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/filterFMDetailsForBranch/${branchId}/${text}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createBulkPaymentApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/createBulkPayment`,
+      data,
     );
     return response;
   } catch (error) {

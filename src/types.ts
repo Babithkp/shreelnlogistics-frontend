@@ -10,6 +10,7 @@ export type Section =
   | "vendor"
   | "client"
   | "pod"
+  | "reports"
   | "settings";
 export type SectionsState = Record<Section, boolean>;
 
@@ -139,6 +140,7 @@ export interface FMInputs {
   sizeW: string;
   sizeH: string;
   ftl: string;
+  WriteOff: WriteOffInputs;
 }
 
 export interface PaymentRecord {
@@ -295,6 +297,7 @@ export interface billInputs {
   };
   Branches: BranchInputs;
   Admin: BranchInputs;
+  WriteOff: WriteOffInputs;
 }
 
 export type BranchInputs = {
@@ -363,4 +366,23 @@ export interface CreditInputs {
   Admin: {
     branchName: string;
   };
+}
+
+export interface BulkRecord {
+  id: string;
+  vendorName: string;
+  date: string;
+  transactionNumber: string;
+  paymentMode: string;
+  remarks: string;
+}
+
+export interface WriteOffInputs {
+  id: string;
+  vendorName: string;
+  date: string;
+  IDNumber: string;
+  amount: string;
+  reason: string;
+  checked: boolean;
 }

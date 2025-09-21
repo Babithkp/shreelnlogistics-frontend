@@ -56,6 +56,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   const [filteredClients, setFilteredClients] = useState<ClientInputs[]>(
     data.slice(0, 50),
   );
+  const [originalClients, setOriginalClients] = useState<ClientInputs[]>(data);
   const [isClientNameAvailable, setIsClientNameAvailable] = useState(true);
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] =
     useState(false);
@@ -67,7 +68,6 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
     isAdmin: false,
   });
 
-  console.log(filteredClients);
 
   const allRecords = selectedClient?.bill?.flatMap(
     (bill) => bill.PaymentRecords || [],
@@ -90,6 +90,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    setOriginalClients(data);
+  }, [data]);
 
   const {
     register,
@@ -245,7 +249,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Clients</p>
-              <p className="text-xl">{data.length}</p>
+              <p className="text-xl">{originalClients.length}</p>
             </div>
           </div>
         </div>
@@ -258,7 +262,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
               <p className="text-muted text-sm">Total pending payment</p>
               <p className="text-xl">
                 {formatter.format(
-                  data.reduce(
+                  originalClients.reduce(
                     (acc, data) =>
                       acc +
                       data.bill.reduce(

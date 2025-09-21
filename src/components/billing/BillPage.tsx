@@ -7,11 +7,15 @@ import { billInputs, ClientInputs } from "@/types";
 export default function BillPage({
   bankDetails,
   clientData,
-  billData
+  billData,
+  clients,
+  onRefresh,
 }: {
   bankDetails?: BankDetailsInputs;
   clientData: ClientInputs[];
   billData: billInputs[];
+  clients: ClientInputs[];
+  onRefresh: () => void;
 }) {
   const [selectedForm, setSelectedForm] = useState({
     billList: true,
@@ -30,6 +34,8 @@ export default function BillPage({
           setSelectedBillToEdit={setSelectedBillToEdit}
           data={billData}
           setSupplementary={setSupplementary}
+          clients={clients}
+          onRefresh={onRefresh}
         />
       )}
       {selectedForm.createNew && (

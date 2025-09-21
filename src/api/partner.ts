@@ -1,6 +1,6 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = "http://localhost:3000";
+// const BASE_URL = "https://shreeln-backend.vercel.app";
 
 export const getAllVendorsApi = async () => {
   try {
@@ -119,10 +119,35 @@ export const filterFMLRByVendorApi = async (data: any) => {
   }
 };
 
+
 export const filterFMLRByVendorForBranchApi = async (data: any, branchId?: string) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/partner/filterFMLRByVendor/${branchId}`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillLRByClientApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/partner/filterBillLRByClient`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterBillLRByClientForBranchApi = async (data: any, branchId?: string) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/partner/filterBillLRByClientForBranch/${branchId}`,
       data,
     );
     return response;
@@ -168,6 +193,30 @@ export const filterClientByNameApi = async (name: string) => {
   try {
     const response = await axios.get(
       `${BASE_URL}/api/v1/partner/filterClientByName/${name}`,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterLRForClientApi = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/partner/filterLRForClient`,
+      data,
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const filterLRForClientForBranchApi = async (data: any, branchId?: string) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/partner/filterLRForClientForBranch/${branchId}`,
+      data,
     );
     return response;
   } catch (error) {
