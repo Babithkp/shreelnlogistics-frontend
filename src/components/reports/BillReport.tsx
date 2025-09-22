@@ -157,6 +157,7 @@ export default function BillReport({
   const formatFMData = (data: billInputs[]) => {
     return data.map((bill) => ({
       "Bill#": bill.billNumber,
+      "Client Name": bill.Client.name,
       Date: new Date(bill.date).toLocaleDateString(),
       "Client GSTIN": bill.Client.GSTIN,
       Amount: bill.subTotal,
@@ -300,8 +301,8 @@ export default function BillReport({
               <tr>
                 <th className="text-start font-[500] text-slate-500">Bill ID</th>
                 <th className="font-[500] text-slate-500">Client Name</th>
-                <th className="font-[500] text-slate-500">Date</th>
                 <th className="font-[500] text-slate-500">GSTIN</th>
+                <th className="font-[500] text-slate-500">Date</th>
                 <th className="font-[500] text-slate-500">Hire Value</th>
                 <th className="font-[500] text-slate-500">Outstanding</th>
                 <th className="font-[500] text-slate-500">0-30</th>
@@ -316,10 +317,10 @@ export default function BillReport({
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2 text-center">{data.Client.name}</td>
                   <td className="py-2 text-center">
-                    {new Date(data.date).toLocaleDateString()}
+                    {data.Client.GSTIN}
                   </td>
                   <td className="py-2 text-center">
-                    {data.Client.GSTIN}
+                    {new Date(data.date).toLocaleDateString()}
                   </td>
                   <td className="py-2 text-center">
                     {formatter.format(data.subTotal)}
