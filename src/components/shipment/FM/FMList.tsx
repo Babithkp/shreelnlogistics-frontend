@@ -370,6 +370,10 @@ export default function FMList({
   };
 
   const onBulkSubmit = async (data: BulkRecord) => {
+    if(FMListForBulk.length === 0) {
+      toast.error("Please add at least one record");
+      return;
+    }
     const isvalidate = FMListForBulk.some(
       (FM) => parseFloat(FM.amount) <= 0 || FM.pendingAmount < 0,
     );
@@ -561,8 +565,7 @@ export default function FMList({
 
   const selectFMForPreview = (FmData: FMInputs) => {
     setSelectedFM(FmData);
-    console.log(FmData);
-    setShowPreview(true);
+     setShowPreview(true);
   };
 
   const onDeleteFMHandler = async (id: string) => {

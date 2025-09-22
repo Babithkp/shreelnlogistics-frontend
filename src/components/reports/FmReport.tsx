@@ -186,7 +186,7 @@ export default function FmReport({
     exportToExcelWithImage(
       formatFMData(FilteredFMStatement),
       "Vendor Statement " + new Date().toDateString(),
-      FilteredFMStatement[0].vendorName,
+      filterInputs.name,
       FilteredFMStatement.reduce((acc, FM) => acc + parseFloat(FM.hire), 0),
       FilteredFMStatement.reduce((acc, FM) => acc + parseFloat(FM.advance), 0),
       FilteredFMStatement.reduce((acc, FM) => acc + FM.outStandingAdvance, 0),

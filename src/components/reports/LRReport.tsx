@@ -133,7 +133,7 @@ export default function LRReport({
     exportToExcelWithImage(
       formatLRData(LRData),
       "LR Statement " + new Date().toDateString(),
-      LRData[0].client.name,
+      filterInputs.name,
       LRData.reduce((acc, FM) => acc + FM.totalAmt, 0),
     );
     toast.success("File Downloaded");

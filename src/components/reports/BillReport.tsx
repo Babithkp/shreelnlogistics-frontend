@@ -158,6 +158,7 @@ export default function BillReport({
     return data.map((bill) => ({
       "Bill#": bill.billNumber,
       Date: new Date(bill.date).toLocaleDateString(),
+      "Client GSTIN": bill.Client.GSTIN,
       Amount: bill.subTotal,
       Pending: bill.pendingAmount,
       "Amount Received": bill.PaymentRecords.reduce(
@@ -190,7 +191,7 @@ export default function BillReport({
     exportToExcelWithImage(
       formatFMData(filteredBillData),
       "Client Statement " + new Date().toDateString(),
-      filteredBillData[0].Client.name,
+      filterInputs.name,
       filteredBillData.reduce((acc, FM) => acc + FM.subTotal, 0),
       filteredBillData.reduce((acc, FM) => acc + FM.pendingAmount, 0),
       formatLRData(pendingLRs),
@@ -297,9 +298,10 @@ export default function BillReport({
           <table>
             <thead>
               <tr>
-                <th className="text-start font-[500] text-slate-500">FM#</th>
+                <th className="text-start font-[500] text-slate-500">Bill ID</th>
                 <th className="font-[500] text-slate-500">Client Name</th>
                 <th className="font-[500] text-slate-500">Date</th>
+                <th className="font-[500] text-slate-500">GSTIN</th>
                 <th className="font-[500] text-slate-500">Hire Value</th>
                 <th className="font-[500] text-slate-500">Outstanding</th>
                 <th className="font-[500] text-slate-500">0-30</th>
@@ -315,6 +317,9 @@ export default function BillReport({
                   <td className="py-2 text-center">{data.Client.name}</td>
                   <td className="py-2 text-center">
                     {new Date(data.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 text-center">
+                    {data.Client.GSTIN}
                   </td>
                   <td className="py-2 text-center">
                     {formatter.format(data.subTotal)}

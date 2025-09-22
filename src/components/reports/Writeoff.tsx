@@ -133,7 +133,7 @@ export default function Writeoff({
     exportToExcelWithImage(
       formatWriteoffData(writeoffData),
       "Write off Statement " + new Date().toDateString(),
-      writeoffData[0].vendorName,
+      filterInputs.clientName || filterInputs.vendorName,
       writeoffData.reduce((acc, FM) => acc + parseFloat(FM.amount), 0),
     );
     toast.success("File Downloaded");
