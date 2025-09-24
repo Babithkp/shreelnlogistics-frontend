@@ -19,7 +19,6 @@ import {
   createPODApi,
   deletePODApi,
   filterPODByTextApi,
-  getAllPODsApi,
   getPodByPageApi,
   updatePODDetailsApi,
 } from "@/api/pod";
