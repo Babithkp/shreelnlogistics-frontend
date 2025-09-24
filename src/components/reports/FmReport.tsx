@@ -9,8 +9,6 @@ import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
-import { RiResetLeftFill } from "react-icons/ri";
-import { BsDownload } from "react-icons/bs";
 import { BiFilterAlt } from "react-icons/bi";
 
 export default function FmReport({
@@ -154,15 +152,15 @@ export default function FmReport({
   const formatFMData = (data: FMInputs[]) => {
     return data.map((FM) => ({
       "FM#": FM.fmNumber,
+      "Vendor Name": FM.vendorName,
       Date: new Date(FM.date).toLocaleDateString(),
       "Hire Value": FM.hire,
-      Advance: FM.advance ?? "0",
-      "Advance Pending": FM.outStandingAdvance,
-      Outstanding: FM.outStandingBalance,
-      "0-30": FM.zeroToThirty,
-      "30-60": FM.thirtyToSixty,
-      "60-90": FM.sixtyToNinety,
-      ">90": FM.ninetyPlus,
+      "Advance Paid": parseFloat(FM.advance) - FM.outStandingAdvance,
+      "Advance Paid Date": getAdvancePaidDate(FM),
+      Balance: FM.netBalance,
+      "Balance Paid Date": getBalancePaidDate(FM),
+      "Pending Advance": FM.outStandingAdvance,
+      "Pending Balance": FM.outStandingBalance,
       TDS: FM.tds,
     }));
   };
@@ -222,100 +220,142 @@ export default function FmReport({
     }
   };
 
+  const getBalancePaidDate = (data: FMInputs) => {
+    const paymentRecords = data.PaymentRecords;
+    const balance =
+      parseFloat(data.hire || "0") +
+      parseFloat(data.detentionCharges || "0") +
+      parseFloat(data.rtoCharges || "0") +
+      parseFloat(data.otherCharges || "0") -
+      parseFloat(data.tds || "0");
+
+    let paidAmount = 0;
+    if (paymentRecords.length > 0) {
+      for (const element of paymentRecords) {
+        paidAmount += parseFloat(element.amount);
+        if (paidAmount >= balance) {
+          return new Date(element.date).toLocaleDateString();
+        }
+      }
+    }
+    return "-";
+  };
+
+  const getAdvancePaidDate = (data: FMInputs) => {
+    const paymentRecords = data.PaymentRecords;
+    const advance = parseFloat(data.advance);
+
+    let paidAmount = 0;
+    if (paymentRecords.length > 0) {
+      for (const element of paymentRecords) {
+        paidAmount += parseFloat(element.amount);
+        if (paidAmount >= advance) {
+          console.log(element.date);
+          return new Date(element.date).toLocaleDateString();
+        }
+      }
+    }
+    return "-";
+  };
+
   return (
     <>
-      <section className="flex items-center gap-3">
-        <AntSelect
-          showSearch
-          options={[
-            { value: "All", label: "All" },
-            ...vendor.map((vendor) => ({
-              value: vendor.name,
-              label: vendor.name,
-            })),
-          ]}
-          onChange={(value) => {
-            setFilterInputs({
-              ...filterInputs,
-              name: value,
-            });
-          }}
-          value={filterInputs.name || null}
-          size="large"
-          placeholder="Select a vendor"
-          className="w-[48%] bg-transparent"
-        />
-        <AntSelect
-          showSearch
-          options={[
-            { label: "All", value: "All" },
-            { label: "Adance Paid", value: "Adance Paid" },
-            { label: "Advance Pending", value: "Advance Pending" },
-            { label: "Cleared", value: "Cleared" },
-          ]}
-          onChange={(value) => {
-            onCategoryFilterHandler(value);
-          }}
-          size="large"
-          placeholder="Select a category"
-          className="w-[49%] bg-transparent"
-        />
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
+      <section className="flex flex-col  gap-3">
+        <div className="flex items-center gap-3">
+          <AntSelect
+            showSearch
+            options={[
+              { value: "All", label: "All" },
+              ...vendor.map((vendor) => ({
+                value: vendor.name,
+                label: vendor.name,
+              })),
+            ]}
+            onChange={(value) => {
+              setFilterInputs({
+                ...filterInputs,
+                name: value,
+              });
+            }}
+            value={filterInputs.name || null}
+            size="large"
+            placeholder="Select a vendor"
+            className="w-[48%] bg-transparent"
+          />
+          <AntSelect
+            showSearch
+            options={[
+              { label: "All", value: "All" },
+              { label: "Adance Paid", value: "Adance Paid" },
+              { label: "Advance Pending", value: "Advance Pending" },
+              { label: "Cleared", value: "Cleared" },
+            ]}
+            onChange={(value) => {
+              onCategoryFilterHandler(value);
+            }}
+            size="large"
+            placeholder="Select a category"
+            className="w-[49%] bg-transparent"
+          />
         </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
+        <div className="flex justify-between">
+          <div className="flex  items-center gap-2">
+            <p>From:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    from: e.target.value,
+                  });
+                }}
+                value={filterInputs.from}
+              />
+            </div>
           </div>
+          <div className="flex items-center gap-2">
+            <p>To:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    to: e.target.value,
+                  });
+                }}
+                value={filterInputs.to}
+              />
+            </div>
+          </div>
+          <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+            {filterLoading ? "Loading..." : "Filter"}
+          </Button>
+          <Button
+            variant={"outline"}
+            className="rounded-md bg-[#B0BEC5] py-4 text-white w-[20%]"
+            disabled={filterLoading}
+            onClick={() => [
+              setFMStatement([]),
+              setPendingLRs([]),
+              setFilteredFMStatement([]),
+            ]}
+          >
+            Reset
+          </Button>
+          <Button className="rounded-md w-[20%]" onClick={exportFMExcelHandler}>
+            Download
+          </Button>
         </div>
-        <Button className="rounded-md" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="rounded-md bg-[#B0BEC5] py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => [
-            setFMStatement([]),
-            setPendingLRs([]),
-            setFilteredFMStatement([]),
-          ]}
-        >
-          <RiResetLeftFill size={30} />
-        </Button>
-        <Button className="rounded-md" onClick={exportFMExcelHandler}>
-          <BsDownload />
-        </Button>
       </section>
 
       <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         {pendingLRs.length > 0 && (
           <p className="font-medium">
-            {pendingLRs.length} LRs pending to create FM
+            {pendingLRs.length} LRs pending to create POD
           </p>
         )}
         {FilteredFMStatement.length !== 0 && (
@@ -326,13 +366,12 @@ export default function FmReport({
                 <th className="font-[500] text-slate-500">Vendor Name</th>
                 <th className="font-[500] text-slate-500">Date</th>
                 <th className="font-[500] text-slate-500">Hire Value</th>
-                <th className="font-[500] text-slate-500">Advance</th>
-                <th className="font-[500] text-slate-500">Advance Pending</th>
-                <th className="font-[500] text-slate-500">Outstanding</th>
-                <th className="font-[500] text-slate-500">0-30</th>
-                <th className="font-[500] text-slate-500">30-60</th>
-                <th className="font-[500] text-slate-500">60-90</th>
-                <th className="text-end font-[500] text-slate-500">&gt;90</th>
+                <th className="font-[500] text-slate-500">Advance Paid</th>
+                <th className="font-[500] text-slate-500">Advance Paid Date</th>
+                <th className="font-[500] text-slate-500">Balance</th>
+                <th className="font-[500] text-slate-500">Balance Paid Date</th>
+                <th className="font-[500] text-slate-500">Pending Advance</th>
+                <th className="font-[500] text-slate-500">Pending Balance</th>
                 <th className="text-end font-[500] text-slate-500">TDS</th>
               </tr>
             </thead>
@@ -346,7 +385,14 @@ export default function FmReport({
                   </td>
                   <td className="py-2 text-center">INR {data.hire}</td>
                   <td className="py-2 text-center">
-                    INR {data.advance ? data.advance : 0}
+                    INR {parseFloat(data.advance) - data.outStandingAdvance}
+                  </td>
+                  <td className="py-2 text-center">
+                    {getAdvancePaidDate(data)}
+                  </td>
+                  <td className="py-2 text-center">INR {data.netBalance}</td>
+                  <td className="py-2 text-center">
+                    {getBalancePaidDate(data)}
                   </td>
                   <td className="py-2 text-center">
                     INR {data.outStandingAdvance}
@@ -354,10 +400,6 @@ export default function FmReport({
                   <td className="py-2 text-center">
                     INR {data.outStandingBalance}
                   </td>
-                  <td className="py-2 text-center">INR {data.zeroToThirty}</td>
-                  <td className="py-2 text-center">INR {data.thirtyToSixty}</td>
-                  <td className="py-2 text-center">INR {data.sixtyToNinety}</td>
-                  <td className="py-2 text-end">INR {data.ninetyPlus}</td>
                   <td className="py-2 text-end">INR {data.tds}</td>
                 </tr>
               ))}

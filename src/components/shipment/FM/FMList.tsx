@@ -370,7 +370,7 @@ export default function FMList({
   };
 
   const onBulkSubmit = async (data: BulkRecord) => {
-    if(FMListForBulk.length === 0) {
+    if (FMListForBulk.length === 0) {
       toast.error("Please add at least one record");
       return;
     }
@@ -565,7 +565,7 @@ export default function FMList({
 
   const selectFMForPreview = (FmData: FMInputs) => {
     setSelectedFM(FmData);
-     setShowPreview(true);
+    setShowPreview(true);
   };
 
   const onDeleteFMHandler = async (id: string) => {
@@ -673,6 +673,44 @@ export default function FMList({
       setCompanyProfile(response.data.data);
     }
   }
+
+  const getBalancePaidDate = (data: FMInputs) => {
+    const paymentRecords = data.PaymentRecords;
+    const balance =
+      parseFloat(data.hire || "0") +
+      parseFloat(data.detentionCharges || "0") +
+      parseFloat(data.rtoCharges || "0") +
+      parseFloat(data.otherCharges || "0") -
+      parseFloat(data.tds || "0");
+
+    let paidAmount = 0;
+    if (paymentRecords.length > 0) {
+      for (const element of paymentRecords) {
+        paidAmount += parseFloat(element.amount);
+        if (paidAmount >= balance) {
+          return new Date(element.date).toLocaleDateString();
+        }
+      }
+    }
+    return "-";
+  };
+
+  const getAdvancePaidDate = (data: FMInputs) => {
+    const paymentRecords = data.PaymentRecords;
+    const advance = parseFloat(data.advance);
+
+    let paidAmount = 0;
+    if (paymentRecords.length > 0) {
+      for (const element of paymentRecords) {
+        paidAmount += parseFloat(element.amount);
+        if (paidAmount >= advance) {
+          console.log(element.date);
+          return new Date(element.date).toLocaleDateString();
+        }
+      }
+    }
+    return "-";
+  };
 
   useEffect(() => {
     fetchCompanyProfile();
@@ -790,38 +828,35 @@ export default function FMList({
                   Hire Value
                 </th>
                 <th className="border text-center font-[400] text-[#797979]">
-                  Advance
+                  Advance Paid
                 </th>
-                {!showPreview && (
-                  <th className="border text-center font-[400] text-[#797979]">
-                    Advance outstanding
-                  </th>
-                )}
+                <th className="border text-center font-[400] text-[#797979]">
+                  Advance Paid Date
+                </th>
                 <th className="border text-center font-[400] text-[#797979]">
                   Balance
                 </th>
+                <th className="border text-center font-[400] text-[#797979]">
+                  Balance Paid Date
+                </th>
+                {!showPreview && (
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Pending Advance
+                  </th>
+                )}
+                {!showPreview && (
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Pending Balance
+                  </th>
+                )}
                 {!showPreview && (
                   <>
                     <th className="border text-center font-[400] text-[#797979]">
                       TDS
                     </th>
-                    <th className="border text-center font-[400] text-[#797979]">
-                      0-30
-                    </th>
-                    <th className="border text-center font-[400] text-[#797979]">
-                      30-60
-                    </th>
-                    <th className="border text-center font-[400] text-[#797979]">
-                      60-90
-                    </th>
-                    <th className="border text-center font-[400] text-[#797979]">
-                      &gt;90
-                    </th>
                   </>
                 )}
-                <th className="border text-center font-[400] text-[#797979]">
-                  Pending Amount
-                </th>
+
                 <th className="border text-center font-[400] text-[#797979]">
                   Status
                 </th>
@@ -844,43 +879,37 @@ export default function FMList({
                   </td>
                   <td className="border py-2">
                     {data.advance
-                      ? formatter.format(parseInt(data.advance))
+                      ? formatter.format(
+                          parseFloat(data.advance) - data.outStandingAdvance,
+                        )
                       : 0}
                   </td>
                   {!showPreview && (
-                    <td className="border py-2">
-                      {formatter.format(data.outStandingAdvance)}
-                    </td>
+                    <td className="border py-2 text-center">{getAdvancePaidDate(data)}</td>
                   )}
                   <td className="border py-2">
                     {formatter.format(parseInt(data.netBalance))}
                   </td>
+                  <td className="border py-2 text-center">{getBalancePaidDate(data)}</td>
+                  <td className="border py-2">
+                    {formatter.format(data.outStandingAdvance)}
+                  </td>
+                  <td className="border py-2">
+                    {formatter.format(
+                      parseFloat(data.outStandingBalance || "0"),
+                    )}
+                  </td>
                   {!showPreview && (
                     <>
-                      <td className="border py-2">
+                      <td className="border py-2 text-center">
                         {data.TDS === "Declared"
                           ? "0"
                           : formatter.format(
                               parseFloat(data.netBalance) * 0.01,
                             )}
                       </td>
-                      <td className="border py-2">
-                        {formatter.format(parseInt(data.zeroToThirty))}
-                      </td>
-                      <td className="border py-2">
-                        {formatter.format(parseInt(data.thirtyToSixty))}
-                      </td>
-                      <td className="border py-2">
-                        {formatter.format(parseInt(data.sixtyToNinety))}
-                      </td>
-                      <td className="border py-2">
-                        {formatter.format(parseInt(data.ninetyPlus))}
-                      </td>
                     </>
                   )}
-                  <td className="border py-2">
-                    {formatter.format(parseFloat(data.outStandingBalance))}
-                  </td>
                   <td
                     className={`border py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
                   >

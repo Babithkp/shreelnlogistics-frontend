@@ -390,7 +390,7 @@ export default function ViewBills({
   };
 
   const onBulkSubmit = async (data: BulkRecord) => {
-    if(BillListForBulk.length === 0) {
+    if (BillListForBulk.length === 0) {
       toast.error("Please add at least one record");
       return;
     }
@@ -751,11 +751,11 @@ export default function ViewBills({
             <thead>
               <tr>
                 <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                  <p>Bill No</p>
+                  <p>Bill ID</p>
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
                   <div className="flex items-center gap-2">
-                    <p>Client</p>
+                    <p>Client Name</p>
                   </div>
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
@@ -764,17 +764,23 @@ export default function ViewBills({
                   </div>
                 </th>
                 <th className="text-start font-[400] text-[#797979]">
-                  Bill Amount
+                  Freight Amount
                 </th>
-                <th className="font-[400] text-[#797979]">Pending Amt</th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Payment Recieved
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Payment Recieved Date
+                </th>
                 {!showPreview && (
                   <>
-                    <th className="font-[400] text-[#797979]">TDS</th>
-                    <th className="font-[400] text-[#797979]">0-30</th>
-                    <th className="font-[400] text-[#797979]">30-60</th>
-                    <th className="font-[400] text-[#797979]">&gt;60</th>
+                    <th className="text-start font-[400] text-[#797979]">
+                      Pending Payment
+                    </th>
+                    <th className="font-[400] text-[#797979]">Deduction</th>
                   </>
                 )}
+                <th className="font-[400] text-[#797979]">TDS</th>
               </tr>
             </thead>
             <tbody>
@@ -794,26 +800,36 @@ export default function ViewBills({
                   </td>
                   <td className="py-2">{formatter.format(data.subTotal)}</td>
                   <td className="py-2">
-                    {formatter.format(data.pendingAmount)}
+                    {formatter.format(
+                      parseFloat(data.zeroToThirty) +
+                        parseFloat(data.thirtyToSixty) +
+                        parseFloat(data.sixtyPlus),
+                    )}
+                  </td>
+                  <td className="py-2 text-center">
+                    {data.PaymentRecords.length > 0
+                      ? new Date(
+                          data.PaymentRecords[
+                            data.PaymentRecords.length - 1
+                          ].date,
+                        ).toLocaleDateString()
+                      : "-"}
                   </td>
                   {!showPreview && (
                     <>
                       <td className="py-2">
-                        {formatter.format(
-                          data.subTotal * (data?.tds ? data?.tds / 100 : 0.01),
-                        )}
+                        {formatter.format(data.pendingAmount)}
                       </td>
-                      <td className="py-2">
-                        {formatter.format(parseInt(data.zeroToThirty))}
-                      </td>
-                      <td className="py-2">
-                        {formatter.format(parseInt(data.thirtyToSixty))}
-                      </td>
-                      <td className="py-2">
-                        {formatter.format(parseInt(data.sixtyPlus))}
+                      <td className="py-2 text-center">
+                        {data.WriteOff?.amount || 0}
                       </td>
                     </>
                   )}
+                  <td className="py-2 text-center">
+                    {formatter.format(
+                      data.subTotal * (data?.tds ? data?.tds / 100 : 0.01),
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

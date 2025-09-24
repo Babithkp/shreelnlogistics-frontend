@@ -1380,9 +1380,10 @@ export default function Header({
                                             {key}
                                           </td>
                                           <td className="border-r border-black/40 text-center">
-                                            {typeof value === "object"
+                                            {typeof value === "object" &&
+                                            value !== null
                                               ? Array.isArray(value)
-                                                ? value.map(
+                                                ? value?.map(
                                                     (
                                                       item: any,
                                                       idx: number,
@@ -1394,8 +1395,8 @@ export default function Header({
                                                       </div>
                                                     ),
                                                   )
-                                                : Object.entries(value)
-                                                    .map(
+                                                : Object?.entries(value)
+                                                    ?.map(
                                                       ([k, v]) => `${k}: ${v}`,
                                                     )
                                                     .join(", ")

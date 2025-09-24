@@ -2,8 +2,6 @@ import { billInputs, ClientInputs, LrInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { RiResetLeftFill } from "react-icons/ri";
-import { BsDownload } from "react-icons/bs";
 import { toast } from "react-toastify";
 import {
   filterBillLRByClientApi,
@@ -111,7 +109,7 @@ export default function BillReport({
     worksheet.getCell("A6").value = clientName;
     worksheet.getCell("A8").value = `Total Amount - INR ${totalAmount}`;
     worksheet.getCell("A10").value = `Total Pending - INR ${totalPending}`;
-    worksheet.getCell("K3").value = "Client summary";
+    worksheet.getCell("K3").value = "Bill summary";
     worksheet.getCell("O9").value = "LR waiting for Bill Generation";
     worksheet.getCell("O11").value = `Total freight amount - INR ${lrTotal}`;
     worksheet.getCell("O6").value = `${branchName}`;
@@ -158,17 +156,18 @@ export default function BillReport({
     return data.map((bill) => ({
       "Bill#": bill.billNumber,
       "Client Name": bill.Client.name,
-      Date: new Date(bill.date).toLocaleDateString(),
       "Client GSTIN": bill.Client.GSTIN,
-      Amount: bill.subTotal,
-      Pending: bill.pendingAmount,
-      "Amount Received": bill.PaymentRecords.reduce(
-        (acc, record) => acc + parseFloat(record.amount),
-        0,
-      ),
-      "0-30": bill.zeroToThirty,
-      "30-60": bill.thirtyToSixty,
-      ">60": bill.sixtyPlus,
+      Date: new Date(bill.date).toLocaleDateString(),
+      "Freight Amount": bill.subTotal,
+      "Payment Received":
+        bill.zeroToThirty + bill.thirtyToSixty + bill.sixtyPlus,
+      "Payment Recieved Date":
+        bill.PaymentRecords.length > 0
+          ? new Date(
+              bill.PaymentRecords[bill.PaymentRecords.length - 1].date,
+            ).toLocaleDateString()
+          : "-",
+      "Pending Payment": bill.pendingAmount,
       TDS: bill.subTotal * (bill?.tds ? bill?.tds / 100 : 0.01),
     }));
   };
@@ -203,91 +202,95 @@ export default function BillReport({
 
   return (
     <>
-      <section className="flex items-center gap-3">
-        <AntSelect
-          showSearch
-          options={[
-            { value: "All", label: "All" },
-            ...client?.map((vendor) => ({
-              value: vendor.name,
-              label: vendor.name,
-            })),
-          ]}
-          onChange={(value) => {
-            setFilterInputs({
-              ...filterInputs,
-              name: value,
-            });    
-          }}
-          value={filterInputs.name || null}
-          size="large"
-          placeholder="Select a Client"
-          className="w-[48%] bg-transparent"
-        />
-        <AntSelect
-          showSearch
-          options={[
-            { label: "All", value: "All" },
-            { label: "Payment Pending", value: "Payment Pending" },
-            { label: "Cleared", value: "Cleared" },
-          ]}
-          onChange={(value) => {
-            onCategoryFilterHandler(value);
-          }}
-          size="large"
-          placeholder="Select a category"
-          className="w-[49%] bg-transparent"
-        />
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
+      <section className="flex flex-col  gap-3"> 
+        <div className="flex items-center gap-3">
+          <AntSelect
+            showSearch
+            options={[
+              { value: "All", label: "All" },
+              ...client?.map((vendor) => ({
+                value: vendor.name,
+                label: vendor.name,
+              })),
+            ]}
+            onChange={(value) => {
+              setFilterInputs({
+                ...filterInputs,
+                name: value,
+              });
+            }}
+            value={filterInputs.name || null}
+            size="large"
+            placeholder="Select a Client"
+            className="w-[48%] bg-transparent"
+          />
+          <AntSelect
+            showSearch
+            options={[
+              { label: "All", value: "All" },
+              { label: "Payment Pending", value: "Payment Pending" },
+              { label: "Cleared", value: "Cleared" },
+            ]}
+            onChange={(value) => {
+              onCategoryFilterHandler(value);
+            }}
+            size="large"
+            placeholder="Select a category"
+            className="w-[49%] bg-transparent"
+          />
         </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
+        <div className="flex justify-between">
+          <div className="flex  items-center gap-2">
+            <p>From:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    from: e.target.value,
+                  });
+                }}
+                value={filterInputs.from}
+              />
+            </div>
           </div>
+          <div className="flex  items-center gap-2">
+            <p>To:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    to: e.target.value,
+                  });
+                }}
+                value={filterInputs.to}
+              />
+            </div>
+          </div>
+          <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+            {filterLoading ? "Loading..." : "Filter"}
+          </Button>
+          <Button
+            variant={"outline"}
+            className="rounded-md bg-[#B0BEC5] py-4 text-white w-[20%]"
+            disabled={filterLoading}
+            onClick={() => [
+              setFilteredBillData([]),
+              setPendingLRs([]),
+              setBillData([]),
+            ]}
+          >
+            Reset
+          </Button>
+          <Button className="rounded-md w-[20%]" onClick={exportBillExcelHandler}>
+            Download
+          </Button>
         </div>
-        <Button className="rounded-md" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="rounded-md bg-[#B0BEC5] py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => [
-            setFilteredBillData([]),
-            setPendingLRs([]),
-            setBillData([]),
-          ]}
-        >
-          <RiResetLeftFill size={30} />
-        </Button>
-        <Button className="rounded-md" onClick={exportBillExcelHandler}>
-          <BsDownload />
-        </Button>
       </section>
       <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         {pendingLRs.length > 0 && (
@@ -299,15 +302,19 @@ export default function BillReport({
           <table>
             <thead>
               <tr>
-                <th className="text-start font-[500] text-slate-500">Bill ID</th>
+                <th className="text-start font-[500] text-slate-500">
+                  Bill ID
+                </th>
                 <th className="font-[500] text-slate-500">Client Name</th>
                 <th className="font-[500] text-slate-500">GSTIN</th>
                 <th className="font-[500] text-slate-500">Date</th>
-                <th className="font-[500] text-slate-500">Hire Value</th>
-                <th className="font-[500] text-slate-500">Outstanding</th>
-                <th className="font-[500] text-slate-500">0-30</th>
-                <th className="font-[500] text-slate-500">30-60</th>
-                <th className="text-end font-[500] text-slate-500">&gt;60</th>
+                <th className="font-[500] text-slate-500">Freight Amount</th>
+                <th className="font-[500] text-slate-500">Payment Recieved</th>
+                <th className="font-[500] text-slate-500">
+                  Payment Recieved Date
+                </th>
+                <th className="font-[500] text-slate-500">Pending Payment</th>
+                <th className="font-[500] text-slate-500">Deduction</th>
                 <th className="text-end font-[500] text-slate-500">TDS</th>
               </tr>
             </thead>
@@ -316,9 +323,7 @@ export default function BillReport({
                 <tr key={data.id}>
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2 text-center">{data.Client.name}</td>
-                  <td className="py-2 text-center">
-                    {data.Client.GSTIN}
-                  </td>
+                  <td className="py-2 text-center">{data.Client.GSTIN}</td>
                   <td className="py-2 text-center">
                     {new Date(data.date).toLocaleDateString()}
                   </td>
@@ -326,16 +331,26 @@ export default function BillReport({
                     {formatter.format(data.subTotal)}
                   </td>
                   <td className="py-2 text-center">
+                    {formatter.format(
+                      parseFloat(data.zeroToThirty) +
+                        parseFloat(data.thirtyToSixty) +
+                        parseFloat(data.sixtyPlus),
+                    )}
+                  </td>
+                  <td className="py-2 text-center">
+                    {data.PaymentRecords.length > 0
+                      ? new Date(
+                          data.PaymentRecords[
+                            data.PaymentRecords.length - 1
+                          ].date,
+                        ).toLocaleDateString()
+                      : "-"}
+                  </td>
+                  <td className="py-2 text-center">
                     {formatter.format(data.pendingAmount)}
                   </td>
                   <td className="py-2 text-center">
-                    {formatter.format(parseFloat(data.zeroToThirty))}
-                  </td>
-                  <td className="py-2 text-center">
-                    {formatter.format(parseFloat(data.thirtyToSixty))}
-                  </td>
-                  <td className="py-2 text-end">
-                    {formatter.format(parseFloat(data.sixtyPlus))}
+                    {data.WriteOff?.amount || 0}
                   </td>
                   <td className="py-2 text-end">
                     {formatter.format(

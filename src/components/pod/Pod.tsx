@@ -175,7 +175,6 @@ export default function Pod({
       setValue("clientName", lr.client.name);
       setValue("date", lr.date);
       setValue("clientGSTIN", lr.client.GSTIN);
-      console.log(lr.client.GSTIN);
     }
   };
 
@@ -225,7 +224,11 @@ export default function Pod({
           toast.success("POD has been updated");
           reset();
           setIsOpen(false);
-          fetchPods();
+          if (isAdmin) {
+            getPODByPage(currentPage, itemsPerPage);
+          } else if (!isAdmin && branch.branchId) {
+            getPODByPage(currentPage, itemsPerPage, branch.branchId);
+          }
         } else {
           toast.error("Something Went Wrong, Check All Fields");
         }
@@ -247,10 +250,10 @@ export default function Pod({
         toast.success("POD has been updated");
         reset();
         setIsOpen(false);
-        if (branch.isAdmin) {
-          fetchPods();
-        } else {
-          fetchPods(branch.branchId);
+        if (isAdmin) {
+          getPODByPage(currentPage, itemsPerPage);
+        } else if (!isAdmin && branch.branchId) {
+          getPODByPage(currentPage, itemsPerPage, branch.branchId);
         }
       } else {
         toast.error("Something Went Wrong, Check All Fields");
@@ -283,7 +286,11 @@ export default function Pod({
           if (response?.status === 200) {
             toast.success("POD has been created");
             setIsOpen(false);
-            fetchPods();
+            if (isAdmin) {
+              getPODByPage(currentPage, itemsPerPage);
+            } else if (!isAdmin && branch.branchId) {
+              getPODByPage(currentPage, itemsPerPage, branch.branchId);
+            }
             setFile(null);
             reset({
               receivingBranch: branch.branchName,
@@ -311,10 +318,10 @@ export default function Pod({
     if (response?.status === 200) {
       toast.success("Request has been sent to admin");
       setNotificationAlertOpen(false);
-      if (branch.isAdmin) {
-        fetchPods();
-      } else {
-        fetchPods(branch.branchId);
+      if (isAdmin) {
+        getPODByPage(currentPage, itemsPerPage);
+      } else if (!isAdmin && branch.branchId) {
+        getPODByPage(currentPage, itemsPerPage, branch.branchId);
       }
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -361,10 +368,10 @@ export default function Pod({
     const response = await deletePODApi(id);
     if (response?.status === 200) {
       toast.success("POD Deleted");
-      if (branch.isAdmin) {
-        fetchPods();
-      } else {
-        fetchPods(branch.branchId);
+      if (isAdmin) {
+        getPODByPage(currentPage, itemsPerPage);
+      } else if (!isAdmin && branch.branchId) {
+        getPODByPage(currentPage, itemsPerPage, branch.branchId);
       }
       setIsDetailsModalOpen(false);
     } else {
@@ -390,17 +397,6 @@ export default function Pod({
     }
   }
 
-  async function fetchPods(branchId?: string) {
-    const response = await getAllPODsApi();
-    if (response?.status === 200) {
-      const allPods: PODInputs[] = response.data.data;
-      const filteredPods = branchId
-        ? allPods.filter((pod) => pod.branchesId === branchId)
-        : allPods;
-      setPods(filteredPods);
-      setFilteredPods(filteredPods);
-    }
-  }
 
   async function getPODByPage(page: number, limit: number, branchId?: string) {
     let branchIdToBeUsed = null;

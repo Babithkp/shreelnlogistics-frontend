@@ -2,8 +2,6 @@ import { ClientInputs, VendorInputs, WriteOffInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { RiResetLeftFill } from "react-icons/ri";
-import { BsDownload } from "react-icons/bs";
 import { filterWriteOffApi } from "@/api/writeoff";
 import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
@@ -141,98 +139,104 @@ export default function Writeoff({
 
   return (
     <>
-      <section className="flex items-center gap-3">
-        <AntSelect
-          showSearch
-          options={[
-            { value: "All", label: "All" },
-            ...clients?.map((client) => ({
-              value: client.name,
-              label: client.name,
-            })),
-          ]}
-          onChange={(value) => {
-            setFilterInputs({
-              ...filterInputs,
-              clientName: value,
-            });
-          }}
-          value={filterInputs.clientName || null}
-          allowClear
-          disabled={filterInputs.vendorName ? true : false}
-          size="large"
-          placeholder="Select a Client"
-          className="w-[48%] bg-transparent"
-        />
-        <AntSelect
-          showSearch
-          options={[
-            { value: "All", label: "All" },
-            ...vendors?.map((vendor) => ({
-              value: vendor.name,
-              label: vendor.name,
-            })),
-          ]}
-          onChange={(value) => {
-            setFilterInputs({
-              ...filterInputs,
-              vendorName: value,
-            });
-          }}
-          value={filterInputs.vendorName || null}
-          disabled={filterInputs.clientName ? true : false}
-          allowClear
-          size="large"
-          placeholder="Select a Vendors"
-          className="w-[48%] bg-transparent"
-        />
-
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <AntSelect
+            showSearch
+            options={[
+              { value: "All", label: "All" },
+              ...clients?.map((client) => ({
+                value: client.name,
+                label: client.name,
+              })),
+            ]}
+            onChange={(value) => {
+              setFilterInputs({
+                ...filterInputs,
+                clientName: value,
+              });
+            }}
+            value={filterInputs.clientName || null}
+            allowClear
+            disabled={filterInputs.vendorName ? true : false}
+            size="large"
+            placeholder="Select a Client"
+            className="w-[48%] bg-transparent"
+          />
+          <AntSelect
+            showSearch
+            options={[
+              { value: "All", label: "All" },
+              ...vendors?.map((vendor) => ({
+                value: vendor.name,
+                label: vendor.name,
+              })),
+            ]}
+            onChange={(value) => {
+              setFilterInputs({
+                ...filterInputs,
+                vendorName: value,
+              });
+            }}
+            value={filterInputs.vendorName || null}
+            disabled={filterInputs.clientName ? true : false}
+            allowClear
+            size="large"
+            placeholder="Select a Vendors"
+            className="w-[48%] bg-transparent"
+          />
         </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
+        <div className="flex justify-between">
+          <div className="flex items-center gap-2">
+            <p>From:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    from: e.target.value,
+                  });
+                }}
+                value={filterInputs.from}
+              />
+            </div>
           </div>
+          <div className="flex items-center gap-2">
+            <p>To:</p>
+            <div className="rounded-md bg-blue-50 p-1 pr-3">
+              <input
+                type="date"
+                className="ml-2 w-full bg-transparent outline-none"
+                onChange={(e) => {
+                  setFilterInputs({
+                    ...filterInputs,
+                    to: e.target.value,
+                  });
+                }}
+                value={filterInputs.to}
+              />
+            </div>
+          </div>
+          <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
+            {filterLoading ? "Loading..." : "Filter"}
+          </Button>
+          <Button
+            variant={"outline"}
+            className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
+            disabled={filterLoading}
+            onClick={() => [setWriteoffData([])]}
+          >
+            Reset
+          </Button>
+          <Button
+            className="w-[20%] rounded-md"
+            onClick={exportBillExcelHandler}
+          >
+            Download
+          </Button>
         </div>
-        <Button className="rounded-md" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="rounded-md bg-[#B0BEC5] py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => []}
-        >
-          <RiResetLeftFill size={30} />
-        </Button>
-        <Button className="rounded-md" onClick={exportBillExcelHandler}>
-          <BsDownload />
-        </Button>
       </section>
       <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         <table>

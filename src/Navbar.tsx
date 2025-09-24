@@ -258,20 +258,18 @@ export default function Navbar({
           />
           <p className={`${sections.pod ? "text-black" : ""}`}>POD</p>
         </button>
-        {branch.isAdmin && (
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
-            onClick={() => sectionChangeHandler("reports")}
-          >
-            <VscGraph
-              size={24}
-              color={`${sections.reports ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${sections.reports ? "text-black" : ""}`}>
-              Reports
-            </p>
-          </button>
-        )}
+
+        <button
+          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          onClick={() => sectionChangeHandler("reports")}
+        >
+          <VscGraph
+            size={24}
+            color={`${sections.reports ? "#2196F3" : "#A3AED0"}`}
+          />
+          <p className={`${sections.reports ? "text-black" : ""}`}>Reports</p>
+        </button>
+
         {branch.isAdmin && (
           <button
             className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
