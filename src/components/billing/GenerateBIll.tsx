@@ -146,7 +146,7 @@ export default function GenerateBIll({
 
   useEffect(() => {
     const subTotal =
-      selectLrData.reduce((acc, data) => acc + Number(data.totalAmt), 0) +
+      selectLrData?.reduce((acc, data) => acc + Number(data.totalAmt), 0) +
       Number(totalAmounts.unloading || 0) +
       Number(totalAmounts.hamali || 0) +
       Number(totalAmounts.extraKmWeight || 0) +
@@ -698,6 +698,7 @@ export default function GenerateBIll({
                   }))
                 }
                 value={totalAmounts.billedin}
+                disabled={selectedBillToEdit?.WriteOff != null}
               >
                 <SelectTrigger className="boder border-primary h-full w-full py-5 shadow-none data-[placeholder]:text-black">
                   <SelectValue />
@@ -799,6 +800,7 @@ export default function GenerateBIll({
                       }}
                       showSearch
                       options={extractLRNumberOptions(LRData)}
+                      disabled={selectedBillToEdit?.WriteOff != null}
                       style={{
                         border: "none",
                         borderRadius: "0px",
@@ -864,14 +866,16 @@ export default function GenerateBIll({
                     <td
                       className={`border-primary border p-2 text-center align-top ${selectLrData.length - 1 === index ? "rounded-br-lg" : ""}`}
                     >
-                      <div className="flex justify-center">
+                      <button
+                        disabled={selectedBillToEdit?.WriteOff != null}
+                        onClick={() => removeLRFromSelectedLR(lrData.id)}
+                      >
                         <MdDeleteOutline
                           size={24}
                           color="red"
-                          onClick={() => removeLRFromSelectedLR(lrData.id)}
                           className="cursor-pointer"
                         />
-                      </div>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -907,6 +911,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -927,6 +932,7 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="unloading">Unloading</Label>
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("unloading.lrnumber", {
@@ -936,6 +942,7 @@ export default function GenerateBIll({
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           type="number"
                           className="w-20 outline-none"
@@ -969,6 +976,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -989,6 +997,7 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="hamali">Hamali</Label>
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("hamali.lrnumber", { required: value })}
@@ -996,6 +1005,7 @@ export default function GenerateBIll({
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           type="number"
                           className="w-20 outline-none"
@@ -1029,6 +1039,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -1049,6 +1060,7 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="extraKmWeight">Extra KMs/Weight</Label>
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("extraKmWeight.lrnumber", {
@@ -1058,6 +1070,7 @@ export default function GenerateBIll({
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           className="w-20 outline-none"
                           type="number"
@@ -1094,6 +1107,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -1114,6 +1128,7 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="detention">Detention</Label>
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("detention.lrnumber", {
@@ -1126,6 +1141,7 @@ export default function GenerateBIll({
                           placeholder="Type here..."
                           className="w-20 outline-none"
                           type="number"
+                          disabled={selectedBillToEdit?.WriteOff != null}
                           {...register("detention.amount", { required: value })}
                           onChange={(e) =>
                             setTotalAmounts((prev) => ({
@@ -1156,6 +1172,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -1176,6 +1193,7 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="weightment">Weightment</Label>
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("weightment.lrnumber", {
@@ -1185,6 +1203,7 @@ export default function GenerateBIll({
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           className="w-20 outline-none"
                           type="number"
@@ -1220,6 +1239,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -1240,13 +1260,15 @@ export default function GenerateBIll({
                         />
                         <Label htmlFor="others">Others</Label>
                         <textarea
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
-                          className="min-w-15 outline-none border p-1 rounded-md"
+                          className="min-w-15 rounded-md border p-1 outline-none"
                           {...register("others.lrnumber", { required: value })}
                         />
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           className="w-20 outline-none"
                           type="number"
@@ -1280,6 +1302,7 @@ export default function GenerateBIll({
                     <div className="flex w-full justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           checked={value}
                           onCheckedChange={(checked) => {
                             onChange(checked);
@@ -1300,6 +1323,7 @@ export default function GenerateBIll({
                           id="others"
                         />
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here"
                           className="w-20 outline-none"
                           {...register("otherCharges.name", {
@@ -1307,6 +1331,7 @@ export default function GenerateBIll({
                           })}
                         />
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
                           className="w-15 outline-none"
                           {...register("otherCharges.lrnumber", {
@@ -1316,6 +1341,7 @@ export default function GenerateBIll({
                       </div>
                       {value ? (
                         <input
+                        disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="Type here..."
                           className="w-20 outline-none"
                           type="number"

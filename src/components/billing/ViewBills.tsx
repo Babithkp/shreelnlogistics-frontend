@@ -274,6 +274,31 @@ export default function ViewBills({
     }
   }, [amount, setValue]);
 
+  // Sync write-off form with selected bill when modal opens or bill changes
+  useEffect(() => {
+    if (selectedBill && isWriteOffModalOpen) {
+      resetWriteOff({
+        IDNumber: selectedBill.billNumber,
+        vendorName: selectedBill.Client?.name || "",
+        amount: (selectedBill.pendingAmount as unknown as string) || (selectedBill.pendingAmount?.toString?.() || ""),
+        date: new Date().toISOString().split("T")[0],
+        reason: "",
+        checked: false,
+      } as any);
+    }
+  }, [selectedBill, isWriteOffModalOpen, resetWriteOff]);
+
+  // Sync record payment form with selected bill when modal opens or bill changes (creation mode)
+  useEffect(() => {
+    if (selectedBill && isRecordModalOpen && formstate === "create") {
+      reset({
+        IDNumber: selectedBill.billNumber,
+        customerName: selectedBill.Client?.name || "",
+        date: new Date().toISOString().split("T")[0],
+      } as any);
+    }
+  }, [selectedBill, isRecordModalOpen, formstate, reset]);
+
   async function filterBillData(text: string) {
     const response = await filterBillDataApi(text);
     if (response?.status === 200) {
@@ -990,15 +1015,14 @@ export default function ViewBills({
                         <div className="flex gap-3">
                           <label>Pickup Location(s):</label>
                           <p className="w-[70%]">
-                            {selectedBill?.lrData
-                              .map((lr) => lr.from)
+                            {selectedBill?.lrData?.map((lr) => lr.from)
                               .join(", ")}
                           </p>
                         </div>
                         <div className="flex gap-3">
                           <label>Delivery Location(s) :</label>
                           <p className="w-[70%]">
-                            {selectedBill?.lrData.map((lr) => lr.to).join(", ")}
+                            {selectedBill?.lrData?.map((lr) => lr.to).join(", ")}
                           </p>
                         </div>
                         <div className="flex">
@@ -1400,7 +1424,7 @@ export default function ViewBills({
         <DialogContent className="min-w-7xl">
           <DialogHeader className="flex flex-row items-start justify-between">
             <DialogTitle className="text-2xl">
-              Write off FM# {selectedBill?.billNumber}
+              Write off {selectedBill?.billNumber}
             </DialogTitle>
           </DialogHeader>
           <DialogDescription></DialogDescription>
@@ -1410,7 +1434,7 @@ export default function ViewBills({
           >
             <div className="w-[50%]">
               <div className="flex flex-col gap-2">
-                <label>FM#</label>
+                <label>Bill ID</label>
                 <input
                   type="text"
                   className="border-primary cursor-not-allowed rounded-md border p-2"

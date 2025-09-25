@@ -704,7 +704,6 @@ export default function FMList({
       for (const element of paymentRecords) {
         paidAmount += parseFloat(element.amount);
         if (paidAmount >= advance) {
-          console.log(element.date);
           return new Date(element.date).toLocaleDateString();
         }
       }
@@ -885,12 +884,16 @@ export default function FMList({
                       : 0}
                   </td>
                   {!showPreview && (
-                    <td className="border py-2 text-center">{getAdvancePaidDate(data)}</td>
+                    <td className="border py-2 text-center">
+                      {getAdvancePaidDate(data)}
+                    </td>
                   )}
                   <td className="border py-2">
                     {formatter.format(parseInt(data.netBalance))}
                   </td>
-                  <td className="border py-2 text-center">{getBalancePaidDate(data)}</td>
+                  <td className="border py-2 text-center">
+                    {getBalancePaidDate(data)}
+                  </td>
                   <td className="border py-2">
                     {formatter.format(data.outStandingAdvance)}
                   </td>
@@ -902,11 +905,7 @@ export default function FMList({
                   {!showPreview && (
                     <>
                       <td className="border py-2 text-center">
-                        {data.TDS === "Declared"
-                          ? "0"
-                          : formatter.format(
-                              parseFloat(data.netBalance) * 0.01,
-                            )}
+                        {formatter.format(parseFloat(data.tds || "0"))}
                       </td>
                     </>
                   )}

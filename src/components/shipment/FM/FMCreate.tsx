@@ -29,7 +29,7 @@ export default function FMCreate({
   formStatus,
   lrData,
   branchDetails,
-  onRefresh
+  onRefresh,
 }: {
   resetToDefault: () => void;
   selectedFMDataToEdit?: FMInputs;
@@ -129,6 +129,8 @@ export default function FMCreate({
     fmData.rtoCharges,
     lrDataToFM?.TDS,
   ]);
+
+  console.log(selectedFMDataToEdit);
 
   useEffect(() => {
     if (formStatus === "edit") {
@@ -275,7 +277,7 @@ export default function FMCreate({
       if (response?.status === 200) {
         toast.success("FM has been created");
         resetToDefault();
-        onRefresh()
+        onRefresh();
       } else if (response?.status === 201) {
         toast.warning("FM Number already exists");
         setFMNumberAlreadyExists(true);
@@ -451,7 +453,7 @@ export default function FMCreate({
             onChange={(value) => {
               setLRDataToFM((prev) => ({ ...prev, vendorName: value }));
               const selectedVendor = vendors.find((v) => v.name === value);
-              
+
               if (selectedVendor) {
                 const allLRs: LrInputs[] = selectedVendor.vehicles.flatMap(
                   (vehicle) => vehicle.LR || [],
@@ -459,12 +461,16 @@ export default function FMCreate({
                 const filteredLR = allLRs.filter(
                   (lr) =>
                     !selectedVendor.FM.some((fm) =>
-                      fm.LRDetails.some((detail) => detail.lrNumber === lr.lrNumber)
-                    )
-                );                
+                      fm.LRDetails.some(
+                        (detail) => detail.lrNumber === lr.lrNumber,
+                      ),
+                    ),
+                );
                 if (branchId.branchId) {
                   setLRData(
-                    filteredLR.filter((lr) => lr.branchId === branchId.branchId),
+                    filteredLR.filter(
+                      (lr) => lr.branchId === branchId.branchId,
+                    ),
                   );
                 } else {
                   setLRData(filteredLR);
@@ -532,6 +538,7 @@ export default function FMCreate({
           <div className="border-primary flex h-[20rem] flex-col justify-between gap-3 overflow-y-auto rounded-md border p-2">
             <div>
               <AntSelect
+                disabled={selectedFMDataToEdit?.WriteOff != null}
                 className="w-full"
                 size="large"
                 placeholder="Select LR"
@@ -580,6 +587,7 @@ export default function FMCreate({
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Hire</label>
             <input
+              disabled={selectedFMDataToEdit?.WriteOff != null}
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
@@ -590,6 +598,7 @@ export default function FMCreate({
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Advance (To be Paid)</label>
             <input
+              disabled={selectedFMDataToEdit?.WriteOff != null}
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
@@ -612,6 +621,7 @@ export default function FMCreate({
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Other charges</label>
             <input
+              disabled={selectedFMDataToEdit?.WriteOff != null}
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
@@ -624,6 +634,7 @@ export default function FMCreate({
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Detention</label>
             <input
+              disabled={selectedFMDataToEdit?.WriteOff != null}
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
@@ -639,6 +650,7 @@ export default function FMCreate({
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">RTO/L/U Charges</label>
             <input
+              disabled={selectedFMDataToEdit?.WriteOff != null}
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               type="number"
               placeholder="Type here..."
@@ -655,6 +667,7 @@ export default function FMCreate({
               type="number"
               placeholder="Type here..."
               value={fmData?.tds}
+              disabled
             />
           </div>
           <div className="flex w-full items-center justify-between gap-2">
@@ -664,11 +677,13 @@ export default function FMCreate({
               type="number"
               placeholder="Type here..."
               value={fmData?.netBalance}
+              disabled
             />
           </div>
           <div className="flex w-full items-center justify-between gap-2">
             <label className="font-medium">Amount in words</label>
             <textarea
+              disabled
               placeholder="Type here..."
               className="border-primary w-1/2 rounded-md border px-2 py-1"
               value={fmData?.amountInwords}
