@@ -3,6 +3,7 @@ import {
   MdOutlineAdd,
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
+  MdOutlineFileDownload,
 } from "react-icons/md";
 import { useEffect, useState } from "react";
 import {
@@ -184,6 +185,19 @@ export default function LRList({
       <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />,
     ).toBlob();
     setAttachment(pdfFile);
+  };
+
+  const downloadPdfFile = async () => {
+    const pdfFile = await pdf(
+      <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />,
+    ).toBlob();
+    const url = URL.createObjectURL(pdfFile);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `LR-${selectedLR?.lrNumber}-${new Date().toLocaleDateString()}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("PDF has been downloaded successfully");
   };
 
   const selectLRForPreview = (LRData: LrInputs) => {
@@ -563,55 +577,62 @@ export default function LRList({
               </DialogContent>
             </Dialog>
           </div>
-          {!isAdmin && (
-            <AlertDialog>
-              <AlertDialogTrigger className="cursor-pointer">
-                <RiDeleteBin6Line size={20} color="red" />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Alert!</AlertDialogTitle>
-                  <AlertDialogDescription className="font-medium text-black">
-                    This will send the admin an delete request. Upon approval
-                    the LR will be deleted
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => onDeleteLRHandlerOnNotification(selectedLR!)}
-                  >
-                    Proceed
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {isAdmin && (
-            <AlertDialog>
-              <AlertDialogTrigger className="cursor-pointer">
-                <RiDeleteBin6Line size={20} color="red" />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Alert!</AlertDialogTitle>
-                  <AlertDialogDescription className="font-medium text-black">
-                    Are you sure you want to delete this Lorry Receipt? This
-                    action is permanent and cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                    onClick={() => onDeleteLRHandler(selectedLR!.id)}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          <div className="flex items-center gap-2">
+            <button onClick={downloadPdfFile} className="cursor-pointer">
+              <MdOutlineFileDownload size={20} />
+            </button>
+            {!isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger className="cursor-pointer">
+                  <RiDeleteBin6Line size={20} color="red" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Alert!</AlertDialogTitle>
+                    <AlertDialogDescription className="font-medium text-black">
+                      This will send the admin an delete request. Upon approval
+                      the LR will be deleted
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() =>
+                        onDeleteLRHandlerOnNotification(selectedLR!)
+                      }
+                    >
+                      Proceed
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger className="cursor-pointer">
+                  <RiDeleteBin6Line size={20} color="red" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Alert!</AlertDialogTitle>
+                    <AlertDialogDescription className="font-medium text-black">
+                      Are you sure you want to delete this Lorry Receipt? This
+                      action is permanent and cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
+                      onClick={() => onDeleteLRHandler(selectedLR!.id)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
         <PDFViewer className="h-full w-full">
           <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />

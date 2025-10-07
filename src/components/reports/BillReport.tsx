@@ -157,6 +157,7 @@ export default function BillReport({
       "Bill#": bill.billNumber,
       "Client Name": bill.Client.name,
       "Client GSTIN": bill.Client.GSTIN,
+      "Client Address": bill.Client.address,
       Date: new Date(bill.date).toLocaleDateString(),
       "Freight Amount": bill.subTotal,
       "Payment Received":
@@ -175,6 +176,7 @@ export default function BillReport({
   const formatLRData = (data: LrInputs[]) => {
     return data.map((lr) => ({
       "LR No.": lr.lrNumber,
+      branchName: lr.branch.branchName,
       Date: lr.date,
       Origin: lr.from,
       Destination: lr.to,
@@ -306,7 +308,8 @@ export default function BillReport({
                   Bill ID
                 </th>
                 <th className="font-[500] text-slate-500">Client Name</th>
-                <th className="font-[500] text-slate-500">GSTIN</th>
+                <th className="font-[500] text-slate-500">Client GSTIN</th>
+                <th className="font-[500] text-slate-500">Client address</th>
                 <th className="font-[500] text-slate-500">Date</th>
                 <th className="font-[500] text-slate-500">Freight Amount</th>
                 <th className="font-[500] text-slate-500">Payment Recieved</th>
@@ -324,6 +327,7 @@ export default function BillReport({
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2 text-center">{data.Client.name}</td>
                   <td className="py-2 text-center">{data.Client.GSTIN}</td>
+                  <td className="py-2 text-center max-w-30">{data.Client.address.substring(0, 30)}...</td>
                   <td className="py-2 text-center">
                     {new Date(data.date).toLocaleDateString()}
                   </td>

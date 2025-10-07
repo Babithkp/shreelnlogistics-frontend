@@ -59,6 +59,7 @@ import {
   MdOutlineAdd,
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
+  MdOutlineFileDownload,
 } from "react-icons/md";
 import { getCompanyProfileApi } from "@/api/settings";
 import { BankDetailsInputs, ProfileInputs } from "../settings/Settings";
@@ -280,7 +281,10 @@ export default function ViewBills({
       resetWriteOff({
         IDNumber: selectedBill.billNumber,
         vendorName: selectedBill.Client?.name || "",
-        amount: (selectedBill.pendingAmount as unknown as string) || (selectedBill.pendingAmount?.toString?.() || ""),
+        amount:
+          (selectedBill.pendingAmount as unknown as string) ||
+          selectedBill.pendingAmount?.toString?.() ||
+          "",
         date: new Date().toISOString().split("T")[0],
         reason: "",
         checked: false,
@@ -563,6 +567,22 @@ export default function ViewBills({
     } else {
       toast.error("Failed to Delete Payment Record");
     }
+  };
+  const downloadPdfFile = async () => {
+    const pdfFile = await pdf(
+      <BillTemplate
+        billInputs={selectedBill}
+        companyProfile={companyProfile}
+        bankDetails={bankDetails}
+      />,
+    ).toBlob();
+    const url = URL.createObjectURL(pdfFile);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Bill-${selectedBill?.billNumber}-${new Date().toLocaleDateString()}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("PDF has been downloaded successfully");
   };
 
   useEffect(() => {
@@ -1015,14 +1035,17 @@ export default function ViewBills({
                         <div className="flex gap-3">
                           <label>Pickup Location(s):</label>
                           <p className="w-[70%]">
-                            {selectedBill?.lrData?.map((lr) => lr.from)
+                            {selectedBill?.lrData
+                              ?.map((lr) => lr.from)
                               .join(", ")}
                           </p>
                         </div>
                         <div className="flex gap-3">
                           <label>Delivery Location(s) :</label>
                           <p className="w-[70%]">
-                            {selectedBill?.lrData?.map((lr) => lr.to).join(", ")}
+                            {selectedBill?.lrData
+                              ?.map((lr) => lr.to)
+                              .join(", ")}
                           </p>
                         </div>
                         <div className="flex">
@@ -1105,6 +1128,9 @@ export default function ViewBills({
                   <SelectItem value="2">2</SelectItem>
                 </SelectContent>
               </Select>
+              <button onClick={downloadPdfFile} className="cursor-pointer">
+                <MdOutlineFileDownload size={20} />
+              </button>
               {!isAdmin && (
                 <AlertDialog>
                   <AlertDialogTrigger className="cursor-pointer">

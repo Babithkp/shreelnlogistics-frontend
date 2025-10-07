@@ -3,6 +3,7 @@ import {
   MdOutlineAdd,
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
+  MdOutlineFileDownload,
 } from "react-icons/md";
 import { useEffect, useState } from "react";
 import {
@@ -568,6 +569,23 @@ export default function FMList({
     setShowPreview(true);
   };
 
+  const downloadPdfFile = async () => {
+    const pdfFile = await pdf(
+      <FMTemplate
+        FmData={selectedFM!}
+        branchDetails={branchDetails!}
+        companyProfile={companyProfile}
+      />,
+    ).toBlob();
+    const url = URL.createObjectURL(pdfFile);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `FM-${selectedFM?.fmNumber}-${new Date().toLocaleDateString()}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("PDF has been downloaded successfully");
+  };
+
   const onDeleteFMHandler = async (id: string) => {
     const response = await deleteFMApi(id);
     if (response?.status === 200) {
@@ -1127,57 +1145,62 @@ export default function FMList({
                 </DialogContent>
               </Dialog>
             </div>
-            {!isAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Alert!</AlertDialogTitle>
-                    <AlertDialogDescription className="font-medium text-black">
-                      This will send the admin an delete request. Upon approval
-                      the FM will be deleted
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() =>
-                        onDeleteFMHandlerOnNotification(selectedFM!)
-                      }
-                    >
-                      Proceed
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            {isAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Alert!</AlertDialogTitle>
-                    <AlertDialogDescription className="font-medium text-black">
-                      Are you sure you want to delete this Freight Memo? This
-                      action is permanent and cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
-                      onClick={() => onDeleteFMHandler(selectedFM!.id)}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+            <div className="flex items-center gap-2">
+              <button onClick={downloadPdfFile} className="cursor-pointer">
+                <MdOutlineFileDownload size={20} />
+              </button>
+              {!isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger className="cursor-pointer">
+                    <RiDeleteBin6Line size={20} color="red" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Alert!</AlertDialogTitle>
+                      <AlertDialogDescription className="font-medium text-black">
+                        This will send the admin an delete request. Upon
+                        approval the FM will be deleted
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() =>
+                          onDeleteFMHandlerOnNotification(selectedFM!)
+                        }
+                      >
+                        Proceed
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger className="cursor-pointer">
+                    <RiDeleteBin6Line size={20} color="red" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Alert!</AlertDialogTitle>
+                      <AlertDialogDescription className="font-medium text-black">
+                        Are you sure you want to delete this Freight Memo? This
+                        action is permanent and cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-[#FF4C4C] hover:bg-[#FF4C4C]/50"
+                        onClick={() => onDeleteFMHandler(selectedFM!.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
           <PDFViewer className="h-full w-full">
             {branchDetails && (

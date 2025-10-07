@@ -355,7 +355,7 @@ export default function Home() {
           />
         )}
 
-        {sections.pod && <Pod data={pods} />}
+        {sections.pod && <Pod data={pods} onRefresh={onRefresh}/>}
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses expenseData={expenseData} />}
         {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}

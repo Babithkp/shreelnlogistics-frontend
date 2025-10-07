@@ -69,11 +69,13 @@ type Option = { value: string; label: string };
 
 export default function Pod({
   data,
+  onRefresh,
 }: {
   data: {
     data: PODInputs[];
     count: number;
   };
+  onRefresh: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
@@ -290,6 +292,7 @@ export default function Pod({
             } else if (!isAdmin && branch.branchId) {
               getPODByPage(currentPage, itemsPerPage, branch.branchId);
             }
+            onRefresh();
             setFile(null);
             reset({
               receivingBranch: branch.branchName,
@@ -396,7 +399,6 @@ export default function Pod({
     }
   }
 
-
   async function getPODByPage(page: number, limit: number, branchId?: string) {
     let branchIdToBeUsed = null;
     if (branchId) {
@@ -462,7 +464,10 @@ export default function Pod({
 
   return (
     <div className="relative">
-      <form className="absolute -top-18 right-[13vw] flex items-center gap-2" onSubmit={handleSearch}>
+      <form
+        className="absolute -top-18 right-[13vw] flex items-center gap-2"
+        onSubmit={handleSearch}
+      >
         <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
           <input
             placeholder="Search"
@@ -471,9 +476,7 @@ export default function Pod({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button
-          className="cursor-pointer rounded-xl p-6"
-        >
+        <Button className="cursor-pointer rounded-xl p-6">
           <LuSearch size={30} className="mx-3 scale-125" />
         </Button>
       </form>
