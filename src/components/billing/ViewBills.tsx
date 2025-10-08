@@ -1208,7 +1208,7 @@ export default function ViewBills({
         className="max-h-[80vh] overflow-y-auto"
       >
         <div>
-          <p className="mb-5 text-xl font-semibold">FM Bulk Record</p>
+          <p className="mb-5 text-xl font-semibold">Bill Bulk Record</p>
         </div>
         <form
           onSubmit={handleBulkSubmit(onBulkSubmit)}
@@ -1229,9 +1229,10 @@ export default function ViewBills({
                     const selectedBill = isAdmin
                       ? selectedClient?.bill || []
                       : selectedClient?.bill.filter(
-                          (bill) => bill.branchId === branch.branchId,
+                          (bill) => bill.branchesId === branch.branchId,
                         ) || [];
                     setBillList(selectedBill);
+                    console.log(selectedBill);
                     field.onChange(value);
                   }}
                   value={field.value}
@@ -1324,7 +1325,7 @@ export default function ViewBills({
             <thead>
               <tr>
                 <th className="border text-sm font-medium">SL NO.</th>
-                <th className="border text-sm font-medium">FM Number</th>
+                <th className="border text-sm font-medium">Bill Number</th>
                 <th className="border text-sm font-medium">Amount</th>
                 <th className="border text-sm font-medium">Pending Amount</th>
                 <th className="border text-sm font-medium">Actions</th>
