@@ -15,7 +15,7 @@ import ExcelJS from "exceljs";
 export default function BillReport({
   branch,
   isAdmin,
-  branchName,
+  branchName = "All",
   client,
 }: {
   branch: any;
@@ -174,9 +174,10 @@ export default function BillReport({
   };
 
   const formatLRData = (data: LrInputs[]) => {
+    console.log(data);
     return data.map((lr) => ({
       "LR No.": lr.lrNumber,
-      branchName: lr.branch.branchName,
+      branchName: lr.branch?.branchName,
       Date: lr.date,
       Origin: lr.from,
       Destination: lr.to,

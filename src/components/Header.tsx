@@ -164,6 +164,7 @@ export default function Header({
       return `Request to edit the LR (LR No. ${notification.requestId}) `;
     } else if (
       notification.title === "FM edit" ||
+      notification.title === "FM edit approved" ||
       notification.title === "FM Decline"
     ) {
       return `Request to edit the FM (FM No. ${notification.requestId}) `;
@@ -365,7 +366,7 @@ export default function Header({
     setIsLoading(true);
     const response = await updateFMByNotificationApi(id, data);
     if (response?.status === 200) {
-      toast.success("Data Updated");
+      toast.success("Notification Sent");
       deleteNotificationHandler(notificationId);
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -948,6 +949,7 @@ export default function Header({
     if (
       title === "LR" ||
       title === "FM" ||
+      title === "FM edit approved" ||
       title === "Bill" ||
       title === "Bill update" ||
       title === "Bill deleted" ||
@@ -987,6 +989,7 @@ export default function Header({
       title !== "LR" &&
       title !== "FM" &&
       title !== "FM edit" &&
+      title !== "FM edit approved" &&
       title !== "Bill update" &&
       title !== "Bill deleted" &&
       title !== "Bill record deleted" &&
