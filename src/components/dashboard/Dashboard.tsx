@@ -68,40 +68,43 @@ export interface DashboardData {
   branchData: BranchInputs[];
 }
 
-export default function Dashboard({data}:{data?: DashboardData}) {
+export default function Dashboard({ data }: { data?: DashboardData }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [branchId, setBranchId] = useState("");
-  const [dashboardData, setDashboardData] = useState<DashboardData | undefined>(data);
-  
+  const [dashboardData, setDashboardData] = useState<DashboardData | undefined>(
+    data,
+  );
 
   const totalInvoice = dashboardData?.billData
     .reduce((acc, bill) => acc + bill.subTotal, 0)
     .toFixed(2);
 
   const getMonthlyRevenueChange = (): number => {
-    if (!dashboardData) return 0;
+    if (!dashboardData?.billData?.length) return 0;
+
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
 
-    if (thisMonth === 0) return 0;
-
-    const lastMonth = thisMonth - 1;
+    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
     let thisMonthRevenue = 0;
     let lastMonthRevenue = 0;
 
-    for (const bill of dashboardData?.billData) {
+    for (const bill of dashboardData.billData) {
       const billDate = new Date(bill.date);
+
       const billMonth = billDate.getMonth();
       const billYear = billDate.getFullYear();
+      const amount = Number(bill.subTotal) || 0;
 
-      if (billYear === thisYear) {
-        if (billMonth === thisMonth) {
-          thisMonthRevenue += bill.subTotal;
-        } else if (billMonth === lastMonth) {
-          lastMonthRevenue += bill.subTotal;
-        }
+      if (billYear === thisYear && billMonth === thisMonth) {
+        thisMonthRevenue += amount;
+      }
+
+      if (billYear === lastMonthYear && billMonth === lastMonth) {
+        lastMonthRevenue += amount;
       }
     }
 
@@ -110,7 +113,7 @@ export default function Dashboard({data}:{data?: DashboardData}) {
     const percentageChange =
       ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
 
-    return parseFloat(percentageChange.toFixed(2));
+    return Number(percentageChange.toFixed(2));
   };
 
   const formatGraphData = (): GraphPoint[] => {
@@ -319,7 +322,7 @@ export default function Dashboard({data}:{data?: DashboardData}) {
       );
 
       setDashboardData((prevState) => {
-        if (!prevState) return undefined
+        if (!prevState) return undefined;
         return {
           ...prevState,
           branchData: branch,
@@ -335,7 +338,9 @@ export default function Dashboard({data}:{data?: DashboardData}) {
       setDashboardData(response.data.data);
     }
     const time2 = new Date().getTime();
-    console.log("Dashboard Data Fetched in " + (time2 - time1) / 1000 + " seconds");
+    console.log(
+      "Dashboard Data Fetched in " + (time2 - time1) / 1000 + " seconds",
+    );
   }
 
   async function fetchDashboardDataForBranch(branchId: string) {
@@ -381,7 +386,7 @@ export default function Dashboard({data}:{data?: DashboardData}) {
               <p
                 className={`${getMonthlyRevenueChange() > 0 ? "text-[#05CD99]" : "text-red-500"}`}
               >
-                {getMonthlyRevenueChange() || 0}%{" "}
+                {getMonthlyRevenueChange()}%{" "}
                 <span className="text-muted text-sm font-[400]">
                   since last month
                 </span>
