@@ -79,42 +79,49 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
     .reduce((acc, bill) => acc + bill.subTotal, 0)
     .toFixed(2);
 
-  const getMonthlyRevenueChange = (): number => {
-    if (!dashboardData?.billData?.length) return 0;
-
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-
-    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-    let thisMonthRevenue = 0;
-    let lastMonthRevenue = 0;
-
-    for (const bill of dashboardData.billData) {
-      const billDate = new Date(bill.date);
-
-      const billMonth = billDate.getMonth();
-      const billYear = billDate.getFullYear();
-      const amount = Number(bill.subTotal) || 0;
-
-      if (billYear === thisYear && billMonth === thisMonth) {
-        thisMonthRevenue += amount;
+    const getMonthlyRevenueChange = (): number => {
+      if (!dashboardData?.billData?.length) return 0;
+    
+      const latestBillDate = dashboardData.billData.reduce(
+        (latest, bill) => {
+          const d = new Date(bill.date);
+          return d > latest ? d : latest;
+        },
+        new Date(dashboardData.billData[0].date)
+      );
+    
+      const thisMonth = latestBillDate.getUTCMonth();
+      const thisYear = latestBillDate.getUTCFullYear();
+    
+      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+    
+      let thisMonthRevenue = 0;
+      let lastMonthRevenue = 0;
+    
+      for (const bill of dashboardData.billData) {
+        const billDate = new Date(bill.date);
+        const billMonth = billDate.getUTCMonth();
+        const billYear = billDate.getUTCFullYear();
+        const amount = Number(bill.subTotal) || 0;
+    
+        if (billYear === thisYear && billMonth === thisMonth) {
+          thisMonthRevenue += amount;
+        }
+    
+        if (billYear === lastMonthYear && billMonth === lastMonth) {
+          lastMonthRevenue += amount;
+        }
       }
-
-      if (billYear === lastMonthYear && billMonth === lastMonth) {
-        lastMonthRevenue += amount;
-      }
-    }
-
-    if (lastMonthRevenue === 0) return 0;
-
-    const percentageChange =
-      ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
-
-    return Number(percentageChange.toFixed(2));
-  };
+    
+      if (lastMonthRevenue === 0) return 0;
+    
+      return Number(
+        (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(2)
+      );
+    };
+    
+  
 
   const formatGraphData = (): GraphPoint[] => {
     if (!dashboardData) return [];
