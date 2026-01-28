@@ -174,7 +174,6 @@ export default function BillReport({
   };
 
   const formatLRData = (data: LrInputs[]) => {
-    console.log(data);
     return data.map((lr) => ({
       "LR No.": lr.lrNumber,
       branchName: lr.branch?.branchName,

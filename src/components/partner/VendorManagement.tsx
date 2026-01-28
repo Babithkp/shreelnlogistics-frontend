@@ -492,587 +492,590 @@ export default function VendorManagement({
         </div>
       </div>
 
-      {
-        <section className="flex max-h-[73vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xl font-medium">
-              {showVehicles ? "All Vechiles" : "All Vendors"}
-            </p>
-            <div className="flex items-center gap-5">
-              <Modal
-                open={isModalOpen}
-                width={1240}
-                centered={true}
-                footer={null}
-                onCancel={() => setIsModalOpen(false)}
+      <section className="flex max-h-[73vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-medium">
+            {showVehicles ? "All Vechiles" : "All Vendors"}
+          </p>
+          <div className="flex items-center gap-5">
+            <Modal
+              open={isModalOpen}
+              width={1240}
+              centered={true}
+              footer={null}
+              onCancel={() => setIsModalOpen(false)}
+              style={{
+                fontFamily: "DM Sans, sans-serif",
+              }}
+            >
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex flex-wrap justify-between gap-5"
               >
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  className="flex flex-wrap justify-between gap-5"
-                >
-                  <p className="w-full text-xl font-semibold">New Vendor</p>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Vendor Name</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("name", { required: true })}
-                      />
-                    </div>
-                    {errors.name && (
-                      <p className="text-red-500">Vendor Name is required</p>
-                    )}
-                    {isVendorNameMatched && (
-                      <p className="text-red-500">
-                        Vendor Name already exists, please try another one
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Vendor’s GSTIN</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("GSTIN")}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">
-                        Branch Name (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("branchName")}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Contact Person</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("contactPerson", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {errors.contactPerson && (
-                      <p className="text-red-500">Contact Person is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Contact Number</label>
-                      <input
-                        type="number"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("contactNumber", {
-                          required: true,
-                          minLength: 10,
-                          maxLength: 10,
-                        })}
-                      />
-                    </div>
-                    {errors.contactNumber && (
-                      <p className="text-red-500">
-                        Contact Number is required and should be 10 characters
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Email ID</label>
-                      <input
-                        type="email"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("email", {})}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-full">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Address</label>
-                      <textarea
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("address", { required: true })}
-                      />
-                    </div>
-                    {errors.address && (
-                      <p className="text-red-500">Address is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Pincode</label>
-                      <input
-                        type="number"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("pincode", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {errors.pincode && (
-                      <p className="text-red-500">Pincode is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">City</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("city", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {errors.city && (
-                      <p className="text-red-500">City is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">State</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("state", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {errors.state && (
-                      <p className="text-red-500">State is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">PAN</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...register("pan", { required: true })}
-                      />
-                    </div>
-                    {errors.pan && (
-                      <p className="text-red-500">PAN is required</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">TDS</label>
-                      <Controller
-                        control={control}
-                        name="TDS"
-                        defaultValue=""
-                        rules={{ required: "Please select TDS" }}
-                        render={({ field }) => (
-                          <AntSelect
-                            {...field}
-                            options={[
-                              { value: "Declared", label: "Declared" },
-                              { value: "Not-declared", label: "Not declared" },
-                            ]}
-                            placeholder="Select TDS"
-                            size="large"
-                            className="outline-primary rounded-md outline"
-                          />
-                        )}
-                      />
-                    </div>
-                    {errors.TDS && (
-                      <p className="text-red-500">{errors.TDS.message}</p>
-                    )}
-                  </div>
-                  <div className="w-[30%]">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium">Outstanding Limit</label>
-                      <div className="border-primary flex items-center rounded-md border pl-2">
-                        <p className="text-xs font-medium">INR</p>
-                        <input
-                          type="number"
-                          placeholder="00000.00"
-                          className="w-full p-1 py-2 pl-2 outline-none"
-                          {...register("outstandingLimit", {
-                            required: true,
-                          })}
-                        />
-                      </div>
-                    </div>
-                    {errors.outstandingLimit && (
-                      <p className="text-red-500">
-                        Outstanding Limit is required
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex w-full justify-end">
-                    <Button className="rounded-xl px-7" disabled={isLoading}>
-                      {isLoading ? (
-                        <VscLoading size={24} className="animate-spin" />
-                      ) : formStatus === "New" ? (
-                        "Create Vendor"
-                      ) : (
-                        "Update Vendor"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </Modal>
-              <Modal
-                open={isCreateVehicleOpen}
-                width={1240}
-                centered={true}
-                footer={null}
-                onCancel={() => setIsCreateVehicleOpen(false)}
-              >
-                <form
-                  onSubmit={VehicleHandleSubmit(onVehicleSubmit)}
-                  className="flex flex-wrap justify-between gap-5"
-                >
-                  <p className="w-full text-xl font-medium">
-                    {formStatus === "New" ? "New Vehicle" : "Edit Vehicle"}
-                  </p>
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Vendor Name</label>
-                      <Controller
-                        name="vendorName"
-                        control={VehicleControl}
-                        defaultValue={""}
-                        render={({ field }) => (
-                          <AntSelect
-                            {...field}
-                            showSearch
-                            options={extractVendorNameOptions(originalVendors)}
-                            placeholder="Select Vendor Name"
-                            className="outline-primary w-full rounded-md outline"
-                            size="large"
-                            onChange={(value) => {
-                              field.onChange(value);
-                              setOwnerDetails(value);
-                            }}
-                            disabled={formStatus === "editing"}
-                          />
-                        )}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Vehicle Type</label>
-                      <Controller
-                        name="vehicletypes"
-                        control={VehicleControl}
-                        defaultValue={""}
-                        rules={{ required: "Please select vehicle types" }}
-                        render={({ field }) => (
-                          <AntSelect
-                            {...field}
-                            options={extractVehicleTypeOptions(vehicleTypes)}
-                            placeholder="Select vehicle types"
-                            className="outline-primary w-full rounded-md outline"
-                            size="large"
-                          />
-                        )}
-                      />
-                    </div>
-                    {VehicleErrors.vehicletypes && (
-                      <p className="text-red-500">
-                        Vehicle types available is required
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Vehicle Number</label>
-                      <Controller
-                        name="vehicleNumber"
-                        control={VehicleControl}
-                        defaultValue={""}
-                        rules={{ required: "Please enter vehicle number" }}
-                        render={({ field }) => (
-                          <input
-                            type="text"
-                            className="border-primary rounded-md border p-1 py-2 pl-2"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
-                        )}
-                      />
-                    </div>
-                    {VehicleErrors.vehicleNumber && (
-                      <p className="text-red-500">Vehicle Number is required</p>
-                    )}
-                    {isVehicleNameMatched && (
-                      <p className="text-red-500">
-                        Vehicle Number already exists, please try another one
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[23%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Owner Name</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        style={
-                          formStatus === "editing"
-                            ? {
-                                backgroundColor: "#F5F5F5",
-                                cursor: "not-allowed",
-                                color: "#C7C3C3FF",
-                              }
-                            : {}
-                        }
-                        {...VehicleRegister("ownerName", {
-                          validate: (value) =>
-                            VehicleWatch("vendorName")
-                              ? !!value || "Owner Name is required"
-                              : true,
-                        })}
-                        disabled={formStatus === "editing"}
-                      />
-                    </div>
-                    {VehicleErrors.ownerName && (
-                      <p className="text-red-500">
-                        {"VehicleErrors.ownerName.message"}
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[23%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Owner Contact</label>
-                      <input
-                        type="number"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        style={
-                          formStatus === "editing"
-                            ? {
-                                backgroundColor: "#F5F5F5",
-                                cursor: "not-allowed",
-                                color: "#C7C3C3FF",
-                              }
-                            : {}
-                        }
-                        {...VehicleRegister("ownerPhone", {
-                          validate: (value) => {
-                            if (VehicleWatch("vendorName")) {
-                              if (!value) return "Owner Number is required";
-                              if (value.toString().length !== 10)
-                                return "Owner Number should be exactly 10 digits";
-                            }
-                            return true;
-                          },
-                        })}
-                        disabled={formStatus === "editing"}
-                      />
-                    </div>
-                    {VehicleErrors.ownerPhone && (
-                      <p className="text-red-500">
-                        {VehicleErrors.ownerPhone.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[23%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Driver Name</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...VehicleRegister("driverName")}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-[23%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Driver Contact</label>
-                      <input
-                        type="number"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...VehicleRegister("driverPhone", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {VehicleErrors.driverPhone && (
-                      <p className="text-red-500">
-                        Driver Number is required and should be 10 characters
-                      </p>
-                    )}
-                  </div>
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Pan Number</label>
-                      <input
-                        type="text"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...VehicleRegister("panNumber", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {VehicleErrors.panNumber && (
-                      <p className="text-red-500">Pan Number is required</p>
-                    )}
-                  </div>
-
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>Insurance</label>
-                      <Controller
-                        name="insurance"
-                        control={VehicleControl}
-                        defaultValue={""}
-                        rules={{ required: "Please select insurance" }}
-                        render={({ field }) => (
-                          <AntSelect
-                            {...field}
-                            options={[
-                              { value: "Insured", label: "Insured" },
-                              { value: "Not insured", label: "Not insured" },
-                            ]}
-                            placeholder="Select insurance"
-                            className="outline-primary w-full rounded-md outline"
-                            size="large"
-                          />
-                        )}
-                      />
-                    </div>
-                    {VehicleErrors.insurance && (
-                      <p className="text-red-500">Insurance is required</p>
-                    )}
-                  </div>
-                  <div className="w-[32%]">
-                    <div className="flex flex-col gap-2">
-                      <label>RC</label>
-                      <Controller
-                        control={VehicleControl}
-                        name="RC"
-                        defaultValue=""
-                        rules={{ required: "Please select RC" }}
-                        render={({ field }) => (
-                          <AntSelect
-                            {...field}
-                            options={[
-                              { value: "Available", label: "Available" },
-                              {
-                                value: "Not Available",
-                                label: "Not Available",
-                              },
-                            ]}
-                            placeholder="Select RC"
-                            size="large"
-                            className="outline-primary rounded-md outline"
-                          />
-                        )}
-                      />
-                    </div>
-                    {VehicleErrors.RC && (
-                      <p className="text-red-500">{VehicleErrors.RC.message}</p>
-                    )}
-                  </div>
-                  <div className="flex w-full justify-end gap-5">
-                    <Button
-                      type="button"
-                      onClick={() => VehicleReset()}
-                      className="rounded-xl px-7"
-                      disabled={isLoading}
-                    >
-                      Reset
-                    </Button>
-                    <Button className="rounded-xl px-7" disabled={isLoading}>
-                      {isLoading ? (
-                        <VscLoading size={24} className="animate-spin" />
-                      ) : formStatus === "New" ? (
-                        "Add Vehicle"
-                      ) : (
-                        "Update Vehicle"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </Modal>
-              {!showVehicles && (
-                <form
-                  className="flex items-center gap-5"
-                  onSubmit={handleSearch}
-                >
-                  <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
-                    <LuSearch size={18} />
+                <p className="w-full text-xl font-semibold">New Vendor</p>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Vendor Name</label>
                     <input
-                      placeholder="Search"
-                      className="outline-none placeholder:font-medium"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("name", { required: true })}
                     />
                   </div>
-                  <Button className="cursor-pointer rounded-xl p-5">
-                    <LuSearch size={30} className="mx-3 scale-125" />
-                  </Button>
-                </form>
-              )}
-
-              <Button
-                className="bg-secondary hover:bg-muted/30 cursor-pointer rounded-xl text-black"
-                onClick={() => setShowVehicles(!showVehicles)}
-              >
-                {showVehicles ? "Show Vendors" : "Show Vehicles"}
-              </Button>
-              <Button
-                variant={"outline"}
-                onClick={() => [
-                  VehicleReset(),
-                  setIsCreateVehicleOpen(true),
-                  setFormStatus("New"),
-                ]}
-                className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
-              >
-                <IoMdAdd size={30} />
-                Add Vehicle
-              </Button>
-              <Button
-                onClick={() => setIsModalOpen(true)}
-                className="cursor-pointer rounded-xl py-5"
-              >
-                <IoMdAdd color="white" size={30} />
-                Add Vendor
-              </Button>
-              {!showVehicles && !search && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <p>
-                    {startIndex}-{endIndex}
-                  </p>
-                  <p>of</p>
-                  <p>{totalItems}</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handlePrev}
-                      disabled={currentPage === 1}
-                      className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
-                    >
-                      <MdOutlineChevronLeft size={20} />
-                    </button>
-                    <button
-                      className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
-                      onClick={handleNext}
-                      disabled={currentPage === totalPages}
-                    >
-                      <MdOutlineChevronRight size={20} />
-                    </button>
+                  {errors.name && (
+                    <p className="text-red-500">Vendor Name is required</p>
+                  )}
+                  {isVendorNameMatched && (
+                    <p className="text-red-500">
+                      Vendor Name already exists, please try another one
+                    </p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Vendor’s GSTIN</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("GSTIN")}
+                    />
                   </div>
                 </div>
-              )}
-            </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">
+                      Branch Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("branchName")}
+                    />
+                  </div>
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Contact Person</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("contactPerson", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {errors.contactPerson && (
+                    <p className="text-red-500">Contact Person is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Contact Number</label>
+                    <input
+                      type="number"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("contactNumber", {
+                        required: true,
+                        minLength: 10,
+                        maxLength: 10,
+                      })}
+                    />
+                  </div>
+                  {errors.contactNumber && (
+                    <p className="text-red-500">
+                      Contact Number is required and should be 10 characters
+                    </p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Email ID</label>
+                    <input
+                      type="email"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("email", {})}
+                    />
+                  </div>
+                </div>
+                <div className="w-full">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Address</label>
+                    <textarea
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("address", { required: true })}
+                    />
+                  </div>
+                  {errors.address && (
+                    <p className="text-red-500">Address is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Pincode</label>
+                    <input
+                      type="number"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("pincode", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {errors.pincode && (
+                    <p className="text-red-500">Pincode is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">City</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("city", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {errors.city && (
+                    <p className="text-red-500">City is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">State</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("state", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {errors.state && (
+                    <p className="text-red-500">State is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">PAN</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...register("pan", { required: true })}
+                    />
+                  </div>
+                  {errors.pan && (
+                    <p className="text-red-500">PAN is required</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">TDS</label>
+                    <Controller
+                      control={control}
+                      name="TDS"
+                      defaultValue=""
+                      rules={{ required: "Please select TDS" }}
+                      render={({ field }) => (
+                        <AntSelect
+                          {...field}
+                          options={[
+                            { value: "Declared", label: "Declared" },
+                            { value: "Not-declared", label: "Not declared" },
+                          ]}
+                          placeholder="Select TDS"
+                          size="large"
+                          className="outline-primary rounded-md outline"
+                        />
+                      )}
+                    />
+                  </div>
+                  {errors.TDS && (
+                    <p className="text-red-500">{errors.TDS.message}</p>
+                  )}
+                </div>
+                <div className="w-[30%]">
+                  <div className="flex flex-col gap-2">
+                    <label className="font-medium">Outstanding Limit</label>
+                    <div className="border-primary flex items-center rounded-md border pl-2">
+                      <p className="text-xs font-medium">INR</p>
+                      <input
+                        type="number"
+                        placeholder="00000.00"
+                        className="w-full p-1 py-2 pl-2 outline-none"
+                        {...register("outstandingLimit", {
+                          required: true,
+                        })}
+                      />
+                    </div>
+                  </div>
+                  {errors.outstandingLimit && (
+                    <p className="text-red-500">
+                      Outstanding Limit is required
+                    </p>
+                  )}
+                </div>
+                <div className="flex w-full justify-end">
+                  <Button className="rounded-xl px-7" disabled={isLoading}>
+                    {isLoading ? (
+                      <VscLoading size={24} className="animate-spin" />
+                    ) : formStatus === "New" ? (
+                      "Create Vendor"
+                    ) : (
+                      "Update Vendor"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Modal>
+            <Modal
+              open={isCreateVehicleOpen}
+              width={1240}
+              centered={true}
+              footer={null}
+              onCancel={() => setIsCreateVehicleOpen(false)}
+            >
+              <form
+                onSubmit={VehicleHandleSubmit(onVehicleSubmit)}
+                className="flex flex-wrap justify-between gap-5"
+              >
+                <p className="w-full text-xl font-medium">
+                  {formStatus === "New" ? "New Vehicle" : "Edit Vehicle"}
+                </p>
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Vendor Name</label>
+                    <Controller
+                      name="vendorName"
+                      control={VehicleControl}
+                      defaultValue={""}
+                      render={({ field }) => (
+                        <AntSelect
+                          {...field}
+                          showSearch
+                          options={extractVendorNameOptions(originalVendors)}
+                          placeholder="Select Vendor Name"
+                          className="outline-primary w-full rounded-md outline"
+                          size="large"
+                          onChange={(value) => {
+                            field.onChange(value);
+                            setOwnerDetails(value);
+                          }}
+                          disabled={formStatus === "editing"}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Vehicle Type</label>
+                    <Controller
+                      name="vehicletypes"
+                      control={VehicleControl}
+                      defaultValue={""}
+                      rules={{ required: "Please select vehicle types" }}
+                      render={({ field }) => (
+                        <AntSelect
+                          {...field}
+                          options={extractVehicleTypeOptions(vehicleTypes)}
+                          placeholder="Select vehicle types"
+                          className="outline-primary w-full rounded-md outline"
+                          size="large"
+                        />
+                      )}
+                    />
+                  </div>
+                  {VehicleErrors.vehicletypes && (
+                    <p className="text-red-500">
+                      Vehicle types available is required
+                    </p>
+                  )}
+                </div>
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Vehicle Number</label>
+                    <Controller
+                      name="vehicleNumber"
+                      control={VehicleControl}
+                      defaultValue={""}
+                      rules={{ required: "Please enter vehicle number" }}
+                      render={({ field }) => (
+                        <input
+                          type="text"
+                          className="border-primary rounded-md border p-1 py-2 pl-2"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      )}
+                    />
+                  </div>
+                  {VehicleErrors.vehicleNumber && (
+                    <p className="text-red-500">Vehicle Number is required</p>
+                  )}
+                  {isVehicleNameMatched && (
+                    <p className="text-red-500">
+                      Vehicle Number already exists, please try another one
+                    </p>
+                  )}
+                </div>
+                <div className="w-[23%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Owner Name</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      style={
+                        formStatus === "editing"
+                          ? {
+                            backgroundColor: "#F5F5F5",
+                            cursor: "not-allowed",
+                            color: "#C7C3C3FF",
+                          }
+                          : {}
+                      }
+                      {...VehicleRegister("ownerName", {
+                        validate: (value) =>
+                          VehicleWatch("vendorName")
+                            ? !!value || "Owner Name is required"
+                            : true,
+                      })}
+                      disabled={formStatus === "editing"}
+                    />
+                  </div>
+                  {VehicleErrors.ownerName && (
+                    <p className="text-red-500">
+                      {"VehicleErrors.ownerName.message"}
+                    </p>
+                  )}
+                </div>
+                <div className="w-[23%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Owner Contact</label>
+                    <input
+                      type="number"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      style={
+                        formStatus === "editing"
+                          ? {
+                            backgroundColor: "#F5F5F5",
+                            cursor: "not-allowed",
+                            color: "#C7C3C3FF",
+                          }
+                          : {}
+                      }
+                      {...VehicleRegister("ownerPhone", {
+                        validate: (value) => {
+                          if (VehicleWatch("vendorName")) {
+                            if (!value) return "Owner Number is required";
+                            if (value.toString().length !== 10)
+                              return "Owner Number should be exactly 10 digits";
+                          }
+                          return true;
+                        },
+                      })}
+                      disabled={formStatus === "editing"}
+                    />
+                  </div>
+                  {VehicleErrors.ownerPhone && (
+                    <p className="text-red-500">
+                      {VehicleErrors.ownerPhone.message}
+                    </p>
+                  )}
+                </div>
+                <div className="w-[23%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Driver Name</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...VehicleRegister("driverName")}
+                    />
+                  </div>
+                </div>
+                <div className="w-[23%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Driver Contact</label>
+                    <input
+                      type="number"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...VehicleRegister("driverPhone", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {VehicleErrors.driverPhone && (
+                    <p className="text-red-500">
+                      Driver Number is required and should be 10 characters
+                    </p>
+                  )}
+                </div>
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Pan Number</label>
+                    <input
+                      type="text"
+                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      {...VehicleRegister("panNumber", {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                  {VehicleErrors.panNumber && (
+                    <p className="text-red-500">Pan Number is required</p>
+                  )}
+                </div>
+
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>Insurance</label>
+                    <Controller
+                      name="insurance"
+                      control={VehicleControl}
+                      defaultValue={""}
+                      rules={{ required: "Please select insurance" }}
+                      render={({ field }) => (
+                        <AntSelect
+                          {...field}
+                          options={[
+                            { value: "Insured", label: "Insured" },
+                            { value: "Not insured", label: "Not insured" },
+                          ]}
+                          placeholder="Select insurance"
+                          className="outline-primary w-full rounded-md outline"
+                          size="large"
+                        />
+                      )}
+                    />
+                  </div>
+                  {VehicleErrors.insurance && (
+                    <p className="text-red-500">Insurance is required</p>
+                  )}
+                </div>
+                <div className="w-[32%]">
+                  <div className="flex flex-col gap-2">
+                    <label>RC</label>
+                    <Controller
+                      control={VehicleControl}
+                      name="RC"
+                      defaultValue=""
+                      rules={{ required: "Please select RC" }}
+                      render={({ field }) => (
+                        <AntSelect
+                          {...field}
+                          options={[
+                            { value: "Available", label: "Available" },
+                            {
+                              value: "Not Available",
+                              label: "Not Available",
+                            },
+                          ]}
+                          placeholder="Select RC"
+                          size="large"
+                          className="outline-primary rounded-md outline"
+                        />
+                      )}
+                    />
+                  </div>
+                  {VehicleErrors.RC && (
+                    <p className="text-red-500">{VehicleErrors.RC.message}</p>
+                  )}
+                </div>
+                <div className="flex w-full justify-end gap-5">
+                  <Button
+                    type="button"
+                    onClick={() => VehicleReset()}
+                    className="rounded-xl px-7"
+                    disabled={isLoading}
+                  >
+                    Reset
+                  </Button>
+                  <Button className="rounded-xl px-7" disabled={isLoading}>
+                    {isLoading ? (
+                      <VscLoading size={24} className="animate-spin" />
+                    ) : formStatus === "New" ? (
+                      "Add Vehicle"
+                    ) : (
+                      "Update Vehicle"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Modal>
+            {!showVehicles && (
+              <form
+                className="flex items-center gap-5"
+                onSubmit={handleSearch}
+              >
+                <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                  <LuSearch size={18} />
+                  <input
+                    placeholder="Search"
+                    className="outline-none placeholder:font-medium"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button className="cursor-pointer rounded-xl p-5">
+                  <LuSearch size={30} className="mx-3 scale-125" />
+                </Button>
+              </form>
+            )}
+
+            <Button
+              className="bg-secondary hover:bg-muted/30 cursor-pointer rounded-xl text-black"
+              onClick={() => setShowVehicles(!showVehicles)}
+            >
+              {showVehicles ? "Show Vendors" : "Show Vehicles"}
+            </Button>
+            <Button
+              variant={"outline"}
+              onClick={() => [
+                VehicleReset(),
+                setIsCreateVehicleOpen(true),
+                setFormStatus("New"),
+              ]}
+              className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
+            >
+              <IoMdAdd size={30} />
+              Add Vehicle
+            </Button>
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="cursor-pointer rounded-xl py-5"
+            >
+              <IoMdAdd color="white" size={30} />
+              Add Vendor
+            </Button>
+            {!showVehicles && !search && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <p>
+                  {startIndex}-{endIndex}
+                </p>
+                <p>of</p>
+                <p>{totalItems}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                  >
+                    <MdOutlineChevronLeft size={20} />
+                  </button>
+                  <button
+                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                  >
+                    <MdOutlineChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          {!showVehicles && (
-            <table>
+        </div>
+        {!showVehicles && (
+          <div className="overflow-y-auto  ">
+            <table className="w-full">
               <thead>
                 <tr>
                   <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
@@ -1139,45 +1142,47 @@ export default function VendorManagement({
                 ))}
               </tbody>
             </table>
-          )}
-          {showVehicles && (
-            <table>
-              <thead>
-                <tr>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Vendor Name
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Vehicle Number
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Vehicle Type
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Pan Number
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Insurance
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">RC</th>
+          </div>
+        )}
+        {showVehicles && (
+          <div className="overflow-y-auto  ">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-start font-[400] text-[#797979]">
+                  Vendor Name
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Vehicle Number
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Vehicle Type
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Pan Number
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Insurance
+                </th>
+                <th className="text-start font-[400] text-[#797979]">RC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVehicles?.map((vehicle) => (
+                <tr key={vehicle.id}>
+                  <td className="py-2">{vehicle.vendorName || "-"}</td>
+                  <td className="py-2">{vehicle.vehicleNumber}</td>
+                  <td className="py-2">{vehicle.vehicletypes}</td>
+                  <td className="py-2">{vehicle.panNumber}</td>
+                  <td className="py-2">{vehicle.insurance}</td>
+                  <td className="py-2">{vehicle.RC}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredVehicles?.map((vehicle) => (
-                  <tr key={vehicle.id}>
-                    <td className="py-2">{vehicle.vendorName || "-"}</td>
-                    <td className="py-2">{vehicle.vehicleNumber}</td>
-                    <td className="py-2">{vehicle.vehicletypes}</td>
-                    <td className="py-2">{vehicle.panNumber}</td>
-                    <td className="py-2">{vehicle.insurance}</td>
-                    <td className="py-2">{vehicle.RC}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      }
+              ))}
+            </tbody>
+          </table>
+          </div>
+        )}
+      </section>
 
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogTrigger className="hidden"></DialogTrigger>
@@ -1317,51 +1322,51 @@ export default function VendorManagement({
               {selectedVendor?.FM?.some(
                 (fm) => fm.PaymentRecords?.length > 0,
               ) && (
-                <div className="col-span-full">
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger className="bg-primary/30 px-4">
-                        Recent Payments
-                      </AccordionTrigger>
-                      <AccordionContent className="bg-primary/30 rounded-b-md px-2">
-                        <table className="w-full rounded-md bg-white px-2">
-                          <thead>
-                            <tr>
-                              <th className="p-1 font-medium">Sl no</th>
-                              <th className="font-medium">Amount Received</th>
-                              <th className="font-medium">Date</th>
-                              <th className="font-medium">Payment mode</th>
-                              <th className="font-medium">
-                                Trans. ID/Cheque Number
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedVendor?.FM?.map((FMdata, i) => (
-                              <>
-                                {FMdata.PaymentRecords.map((record) => (
-                                  <tr
-                                    className="hover:bg-accent text-center"
-                                    key={record.id}
-                                  >
-                                    <td className="p-2">{i + 1}</td>
-                                    <td>
-                                      INR {parseFloat(record.amount).toFixed(2)}
-                                    </td>
-                                    <td>{record.date}</td>
-                                    <td>{record.paymentMode}</td>
-                                    <td>{record.transactionNumber}</td>
-                                  </tr>
-                                ))}
-                              </>
-                            ))}
-                          </tbody>
-                        </table>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              )}
+                  <div className="col-span-full">
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger className="bg-primary/30 px-4">
+                          Recent Payments
+                        </AccordionTrigger>
+                        <AccordionContent className="bg-primary/30 rounded-b-md px-2">
+                          <table className="w-full rounded-md bg-white px-2">
+                            <thead>
+                              <tr>
+                                <th className="p-1 font-medium">Sl no</th>
+                                <th className="font-medium">Amount Received</th>
+                                <th className="font-medium">Date</th>
+                                <th className="font-medium">Payment mode</th>
+                                <th className="font-medium">
+                                  Trans. ID/Cheque Number
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedVendor?.FM?.map((FMdata, i) => (
+                                <>
+                                  {FMdata.PaymentRecords.map((record) => (
+                                    <tr
+                                      className="hover:bg-accent text-center"
+                                      key={record.id}
+                                    >
+                                      <td className="p-2">{i + 1}</td>
+                                      <td>
+                                        INR {parseFloat(record.amount).toFixed(2)}
+                                      </td>
+                                      <td>{record.date}</td>
+                                      <td>{record.paymentMode}</td>
+                                      <td>{record.transactionNumber}</td>
+                                    </tr>
+                                  ))}
+                                </>
+                              ))}
+                            </tbody>
+                          </table>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
+                )}
             </div>
           </DialogContent>
         )}

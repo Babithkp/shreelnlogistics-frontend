@@ -352,7 +352,7 @@ export default function FmReport({
         </div>
       </section>
 
-      <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
+      <section className="flex h-[66vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         {pendingLRs.length > 0 && (
           <p className="font-medium">
             {pendingLRs.length} LRs pending to create POD

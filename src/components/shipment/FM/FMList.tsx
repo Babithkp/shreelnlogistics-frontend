@@ -785,7 +785,7 @@ export default function FMList({
             <div className="flex gap-5">
               <Button
                 variant={"outline"}
-                className="border-primary text-primary rounded-xl"
+                className="border-primary text-primary rounded-xl p-5"
                 onClick={() => setIsBulkModalOpen(true)}
               >
                 Bulk Record
@@ -827,115 +827,117 @@ export default function FMList({
               )}
             </div>
           </div>
-          <table
-            className={`w-full border text-sm ${showPreview ? "text-[0.6rem]" : ""}`}
-          >
-            <thead>
-              <tr>
-                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                  <p>FM#</p>
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  Vendor Name
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  <p>Date</p>
-                </th>
-                <th className="flex items-center gap-2 text-center font-[400] text-[#797979]">
-                  Hire Value
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  Advance Paid
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  Advance Paid Date
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  Balance
-                </th>
-                <th className="border text-center font-[400] text-[#797979]">
-                  Balance Paid Date
-                </th>
-                {!showPreview && (
-                  <th className="border text-center font-[400] text-[#797979]">
-                    Pending Advance
+          <div className="overflow-y-auto pr-2">
+            <table
+              className={`w-full border text-sm ${showPreview ? "text-[0.6rem]" : ""}`}
+            >
+              <thead>
+                <tr>
+                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                    <p>FM#</p>
                   </th>
-                )}
-                {!showPreview && (
                   <th className="border text-center font-[400] text-[#797979]">
-                    Pending Balance
+                    Vendor Name
                   </th>
-                )}
-                {!showPreview && (
-                  <>
-                    <th className="border text-center font-[400] text-[#797979]">
-                      TDS
-                    </th>
-                  </>
-                )}
-
-                <th className="border text-center font-[400] text-[#797979]">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredFMs.map((data) => (
-                <tr
-                  className={`hover:bg-accent cursor-pointer ${selectedFM?.fmNumber === data.fmNumber ? "bg-accent" : ""}`}
-                  onClick={() => selectFMForPreview(data)}
-                  key={data.fmNumber}
-                >
-                  <td className="border py-2">{data.fmNumber}</td>
-                  <td className="border py-2">{data.vendorName}</td>
-                  <td className="border py-2">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="border py-2">
-                    {formatter.format(parseInt(data.hire))}
-                  </td>
-                  <td className="border py-2">
-                    {data.advance
-                      ? formatter.format(
-                          parseFloat(data.advance) - data.outStandingAdvance,
-                        )
-                      : 0}
-                  </td>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    <p>Date</p>
+                  </th>
+                  <th className="flex items-center gap-2 text-center font-[400] text-[#797979]">
+                    Hire Value
+                  </th>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Advance Paid
+                  </th>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Advance Paid Date
+                  </th>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Balance
+                  </th>
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Balance Paid Date
+                  </th>
                   {!showPreview && (
-                    <td className="border py-2 text-center">
-                      {getAdvancePaidDate(data)}
-                    </td>
+                    <th className="border text-center font-[400] text-[#797979]">
+                      Pending Advance
+                    </th>
                   )}
-                  <td className="border py-2">
-                    {formatter.format(parseInt(data.netBalance))}
-                  </td>
-                  <td className="border py-2 text-center">
-                    {getBalancePaidDate(data)}
-                  </td>
-                  <td className="border py-2">
-                    {formatter.format(data.outStandingAdvance)}
-                  </td>
-                  <td className="border py-2">
-                    {formatter.format(
-                      parseFloat(data.outStandingBalance || "0"),
-                    )}
-                  </td>
+                  {!showPreview && (
+                    <th className="border text-center font-[400] text-[#797979]">
+                      Pending Balance
+                    </th>
+                  )}
                   {!showPreview && (
                     <>
-                      <td className="border py-2 text-center">
-                        {formatter.format(parseFloat(data.tds || "0"))}
-                      </td>
+                      <th className="border text-center font-[400] text-[#797979]">
+                        TDS
+                      </th>
                     </>
                   )}
-                  <td
-                    className={`border py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
-                  >
-                    {data.status}
-                  </td>
+
+                  <th className="border text-center font-[400] text-[#797979]">
+                    Status
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredFMs.map((data) => (
+                  <tr
+                    className={`hover:bg-accent cursor-pointer ${selectedFM?.fmNumber === data.fmNumber ? "bg-accent" : ""}`}
+                    onClick={() => selectFMForPreview(data)}
+                    key={data.fmNumber}
+                  >
+                    <td className="border py-2">{data.fmNumber}</td>
+                    <td className="border py-2">{data.vendorName}</td>
+                    <td className="border py-2">
+                      {new Date(data.date).toLocaleDateString()}
+                    </td>
+                    <td className="border py-2">
+                      {formatter.format(parseInt(data.hire || "0"))}
+                    </td>
+                    <td className="border py-2">
+                      {data.advance
+                        ? formatter.format(
+                          parseFloat(data.advance) - data.outStandingAdvance,
+                        )
+                        : 0}
+                    </td>
+                    {!showPreview && (
+                      <td className="border py-2 text-center">
+                        {getAdvancePaidDate(data)}
+                      </td>
+                    )}
+                    <td className="border py-2">
+                      {formatter.format(parseInt(data.netBalance))}
+                    </td>
+                    <td className="border py-2 text-center">
+                      {getBalancePaidDate(data)}
+                    </td>
+                    <td className="border py-2">
+                      {formatter.format(data.outStandingAdvance)}
+                    </td>
+                    <td className="border py-2">
+                      {formatter.format(
+                        parseFloat(data.outStandingBalance || "0"),
+                      )}
+                    </td>
+                    {!showPreview && (
+                      <>
+                        <td className="border py-2 text-center">
+                          {formatter.format(parseFloat(data.tds || "0"))}
+                        </td>
+                      </>
+                    )}
+                    <td
+                      className={`border py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
+                    >
+                      {data.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </motion.div>
         <motion.div
           className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
@@ -1224,6 +1226,7 @@ export default function FMList({
             resetBulk(),
           ]}
           className="max-h-[80vh] overflow-auto"
+
         >
           <div>
             <p className="mb-5 text-xl font-semibold">FM Bulk Record</p>
@@ -1247,8 +1250,8 @@ export default function FMList({
                       const selectedFM = isAdmin
                         ? selectedVendor?.FM || []
                         : selectedVendor?.FM.filter(
-                            (FM) => FM.branchId === branch.branchId,
-                          ) || [];
+                          (FM) => FM.branchId === branch.branchId,
+                        ) || [];
                       setFMList(selectedFM);
                       field.onChange(value);
                     }}
@@ -1749,6 +1752,7 @@ export default function FMList({
                                 <th className="font-medium">Amount Received</th>
                                 <th className="font-medium">Date</th>
                                 <th className="font-medium">Payment mode</th>
+                                <th className="font-medium">Remarks</th>
                                 <th className="font-medium">
                                   Trans. ID/Cheque Number
                                 </th>
@@ -1770,6 +1774,7 @@ export default function FMList({
                                       ).toLocaleDateString()}
                                     </td>
                                     <td>{record.paymentMode}</td>
+                                    <td>{record.remarks}</td>
                                     <td>{record.transactionNumber}</td>
                                     <td className="flex justify-center gap-2">
                                       <button

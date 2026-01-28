@@ -526,6 +526,9 @@ export default function Pod({
             )}
           </div>
         </div>
+        <div className="overflow-y-auto pr-2">
+
+        
         <table className="w-full">
           <thead>
             <tr>
@@ -574,6 +577,7 @@ export default function Pod({
             ))}
           </tbody>
         </table>
+        </div>
       </section>
       <Modal
         open={isOpen}

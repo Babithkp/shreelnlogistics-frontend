@@ -238,7 +238,7 @@ export default function Writeoff({
           </Button>
         </div>
       </section>
-      <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
+      <section className="flex h-[65vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         <table>
           <thead>
             <tr>

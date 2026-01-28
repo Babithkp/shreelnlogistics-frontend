@@ -383,7 +383,7 @@ export default function Expense({
               />
             </div>
             <Button
-            type="submit"
+              type="submit"
               className="cursor-pointer rounded-xl p-5"
             >
               <LuSearch size={30} className="mx-3 scale-125" />
@@ -402,7 +402,7 @@ export default function Expense({
               View Credits
             </Button>
             <Button
-            type="button"
+              type="button"
               className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
               onClick={() => [
                 setIsOpen(true),
@@ -443,60 +443,58 @@ export default function Expense({
             )}
           </form>
         </div>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Expenses ID</p>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Title</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Expense Date</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">Category</th>
-              <th className="font-[400] text-[#797979]">Branch</th>
-              <th className="font-[400] text-[#797979]">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredExpenses?.map((expense) => (
-              <tr
-                key={expense.expenseId}
-                className="hover:bg-accent cursor-pointer"
-                onClick={() => [
-                  setSelectedExpense(expense),
-                  setIsDetailsModalOpen(true),
-                ]}
-              >
-                <td className="py-2">{expense.expenseId}</td>
-                <td className="py-2">{expense.title}</td>
-                <td className="py-2">
-                  {new Date(expense.date).toLocaleDateString()}
-                </td>
-                <td className="py-2">{expense.category}</td>
-                {expense.Branches && (
-                  <td className="py-2 text-center">
-                    {expense.Branches?.branchName}
-                  </td>
-                )}
-                {expense.Admin && (
-                  <td className="py-2 text-center">
-                    {expense.Admin?.branchName}
-                  </td>
-                )}
-                <td className="py-2">
-                  {formatter.format(parseFloat(expense.amount))}
-                </td>
+        <div className="overflow-y-auto pr-2">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className=" gap-2 text-start font-[400] text-[#797979] ">
+                  Exp ID
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                    Title
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                    Date
+                </th>
+                <th className="text-start font-[400] text-[#797979]">Category</th>
+                <th className="font-[400] text-[#797979]">Branch</th>
+                <th className="font-[400] text-[#797979]">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredExpenses?.map((expense) => (
+                <tr
+                  key={expense.expenseId}
+                  className="hover:bg-accent cursor-pointer"
+                  onClick={() => [
+                    setSelectedExpense(expense),
+                    setIsDetailsModalOpen(true),
+                  ]}
+                >
+                  <td className="py-2 ">{expense.expenseId}</td>
+                  <td className="py-2 w-[30rem] text-sm">{expense.title}</td>
+                  <td className="py-2">
+                    {new Date(expense.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 w-40">{expense.category}</td>
+                  {expense.Branches && (
+                    <td className="py-2 text-center">
+                      {expense.Branches?.branchName}
+                    </td>
+                  )}
+                  {expense.Admin && (
+                    <td className="py-2 text-center">
+                      {expense.Admin?.branchName}
+                    </td>
+                  )}
+                  <td className="py-2 text-center">
+                    {formatter.format(parseFloat(expense.amount))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
       <Modal
         open={isOpen}
@@ -667,11 +665,10 @@ export default function Expense({
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${
-                  linkTo !== "FM"
+                className={`rounded-md border p-2 ${linkTo !== "FM"
                     ? "border-muted cursor-not-allowed"
                     : "border-primary"
-                }`}
+                  }`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -789,9 +786,11 @@ export default function Expense({
           </div>
         </form>
       </Modal>
-      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen} >
         <DialogTrigger className="hidden"></DialogTrigger>
-        <DialogContent className="min-w-7xl">
+        <DialogContent className="min-w-7xl " style={{
+          fontFamily: "DM Sans, sans-serif",
+        }}>
           <DialogHeader className="flex flex-row items-start justify-between">
             <DialogTitle className="text-2xl">
               Expense ID - {selectedExpense?.expenseId}
@@ -840,7 +839,7 @@ export default function Expense({
                   <AlertDialogTrigger className="cursor-pointer">
                     <RiDeleteBin6Line size={20} color="red" />
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent >
                     <AlertDialogHeader>
                       <AlertDialogTitle>Alert!</AlertDialogTitle>
                       <AlertDialogDescription className="font-medium text-black">
@@ -938,9 +937,13 @@ export default function Expense({
               <label className="font-medium">Transaction ID</label>
               <p>{selectedExpense?.transactionNumber}</p>
             </div>
-            <div className="col-span-3 flex flex-col items-start gap-2 capitalize">
+            <div className=" flex flex-col items-start gap-2 capitalize">
               <label className="font-medium">Amount in words</label>
               <p>{selectedExpense?.amountInWords}</p>
+            </div>
+            <div className="flex flex-col items-start gap-5">
+              <label className="font-medium">Description</label>
+              <p>{selectedExpense?.description}</p>
             </div>
           </div>
         </DialogContent>
@@ -950,7 +953,9 @@ export default function Expense({
         onOpenChange={setNotificationAlertOpen}
       >
         <AlertDialogTrigger className="cursor-pointer"></AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent style={{
+          fontFamily: "DM Sans, sans-serif",
+        }}>
           <AlertDialogHeader>
             <AlertDialogTitle>Alert!</AlertDialogTitle>
             <AlertDialogDescription className="font-medium text-black">

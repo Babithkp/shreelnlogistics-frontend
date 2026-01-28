@@ -85,8 +85,8 @@ export default function Navbar({
     getVersion().then(setVersion);
   }, []);
   return (
-    <nav className="flex h-screen w-[20rem] flex-col justify-between gap-10 overflow-y-auto bg-white p-3">
-      <div className="flex w-full justify-center">
+    <nav className="flex h-screen w-[20rem] flex-col justify-between gap-2 overflow-y-auto bg-white p-3">
+      <div className="flex w-full justify-center pb-5">
         <img src={logo} alt="logo" className="w-[16rem]" />
       </div>
       <div className="flex h-full flex-col items-start gap-5 max-xl:text-sm">

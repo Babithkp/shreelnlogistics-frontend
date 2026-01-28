@@ -371,50 +371,53 @@ export default function LRList({
             )}
           </div>
         </div>
-        <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>LR#</p>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Client Name</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Date</p>
-                </div>
-              </th>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>From</p>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">To</th>
-              <th className="text-start font-[400] text-[#797979]">Branch</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLRs?.map((data) => (
-              <tr
-                className="hover:bg-accent cursor-pointer"
-                key={data.lrNumber}
-                onClick={() => selectLRForPreview(data)}
-              >
-                <td className="py-2">{data.lrNumber}</td>
-                <td className="py-2">{data.client.name}</td>
-                <td className="py-2">
-                  {new Date(data.date).toLocaleDateString()}
-                </td>
-                <td className="py-2">{data.from}</td>
-                <td className="py-2">{data.to}</td>
-                <td className="py-2">
-                  {data.branch?.branchName || data.admin?.branchName}
-                </td>
+        <div className="overflow-y-auto pr-2">
+
+          <table className={`w-full ${showPreview ? "text-xs" : ""} `}>
+            <thead>
+              <tr>
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979] border">
+                  <p>LR#</p>
+                </th>
+                <th className="text-start font-[400] text-[#797979] border">
+                  <div className="flex items-center gap-2">
+                    <p>Client Name</p>
+                  </div>
+                </th>
+                <th className="text-start font-[400] text-[#797979] border">
+                  <div className="flex items-center gap-2">
+                    <p>Date</p>
+                  </div>
+                </th>
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979] border">
+                  <p>From</p>
+                </th>
+                <th className="text-start font-[400] text-[#797979] border">To</th>
+                {!showPreview && <th className="text-start font-[400] text-[#797979] border">Branch</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredLRs?.map((data) => (
+                <tr
+                  className={`hover:bg-accent cursor-pointer ${selectedLR?.lrNumber === data.lrNumber ? "bg-accent" : ""}`}
+                  key={data.lrNumber}
+                  onClick={() => selectLRForPreview(data)}
+                >
+                  <td className="py-2 border">{data.lrNumber}</td>
+                  <td className="py-2 border">{data.client.name}</td>
+                  <td className="py-2 border">
+                    {new Date(data.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 border">{data.from}</td>
+                  <td className="py-2 border">{data.to}</td>
+                  {!showPreview && <td className="py-2 border">
+                    {data.branch?.branchName || data.admin?.branchName}
+                  </td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </motion.div>
       <motion.div
         className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"

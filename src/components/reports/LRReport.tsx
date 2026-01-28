@@ -209,7 +209,7 @@ export default function LRReport({
           Download
         </Button>
       </section>
-      <section className="flex h-[64vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
+      <section className="flex h-[70vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
         {LRData.length !== 0 && (
           <table>
             <thead>

@@ -421,60 +421,62 @@ export default function Credit({ setSection }: { setSection: any }) {
             )}
           </div>
         </div>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Credit ID</p>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Title</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Expense Date</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">Category</th>
-              <th className="font-[400] text-[#797979]">Branch</th>
-              <th className="font-[400] text-[#797979]">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCredits?.map((expense) => (
-              <tr
-                key={expense.creditId}
-                className="hover:bg-accent cursor-pointer"
-                onClick={() => [
-                  setSelectedCredit(expense),
-                  setIsDetailsModalOpen(true),
-                ]}
-              >
-                <td className="py-2">{expense.creditId}</td>
-                <td className="py-2">{expense.title}</td>
-                <td className="py-2">
-                  {new Date(expense.date).toLocaleDateString()}
-                </td>
-                <td className="py-2">{expense.category}</td>
-                {expense.Branches && (
-                  <td className="py-2 text-center">
-                    {expense.Branches?.branchName}
-                  </td>
-                )}
-                {expense.Admin && (
-                  <td className="py-2 text-center">
-                    {expense.Admin?.branchName}
-                  </td>
-                )}
-                <td className="py-2">
-                  {formatter.format(parseFloat(expense.amount))}
-                </td>
+        <div className="overflow-y-auto pr-2">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                  <p>Credit ID</p>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  <div className="flex items-center gap-2">
+                    <p>Title</p>
+                  </div>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  <div className="flex items-center gap-2">
+                    <p>Expense Date</p>
+                  </div>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">Category</th>
+                <th className="font-[400] text-[#797979]">Branch</th>
+                <th className="font-[400] text-[#797979]">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredCredits?.map((expense) => (
+                <tr
+                  key={expense.creditId}
+                  className="hover:bg-accent cursor-pointer"
+                  onClick={() => [
+                    setSelectedCredit(expense),
+                    setIsDetailsModalOpen(true),
+                  ]}
+                >
+                  <td className="py-2">{expense.creditId}</td>
+                  <td className="py-2">{expense.title}</td>
+                  <td className="py-2">
+                    {new Date(expense.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2">{expense.category}</td>
+                  {expense.Branches && (
+                    <td className="py-2 text-center">
+                      {expense.Branches?.branchName}
+                    </td>
+                  )}
+                  {expense.Admin && (
+                    <td className="py-2 text-center">
+                      {expense.Admin?.branchName}
+                    </td>
+                  )}
+                  <td className="py-2">
+                    {formatter.format(parseFloat(expense.amount))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
       <Modal
         open={isOpen}
@@ -645,11 +647,10 @@ export default function Credit({ setSection }: { setSection: any }) {
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${
-                  linkTo !== "FM"
-                    ? "border-muted cursor-not-allowed"
-                    : "border-primary"
-                }`}
+                className={`rounded-md border p-2 ${linkTo !== "FM"
+                  ? "border-muted cursor-not-allowed"
+                  : "border-primary"
+                  }`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -916,9 +917,13 @@ export default function Credit({ setSection }: { setSection: any }) {
               <label className="font-medium">Transaction ID</label>
               <p>{selectedCredit?.transactionNumber}</p>
             </div>
-            <div className="col-span-3 flex flex-col items-start gap-2 capitalize">
+            <div className=" flex flex-col items-start gap-2 capitalize">
               <label className="font-medium">Amount in words</label>
               <p>{selectedCredit?.amountInWords}</p>
+            </div>
+            <div className="flex flex-col items-start gap-5">
+              <label className="font-medium">Description</label>
+              <p>{selectedCredit?.description}</p>
             </div>
           </div>
         </DialogContent>

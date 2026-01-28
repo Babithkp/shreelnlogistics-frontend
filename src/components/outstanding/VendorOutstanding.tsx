@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
 import { filterVendorByNameApi, getVendorForPageApi } from "@/api/partner";
 import { formatter } from "@/lib/utils";
@@ -15,6 +14,11 @@ type FM = {
   netBalance: string;
   outStandingBalance: string;
   PaymentRecords: PaymentRecord[];
+  detentionCharges: string;
+  rtoCharges: string;
+  otherCharges: string;
+  tds: string;
+  hire: string;
 };
 
 type Vendor = {
@@ -89,14 +93,18 @@ export default function VendorOutstanding({
       let latestDate: string | null = null;
 
       vendor.FM.forEach((fm) => {
-        totalInvoice += parseFloat(fm.netBalance || "0");
+        totalInvoice += parseFloat(fm.hire || "0") +
+          parseFloat(fm.detentionCharges || "0") +
+          parseFloat(fm.rtoCharges || "0") +
+          parseFloat(fm.otherCharges || "0") -
+          parseFloat(fm.tds || "0"),
 
-        fm.PaymentRecords.forEach((pr) => {
-          totalReceived += parseFloat(pr.amount || "0");
-          if (!latestDate || new Date(pr.date) > new Date(latestDate)) {
-            latestDate = pr.date;
-          }
-        });
+          fm.PaymentRecords.forEach((pr) => {
+            totalReceived += parseFloat(pr.amount || "0");
+            if (!latestDate || new Date(pr.date) > new Date(latestDate)) {
+              latestDate = pr.date;
+            }
+          });
       });
 
       const pendingAmount = vendor.FM.reduce(
@@ -194,14 +202,12 @@ export default function VendorOutstanding({
             </th>
             <th className="text-start font-[400] text-[#797979]">
               <div className="flex items-center gap-2">
-                <p>Total Freight</p>
-                <FaChevronDown size={15} className="cursor-pointer" />
+                <p>Total Hire cost</p>
               </div>
             </th>
             <th className="text-start font-[400] text-[#797979]">
               <div className="flex items-center gap-2">
                 <p>Total Paid</p>
-                <FaChevronDown size={15} className="cursor-pointer" />
               </div>
             </th>
             <th className="text-start font-[400] text-[#797979]">

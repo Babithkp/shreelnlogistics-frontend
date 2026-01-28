@@ -792,66 +792,63 @@ export default function ViewBills({
               )}
             </div>
           </div>
-          <table className={`w-full ${showPreview ? "text-xs" : ""}`}>
+          <div className="overflow-y-auto pr-2">
+          <table className={`w-full ${showPreview ? "text-xs" : ""} scroll-auto`}>
             <thead>
               <tr>
-                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                  <p>Bill ID</p>
+                <th className="items-center  text-start font-[400] text-[#797979] border">
+                  Bill ID
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
-                  <div className="flex items-center gap-2">
-                    <p>Client Name</p>
-                  </div>
+                <th className="text-start font-[400] text-[#797979] border">
+                  Client Name
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
-                  <div className="flex items-center gap-2">
-                    <p>Date</p>
-                  </div>
+                <th className="text-start font-[400] text-[#797979] border">
+                    Date
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="text-start font-[400] text-[#797979] border ">
                   Freight Amount
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="text-start font-[400] text-[#797979] border ">
                   Payment Recieved
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="text-start font-[400] text-[#797979] border ">
                   Payment Recieved Date
                 </th>
                 {!showPreview && (
                   <>
-                    <th className="text-start font-[400] text-[#797979]">
+                    <th className="text-start font-[400] text-[#797979] border ">
                       Pending Payment
                     </th>
-                    <th className="font-[400] text-[#797979]">Deduction</th>
+                    <th className="font-[400] text-[#797979] border">Deduction</th>
                   </>
                 )}
-                <th className="font-[400] text-[#797979]">TDS</th>
+                <th className="font-[400] text-[#797979] border">TDS</th>
               </tr>
             </thead>
             <tbody>
               {filteredBills.map((data) => (
                 <tr
-                  className="hover:bg-accent cursor-pointer"
+                  className={`hover:bg-accent cursor-pointer ${selectedBill?.billNumber === data.billNumber ? "bg-accent" : ""}`}
                   key={data.id}
                   onClick={() => [
                     selectBillForPreview(data),
                     setEmailIds(data.Client.email),
                   ]}
                 >
-                  <td className="py-2">{data.billNumber}</td>
-                  <td className="py-2">{data.Client?.name}</td>
-                  <td className="py-2">
+                  <td className="py-2 border">{data.billNumber}</td>
+                  <td className="py-2 border">{data.Client?.name}</td>
+                  <td className="py-2 border">
                     {new Date(data.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2">{formatter.format(data.subTotal)}</td>
-                  <td className="py-2">
+                  <td className="py-2 border">{formatter.format(data.subTotal)}</td>
+                  <td className="py-2 border">
                     {formatter.format(
                       parseFloat(data.zeroToThirty) +
                         parseFloat(data.thirtyToSixty) +
                         parseFloat(data.sixtyPlus),
                     )}
                   </td>
-                  <td className="py-2 text-center">
+                  <td className="py-2 text-center border">
                     {data.PaymentRecords.length > 0
                       ? new Date(
                           data.PaymentRecords[
@@ -862,15 +859,15 @@ export default function ViewBills({
                   </td>
                   {!showPreview && (
                     <>
-                      <td className="py-2">
+                      <td className="py-2 border">
                         {formatter.format(data.pendingAmount)}
                       </td>
-                      <td className="py-2 text-center">
+                      <td className="py-2 text-center border">
                         {data.WriteOff?.amount || 0}
                       </td>
                     </>
                   )}
-                  <td className="py-2 text-center">
+                  <td className="py-2 text-center border">
                     {formatter.format(
                       data.subTotal * (data?.tds ? data?.tds / 100 : 0.01),
                     )}
@@ -879,6 +876,7 @@ export default function ViewBills({
               ))}
             </tbody>
           </table>
+          </div>
         </motion.div>
         <motion.div
           className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
@@ -1719,6 +1717,7 @@ export default function ViewBills({
                               <th className="font-medium">Amount Received</th>
                               <th className="font-medium">Date</th>
                               <th className="font-medium">Payment mode</th>
+                              <th className="font-medium">Remarks</th>
                               <th className="font-medium">
                                 Trans. ID/Cheque Number
                               </th>
@@ -1738,6 +1737,7 @@ export default function ViewBills({
                                     {new Date(record.date).toLocaleDateString()}
                                   </td>
                                   <td>{record.paymentMode}</td>
+                                  <td className="max-w-70">{record.remarks}</td>
                                   <td>{record.transactionNumber}</td>
                                   <td className="flex justify-center gap-2">
                                     <button

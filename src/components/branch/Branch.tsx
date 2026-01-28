@@ -51,6 +51,7 @@ import { BranchInputs, ExpensesInputs } from "@/types";
 import { LuSearch } from "react-icons/lu";
 import { getAllExpensesApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
+import { Skeleton } from "antd";
 
 export type EditBranchPassword = {
   adminPassword: string;
@@ -276,7 +277,7 @@ export default function Branch() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-5 rounded-md bg-white p-5">
+      <div className="flex flex-col gap-5 rounded-md bg-white p-5 max-h-[75vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Branches</p>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -498,194 +499,200 @@ export default function Branch() {
             </DialogContent>
           </Dialog>
         </div>
-        <table className="h-full w-full">
-          <thead>
-            <tr className="text-[#797979]">
-              <th className="text-start font-medium">
-                <div className="flex items-center gap-3">
-                  <p>Branch Name</p>
-                </div>
-              </th>
-              <th className="text-start font-medium">
-                <div className="flex items-center gap-3">
-                  <p>Branch Manager</p>
-                </div>
-              </th>
-              <th className="text-start font-medium">
-                <div className="flex items-center gap-3">
-                  <p>Employee count</p>
+        {
+          filteredBranches?.length > 0 ?
+            <table className="h-full w-full">
+              <thead>
+                <tr className="text-[#797979]">
+                  <th className="text-start font-medium">
+                    <div className="flex items-center gap-3">
+                      <p>Branch Name</p>
+                    </div>
+                  </th>
+                  <th className="text-start font-medium">
+                    <div className="flex items-center gap-3">
+                      <p>Branch Manager</p>
+                    </div>
+                  </th>
+                  <th className="text-start font-medium">
+                    <div className="flex items-center gap-3">
+                      <p>Employee count</p>
 
-                </div>
-              </th>
-              <th className="text-start font-medium">
-                <div className="flex items-center gap-3">
-                  <p>Total Billing value</p>
-                </div>
-              </th>
-              <th className="text-start font-medium">Username</th>
-              <th className="text-start font-medium">Password</th>
-            </tr>
-          </thead>
-          <tbody className="">
-            {filteredBranches?.map((branch) => (
-              <tr className="hover:bg-accent cursor-pointer" key={branch.id}>
-                <td
-                  className="py-3"
-                  onClick={() => [
-                    setIsBranchDetailsModalOpen(true),
-                    setBranchDetails(branch),
-                  ]}
-                >
-                  {branch.branchName}
-                </td>
-                <td
-                  className="py-3"
-                  onClick={() => [
-                    setIsBranchDetailsModalOpen(true),
-                    setBranchDetails(branch),
-                  ]}
-                >
-                  {branch.branchManager}
-                </td>
-                <td
-                  className="py-3"
-                  onClick={() => [
-                    setIsBranchDetailsModalOpen(true),
-                    setBranchDetails(branch),
-                  ]}
-                >
-                  {branch.employeeCount}
-                </td>
-                <td
-                  className="py-3"
-                  onClick={() => [
-                    setIsBranchDetailsModalOpen(true),
-                    setBranchDetails(branch),
-                  ]}
-                >
-                  {formatter.format(branch?.bill?.reduce((acc, data) => acc + data.subTotal, 0))}
-                </td>
-                <td
-                  className="py-3"
-                  onClick={() => [
-                    setIsBranchDetailsModalOpen(true),
-                    setBranchDetails(branch),
-                  ]}
-                >
-                  {branch.username}
-                </td>
-                <td>
-                  <Dialog
-                    open={isEditPasswordModalOpen}
-                    onOpenChange={setIsEditPasswordModalOpen}
-                  >
-                    <DialogTrigger
-                      className="cursor-pointer"
-                      onClick={() => setSelectedBranch(branch.branchName)}
+                    </div>
+                  </th>
+                  <th className="text-start font-medium">
+                    <div className="flex items-center gap-3">
+                      <p>Total Billing value</p>
+                    </div>
+                  </th>
+                  <th className="text-start font-medium">Username</th>
+                  <th className="text-start font-medium">Password</th>
+                </tr>
+              </thead>
+              <tbody className="">
+                {filteredBranches?.map((branch) => (
+                  <tr className="hover:bg-accent cursor-pointer" key={branch.id}>
+                    <td
+                      className="py-3"
+                      onClick={() => [
+                        setIsBranchDetailsModalOpen(true),
+                        setBranchDetails(branch),
+                      ]}
                     >
-                      <RiEditBoxLine size={24} color="#2196F3" />
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
-                      </DialogHeader>
-                      <DialogDescription className="text-base text-black">
-                        This will update the password for the{" "}
-                        <span className="font-medium">
-                          {selectedBranch} Branch
-                        </span>
-                        . User will have to login again.
-                      </DialogDescription>
-                      <form
-                        className="flex flex-col gap-5"
-                        onSubmit={handlePasswordSubmit(onChangePasswordSubmit)}
+                      {branch.branchName}
+                    </td>
+                    <td
+                      className="py-3"
+                      onClick={() => [
+                        setIsBranchDetailsModalOpen(true),
+                        setBranchDetails(branch),
+                      ]}
+                    >
+                      {branch.branchManager}
+                    </td>
+                    <td
+                      className="py-3"
+                      onClick={() => [
+                        setIsBranchDetailsModalOpen(true),
+                        setBranchDetails(branch),
+                      ]}
+                    >
+                      {branch.employeeCount}
+                    </td>
+                    <td
+                      className="py-3"
+                      onClick={() => [
+                        setIsBranchDetailsModalOpen(true),
+                        setBranchDetails(branch),
+                      ]}
+                    >
+                      {formatter.format(branch?.bill?.reduce((acc, data) => acc + data.subTotal, 0))}
+                    </td>
+                    <td
+                      className="py-3"
+                      onClick={() => [
+                        setIsBranchDetailsModalOpen(true),
+                        setBranchDetails(branch),
+                      ]}
+                    >
+                      {branch.username}
+                    </td>
+                    <td>
+                      <Dialog
+                        open={isEditPasswordModalOpen}
+                        onOpenChange={setIsEditPasswordModalOpen}
                       >
-                        <div className="">
-                          <div className="flex flex-col gap-2">
-                            <label>Enter admin password</label>
-                            <input
-                              type="password"
-                              className="border-primary rounded-md border p-1 py-2 pl-2"
-                              {...registerPassword("adminPassword", {
-                                required: true,
-                              })}
-                            />
-                          </div>
-                          {passwordErrors.adminPassword && (
-                            <p className="mt-1 text-sm text-red-500">
-                              Admin password is required
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex flex-col gap-2">
-                            <label>Enter new password</label>
-                            <input
-                              type="password"
-                              className="border-primary rounded-md border p-1 py-2 pl-2"
-                              {...registerPassword("newPassword", {
-                                required: true,
-                              })}
-                            />
-                          </div>
-                          {passwordErrors.newPassword && (
-                            <p className="mt-1 text-sm text-red-500">
-                              Password is required
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex flex-col gap-2">
-                            <label>Confirm new password</label>
-                            <input
-                              type="password"
-                              className="border-primary rounded-md border p-1 py-2 pl-2"
-                              {...registerPassword("confirmNewPassword", {
-                                required: "Please confirm your password",
-                                validate: (value) =>
-                                  value === watch("newPassword") ||
-                                  "Passwords do not match",
-                              })}
-                            />
-                          </div>
-                          {passwordErrors.confirmNewPassword && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {passwordErrors.confirmNewPassword.message}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex justify-end gap-5">
-                          <Button
-                            variant={"outline"}
-                            className="border-primary px-7"
-                            onClick={() => [
-                              resetPassword(),
-                              setIsEditPasswordModalOpen(false),
-                            ]}
-                            disabled={isloading}
-                            type="button"
+                        <DialogTrigger
+                          className="cursor-pointer"
+                          onClick={() => setSelectedBranch(branch.branchName)}
+                        >
+                          <RiEditBoxLine size={24} color="#2196F3" />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Change Password</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription className="text-base text-black">
+                            This will update the password for the{" "}
+                            <span className="font-medium">
+                              {selectedBranch} Branch
+                            </span>
+                            . User will have to login again.
+                          </DialogDescription>
+                          <form
+                            className="flex flex-col gap-5"
+                            onSubmit={handlePasswordSubmit(onChangePasswordSubmit)}
                           >
-                            Cancel
-                          </Button>
-                          <Button
-                            className="bg-primary px-7"
-                            disabled={isloading}
-                          >
-                            {isloading ? (
-                              <VscLoading size={24} className="animate-spin" />
-                            ) : (
-                              "Update"
-                            )}
-                          </Button>
-                        </div>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                            <div className="">
+                              <div className="flex flex-col gap-2">
+                                <label>Enter admin password</label>
+                                <input
+                                  type="password"
+                                  className="border-primary rounded-md border p-1 py-2 pl-2"
+                                  {...registerPassword("adminPassword", {
+                                    required: true,
+                                  })}
+                                />
+                              </div>
+                              {passwordErrors.adminPassword && (
+                                <p className="mt-1 text-sm text-red-500">
+                                  Admin password is required
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex flex-col gap-2">
+                                <label>Enter new password</label>
+                                <input
+                                  type="password"
+                                  className="border-primary rounded-md border p-1 py-2 pl-2"
+                                  {...registerPassword("newPassword", {
+                                    required: true,
+                                  })}
+                                />
+                              </div>
+                              {passwordErrors.newPassword && (
+                                <p className="mt-1 text-sm text-red-500">
+                                  Password is required
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex flex-col gap-2">
+                                <label>Confirm new password</label>
+                                <input
+                                  type="password"
+                                  className="border-primary rounded-md border p-1 py-2 pl-2"
+                                  {...registerPassword("confirmNewPassword", {
+                                    required: "Please confirm your password",
+                                    validate: (value) =>
+                                      value === watch("newPassword") ||
+                                      "Passwords do not match",
+                                  })}
+                                />
+                              </div>
+                              {passwordErrors.confirmNewPassword && (
+                                <p className="mt-1 text-sm text-red-500">
+                                  {passwordErrors.confirmNewPassword.message}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex justify-end gap-5">
+                              <Button
+                                variant={"outline"}
+                                className="border-primary px-7"
+                                onClick={() => [
+                                  resetPassword(),
+                                  setIsEditPasswordModalOpen(false),
+                                ]}
+                                disabled={isloading}
+                                type="button"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="bg-primary px-7"
+                                disabled={isloading}
+                              >
+                                {isloading ? (
+                                  <VscLoading size={24} className="animate-spin" />
+                                ) : (
+                                  "Update"
+                                )}
+                              </Button>
+                            </div>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table> :
+            <div className="flex w-full h-full items-center justify-center">
+              <Skeleton active  rootClassName="w-full h-full" paragraph={{ rows: 10 }} />
+            </div>
+        }
       </div>
       <Dialog
         open={isBranchDetailsModalOpen}

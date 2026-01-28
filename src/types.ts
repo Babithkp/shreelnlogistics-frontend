@@ -75,6 +75,7 @@ export interface LrInputs {
   vehicleId: string;
   branch: BranchInputs;
   client: ClientInputs;
+  billId: string;
   Vehicle: {
     id: string;
     vehicleNumber: string;

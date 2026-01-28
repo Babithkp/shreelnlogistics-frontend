@@ -554,7 +554,8 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             )}
           </div>
         </div>
-        <table>
+        <div className="overflow-y-auto pr-2">
+        <table className="w-full">
           <thead>
             <tr>
               <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
@@ -602,6 +603,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <Dialog
         open={isClientDetailsModalOpen}

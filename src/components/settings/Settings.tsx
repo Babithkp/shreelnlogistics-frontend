@@ -460,7 +460,7 @@ export default function Settings({ data }: { data?: Setting }) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10">
+          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10 ">
             <div className="flex items-center justify-between">
               <p className="text-lg font-medium">General Settings</p>
               <TbEdit
@@ -470,7 +470,7 @@ export default function Settings({ data }: { data?: Setting }) {
                 className="cursor-pointer"
               />
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm max-h-[40vh] overflow-y-auto">
               <div className="flex w-1/2 flex-col gap-3">
                 <label className="font-medium">Vehicle List</label>
                 <div className="grid grid-cols-3 gap-6">
@@ -775,6 +775,9 @@ export default function Settings({ data }: { data?: Setting }) {
         centered={true}
         footer={null}
         onCancel={() => setIsBankDetailsModalOpen(false)}
+        style={{
+          fontFamily: "DM Sans, sans-serif",
+        }}
       >
         <form
           onSubmit={bankSettingsHandleSubmit(onBankSettingsSubmit)}
@@ -970,6 +973,7 @@ export default function Settings({ data }: { data?: Setting }) {
         centered={true}
         footer={null}
         onCancel={() => setIsOtherSettingsModalOpen(false)}
+
       >
         <form className="flex flex-wrap justify-between gap-5">
           <p className="w-full text-xl font-semibold">Other settings</p>

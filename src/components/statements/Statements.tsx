@@ -12,6 +12,7 @@ import {
 import { getAllCreditApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 import { toast } from "react-toastify";
+import { Skeleton } from "antd";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: any;
@@ -50,10 +51,10 @@ export default function Statements() {
   };
 
   const exportFilteredRecordExcel = async () => {
-    exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)    
+    exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)
     if (!branchId) {
       fetchTransactions();
-    } else if(branchId) {
+    } else if (branchId) {
       fetchTransactions(branchId);
     }
     setExportDate("");
@@ -155,8 +156,8 @@ export default function Statements() {
       const allCredits: CreditInputs[] = creditResponse.data.data;
       const filteredTransactions = branchId
         ? allTransactions.filter(
-            (transaction) => transaction.branchesId === branchId,
-          )
+          (transaction) => transaction.branchesId === branchId,
+        )
         : allTransactions;
       const filteredCredits = branchId
         ? allCredits.filter((credit) => credit.branchesId === branchId)
@@ -170,7 +171,7 @@ export default function Statements() {
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
       setTransactions(sortedTransactions as ExtendedPaymentRecord[]);
-      
+
       setPaymentTotals(
         summarizePayments(sortedTransactions as ExtendedPaymentRecord[]),
       );
@@ -230,7 +231,7 @@ export default function Statements() {
 
       {(
         <section className="flex w-full flex-col justify-between gap-5 rounded-md bg-white p-5">
-          <div className="h-[57Vh] overflow-y-auto">
+          <div className="h-[63Vh] ">
             <div className="flex justify-between pr-2">
               <p className="pb-2 text-lg font-medium">Cash Statement</p>
               <div className="flex gap-2">
@@ -245,66 +246,74 @@ export default function Statements() {
                 <Button onClick={exportFilteredRecordExcel}>Export</Button>
               </div>
             </div>
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                    <p>Date</p>
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    <div className="flex items-center gap-2">
-                      <p>Description</p>
-                    </div>
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    <div className="flex items-center gap-2">
-                      <p>Branch</p>
-                    </div>
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">
-                    Billed value
-                  </th>
-                  <th className="text-start font-[400] text-[#797979]">Cr.</th>
-                  <th className="text-center font-[400] text-[#797979]">Dr.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((record) => (
-                  <tr
-                    className="hover:bg-accent cursor-pointer"
-                    key={record.id}
-                  >
-                    <td className="py-2">
-                      {new Date(record.date).toLocaleDateString()}
-                    </td>
-                    <td className="py-2">
-                      {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
-                      {record.IDNumber ?? record.creditId}
-                    </td>
-                    <td className="py-2">
-                      {record.Admin?.branchName || record.Branches?.branchName}
-                    </td>
-                    <td className="py-2">
-                      {formatter.format(parseFloat(record.amount))}
-                    </td>
-                    {record.billId || record.creditId ? (
+            <div className="overflow-y-auto pr-2 h-[60vh]">
+              {
+                transactions.length > 0 ?
+                <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                      <p>Date</p>
+                    </th>
+                    <th className="text-start font-[400] text-[#797979]">
+                      <div className="flex items-center gap-2">
+                        <p>Description</p>
+                      </div>
+                    </th>
+                    <th className="text-start font-[400] text-[#797979]">
+                      <div className="flex items-center gap-2">
+                        <p>Branch</p>
+                      </div>
+                    </th>
+                    <th className="text-start font-[400] text-[#797979]">
+                      Billed value
+                    </th>
+                    <th className="text-start font-[400] text-[#797979]">Cr.</th>
+                    <th className="text-center font-[400] text-[#797979]">Dr.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((record) => (
+                    <tr
+                      className="hover:bg-accent cursor-pointer"
+                      key={record.id}
+                    >
+                      <td className="py-2">
+                        {new Date(record.date).toLocaleDateString()}
+                      </td>
+                      <td className="py-2">
+                        {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
+                        {record.IDNumber ?? record.creditId}
+                      </td>
+                      <td className="py-2">
+                        {record.Admin?.branchName || record.Branches?.branchName}
+                      </td>
                       <td className="py-2">
                         {formatter.format(parseFloat(record.amount))}
                       </td>
-                    ) : (
-                      <td className="py-2">-</td>
-                    )}
-                    {record.fMId ? (
-                      <td className="py-2 text-center">
-                        {formatter.format(parseFloat(record.amount))}
-                      </td>
-                    ) : (
-                      <td className="py-2 text-center">-</td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {record.billId || record.creditId ? (
+                        <td className="py-2">
+                          {formatter.format(parseFloat(record.amount))}
+                        </td>
+                      ) : (
+                        <td className="py-2">-</td>
+                      )}
+                      {record.fMId ? (
+                        <td className="py-2 text-center">
+                          {formatter.format(parseFloat(record.amount))}
+                        </td>
+                      ) : (
+                        <td className="py-2 text-center">-</td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>:
+                <div className="flex w-full h-full items-center justify-center">
+                  <Skeleton active  rootClassName="w-full h-full" paragraph={{ rows: 50 }} />
+                </div>
+              }
+            </div>
           </div>
           <div className="flex justify-end pr-10">
             <div className="flex gap-15">
