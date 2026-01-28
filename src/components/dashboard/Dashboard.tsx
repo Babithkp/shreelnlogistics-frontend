@@ -460,7 +460,7 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
                   }}
                 />
                 <YAxis hide />
-                <Tooltip position={{ y: 100 }} />
+                <Tooltip position={{ y: -90 }} />
                 <Line
                   type="monotone"
                   dataKey="totalBill"
@@ -493,7 +493,7 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
                   }}
                 />
                 <YAxis hide />
-                <Tooltip position={{ x: 230 }} />
+                <Tooltip position={{ y: -90 }} />
                 <Line
                   type="monotone"
                   dataKey="totalOutStanding"
@@ -522,12 +522,12 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
         <div className="flex w-[10%] rounded-xl bg-white p-5 justify-center items-center">
             
             <div className="font-medium">
-              <p className="text-2xl">{dashboardData ? dashboardData.vendorCount : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}</p>
+              <p className="text-2xl text-center">{dashboardData ? dashboardData.vendorCount : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}</p>
               <p className="text-black text-sm">Vendors</p>
           </div>
         </div>
       </div>
-      <section className="flex justify-between gap-5 max-h-[38vh] ">
+      <section className="flex justify-between gap-5 max-h-[38vh] w-full">
         <div className={`flex rounded-xl bg-white p-5 gap-10`}>
           <div className="flex w-[15%] flex-col justify-between gap-2 py-5 ">
             <div className="flex flex-col gap-3">
