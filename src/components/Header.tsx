@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { billInputs, Notification, SectionsState } from "@/types";
+import {  Notification, SectionsState } from "@/types";
 import {
   deleteNotificationApi,
   getAllAdminNotificationsApi,
@@ -157,14 +157,14 @@ export default function Header({
     }
   };
 
-  function getMessageTitle(notification: Notification): string {
-    if (notification.entityType === "Credit Limit") {
-      return `Alert - Credit Limit exceeded for ${notification.createdByRole}`;
-    } else if (notification.entityType === "Outstanding limit") {
-      return `Alert - Outstanding limit exceeded for ${notification.createdByRole}`;
-    } else
-      return `Request to ${notification.actionType} the ${notification.entityType} for ( ${notification.entityType} No. ${notification.requestId}) `;
-  }
+  // function getMessageTitle(notification: Notification): string {
+  //   if (notification.entityType === "Credit Limit") {
+  //     return `Alert - Credit Limit exceeded for ${notification.createdByRole}`;
+  //   } else if (notification.entityType === "Outstanding limit") {
+  //     return `Alert - Outstanding limit exceeded for ${notification.createdByRole}`;
+  //   } else
+  //     return `Request to ${notification.actionType} the ${notification.entityType} for ( ${notification.entityType} No. ${notification.requestId}) `;
+  // }
 
   async function fetchAdminNotifications() {
     const response = await getAllAdminNotificationsApi();
