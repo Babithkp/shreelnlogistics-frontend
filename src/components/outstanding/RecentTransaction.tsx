@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaChevronDown } from "react-icons/fa6";
 import { FMInputs, PaymentRecord } from "@/types";
 import { formatter } from "@/lib/utils";
 import { GetRecentTransactionsApi } from "@/api/branch";
