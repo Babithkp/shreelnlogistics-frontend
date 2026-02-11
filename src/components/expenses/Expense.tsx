@@ -215,10 +215,11 @@ export default function Expense({
   const onExpensesEditNotificationSubmit = async () => {
     const data = {
       requestId: selectedExpense?.expenseId,
-      title: "Expense edit",
-      message: branch.branchName,
-      description: branch.id,
-      status: "editable",
+      entityType: "Expense",
+      actionType: "edit",
+      createdByRole: branch.branchName,
+      createdById: branch.id,
+      status: "pending",
       data: JSON.stringify(notificationData),
     };
     const response = await createNotificationApi(data);
@@ -236,10 +237,11 @@ export default function Expense({
   ) => {
     const data = {
       requestId: expenses.expenseId,
-      title: "Expense delete",
-      message: branch?.branchName,
-      description: branch.id,
-      status: "delete",
+      entityType: "Expense",
+      actionType: "delete",
+      createdByRole: branch.branchName,
+      createdById: branch.id,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {

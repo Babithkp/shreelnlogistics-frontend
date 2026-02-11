@@ -205,10 +205,11 @@ export default function Credit({ setSection }: { setSection: any }) {
   const onCreditEditNotificationSubmit = async () => {
     const data = {
       requestId: selectedCredit?.creditId,
-      title: "Credit edit",
-      message: branch.branchName,
-      description: branch.id,
-      status: "editable",
+      entityType: "Credit",
+      actionType: "edit",
+      createdByRole: branch.branchName,
+      createdById: branch.id,
+      status: "pending",
       data: JSON.stringify(notificationData),
     };
     const response = await createNotificationApi(data);
@@ -224,10 +225,11 @@ export default function Credit({ setSection }: { setSection: any }) {
   const onDeleteCreditHandlerOnNotification = async (credit: CreditInputs) => {
     const data = {
       requestId: credit.creditId,
-      title: "Credit delete",
-      message: branch?.branchName,
-      description: branch.id,
-      status: "delete",
+      entityType: "Credit",
+      actionType: "delete",
+      createdByRole: branch.branchName,
+      createdById: branch.id,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {

@@ -1,6 +1,5 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const createLRApi = async (data: any) => {
   try {
@@ -300,13 +299,13 @@ export const deleteLRByNotificationApi = async (data: any) => {
 };
 
 export const updateRecordPaymentByNotificationApi = async (
-  id: string,
   LRnumber: string,
+  id: string,
   data: any,
 ) => {
   try {
     const response = await axios.patch(
-      `${BASE_URL}/api/v1/updateRecordPaymentByNotification/${id}/${LRnumber}`,
+      `${BASE_URL}/api/v1/updateRecordPaymentByNotification//${id}/${LRnumber}`,
       data,
     );
     return response;
@@ -316,12 +315,11 @@ export const updateRecordPaymentByNotificationApi = async (
 };
 
 export const deleteFMRecordByNotificationApi = async (
-  id: string,
   IDNumber: string,
 ) => {
   try {
     const response = await axios.delete(
-      `${BASE_URL}/api/v1/deleteFMRecordByNotification/${id}/${IDNumber}`,
+      `${BASE_URL}/api/v1/deleteFMRecordByNotification/${IDNumber}`,
     );
     return response;
   } catch (error) {

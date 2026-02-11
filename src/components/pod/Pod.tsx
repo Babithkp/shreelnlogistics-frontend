@@ -309,12 +309,12 @@ export default function Pod({
   const onPodEditNotificationSubmit = async () => {
     const data = {
       requestId: selectedPOD?.lrNumber,
-      title: "POD edit",
-      message: branch.branchName,
-      description: branch.branchId,
-      status: "editable",
+      entityType: "POD",
+      actionType: "edit",
+      createdByRole: branch.branchName,
+      createdById: branch.branchId,
+      status: "pending",
       data: JSON.stringify(notificationData),
-      fileId: selectedPOD?.id,
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
@@ -334,11 +334,11 @@ export default function Pod({
   const onDeletePodHandlerOnNotification = async (pod: PODInputs) => {
     const data = {
       requestId: pod.lrNumber,
-      title: "POD delete",
-      message: branch?.branchName,
-      description: branch.branchId,
-      status: "delete",
-      fileId: pod.id,
+      entityType: "POD",
+      actionType: "delete",
+      createdByRole: branch.branchName,
+      createdById: branch.branchId,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
@@ -528,55 +528,55 @@ export default function Pod({
         </div>
         <div className="overflow-y-auto pr-2">
 
-        
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>LR#</p>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Client Name</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Receiving Date</p>
-                </div>
-              </th>
-              <th className="text-start font-[400] text-[#797979]">LR Date</th>
-              <th className="font-[400] text-[#797979]">Time taken</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPods?.map((pod) => (
-              <tr
-                key={pod.id}
-                className="hover:bg-accent cursor-pointer"
-                onClick={() => [
-                  setSelectedPOD(pod),
-                  setIsDetailsModalOpen(true),
-                ]}
-              >
-                <td className="py-2">{pod.lrNumber}</td>
-                <td className="py-2">{pod.clientName}</td>
-                <td className="py-2">{pod.receivingDate}</td>
-                <td className="py-2">
-                  {new Date(pod.date).toLocaleDateString()}
-                </td>
-                <td className="py-2 text-center">
-                  {Math.floor(
-                    (new Date(pod.receivingDate).getTime() -
-                      new Date(pod.date).getTime()) /
-                      (1000 * 60 * 60 * 24),
-                  )}{" "}
-                  days
-                </td>
+
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                  <p>LR#</p>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  <div className="flex items-center gap-2">
+                    <p>Client Name</p>
+                  </div>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">
+                  <div className="flex items-center gap-2">
+                    <p>Receiving Date</p>
+                  </div>
+                </th>
+                <th className="text-start font-[400] text-[#797979]">LR Date</th>
+                <th className="font-[400] text-[#797979]">Time taken</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredPods?.map((pod) => (
+                <tr
+                  key={pod.id}
+                  className="hover:bg-accent cursor-pointer"
+                  onClick={() => [
+                    setSelectedPOD(pod),
+                    setIsDetailsModalOpen(true),
+                  ]}
+                >
+                  <td className="py-2">{pod.lrNumber}</td>
+                  <td className="py-2">{pod.clientName}</td>
+                  <td className="py-2">{pod.receivingDate}</td>
+                  <td className="py-2">
+                    {new Date(pod.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 text-center">
+                    {Math.floor(
+                      (new Date(pod.receivingDate).getTime() -
+                        new Date(pod.date).getTime()) /
+                      (1000 * 60 * 60 * 24),
+                    )}{" "}
+                    days
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
       <Modal

@@ -486,12 +486,12 @@ export default function FMList({
     record: PaymentRecord,
   ) => {
     const data = {
+      entityType: "FM record",
+      actionType: "delete",
       requestId: record.IDNumber,
-      title: "FM record delete",
-      message: branchName,
-      description: branch.branchId,
-      status: "delete",
-      fileId: record.id,
+      createdByRole: branchName,
+      createdById: branch.branchId,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
@@ -643,11 +643,12 @@ export default function FMList({
 
   const onDeleteFMHandlerOnNotification = async (FMData: FMInputs) => {
     const data = {
+      entityType: "FM",
+      actionType: "delete",
       requestId: FMData.fmNumber,
-      title: "FM delete",
-      message: FMData.branch?.branchName,
-      description: FMData.branchId,
-      status: "delete",
+      createdByRole: branchName,
+      createdById: branch.branchId,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
@@ -659,13 +660,13 @@ export default function FMList({
 
   const editFMPaymentOnNotification = async () => {
     const data = {
-      requestId: oldRecordData?.IDNumber,
-      title: "FM record edit",
-      message: branchName,
-      description: branch.branchId,
-      status: "editable",
+      entityType: "FM record",
+      actionType: "edit",
+      requestId: selectedFM?.fmNumber,
+      createdByRole: branchName,
+      createdById: branch.branchId,
+      status: "pending",
       data: JSON.stringify(editAbleData),
-      fileId: oldRecordData?.id,
     };
     setIsLoading(true);
     const response = await createNotificationApi(data);

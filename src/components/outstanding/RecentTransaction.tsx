@@ -18,6 +18,8 @@ export default function RecentTransaction() {
       if (response?.status === 200) {
         const allTransactions = response.data.data;
         setTransactions(allTransactions);
+        console.log(allTransactions);
+        
       }
     }
     fetchTransactions();
@@ -37,14 +39,12 @@ export default function RecentTransaction() {
               </th>
               <th className="text-start font-[400] text-[#797979]">
                 <div className="flex items-center gap-2">
-                  <p>Name</p>
-                  <FaChevronDown size={15} className="cursor-pointer" />
+                  <p>Description</p>
                 </div>
               </th>
               <th className="text-start font-[400] text-[#797979]">
                 <div className="flex items-center gap-2">
                   <p>Transaction Type</p>
-                  <FaChevronDown size={15} className="cursor-pointer" />
                 </div>
               </th>
               <th className="text-start font-[400] text-[#797979]">
@@ -58,7 +58,7 @@ export default function RecentTransaction() {
                 <td className="py-2">
                   {new Date(transaction.date).toLocaleDateString()}
                 </td>
-                <td className="py-2">{transaction.customerName}</td>
+                <td className="py-2">{transaction.IDNumber} </td>
                 <td className="py-2">{transaction.billId ? "Cr." : "Dr"} </td>
                 <td className="py-2">
                   {formatter.format(parseInt(transaction.amount))}

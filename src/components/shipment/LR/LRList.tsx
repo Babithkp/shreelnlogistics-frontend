@@ -223,11 +223,12 @@ export default function LRList({
 
   const onDeleteLRHandlerOnNotification = async (LRData: LrInputs) => {
     const data = {
+      entityType: "LR",
+      actionType: "delete",
       requestId: LRData.lrNumber,
-      title: "LR delete",
-      message: LRData.branch?.branchName,
-      description: LRData.branchId,
-      status: "delete",
+      status: "pending",
+      createdByRole: LRData.branch?.branchName,
+      createdById: LRData.branchId,
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {

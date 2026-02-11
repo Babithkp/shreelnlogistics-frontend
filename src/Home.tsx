@@ -52,6 +52,7 @@ import {
 import { getExpenseByPageApi } from "./api/expense";
 import { getPodByPageApi } from "./api/pod";
 import ReportPage from "./components/reports/ReportPage";
+import Loader from "./Loader";
 
 export interface Setting {
   ProfileInputs: ProfileInputs;
@@ -115,6 +116,15 @@ export default function Home() {
     data: [],
     count: 0,
   });
+  const [showUI, setShowUI] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowUI(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   async function getClientDetails() {
     const response = await getAllClientsApi();
@@ -328,6 +338,10 @@ export default function Home() {
     getClientDetails();
   }, []);
 
+  if (!dashboardData || !showUI) {
+    return <Loader />;
+  }
+
   return (
     <main className="flex h-screen bg-[#F0F8FF]">
       <Navbar setSections={setSections} sections={sections} branch={branch} />
@@ -340,10 +354,10 @@ export default function Home() {
         {sections.dashboard && <Dashboard data={dashboardData} />}
         {sections.branch && <Branch />}
         {sections.LR && <LRPage lrData={LRData} />}
-        {sections.FM && <FMPage FMData={FMData} vendors={vendors} onRefresh={onRefresh}/>}
+        {sections.FM && <FMPage FMData={FMData} vendors={vendors} onRefresh={onRefresh} />}
         {sections.client && <ClientManagement data={clients} />}
         {sections.vendor && (
-          <VendorManagement vendorsData={vendors} vehiclesData={vehicles} onRefresh={onRefresh}/>
+          <VendorManagement vendorsData={vendors} vehiclesData={vehicles} onRefresh={onRefresh} />
         )}
         {sections.Bill && (
           <BillPage
@@ -355,12 +369,12 @@ export default function Home() {
           />
         )}
 
-        {sections.pod && <Pod data={pods} onRefresh={onRefresh}/>}
+        {sections.pod && <Pod data={pods} onRefresh={onRefresh} />}
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses expenseData={expenseData} />}
         {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}
         {sections.statements && <Statements />}
-        {sections.reports && <ReportPage clients={clients} vendors={vendors} />} 
+        {sections.reports && <ReportPage clients={clients} vendors={vendors} />}
       </div>
     </main>
   );

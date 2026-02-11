@@ -334,12 +334,13 @@ export default function LRCreate({
     console.log(editAbleData);
 
     const data = {
+      entityType: "LR",
+      actionType: "edit",
       requestId: editAbleData.lrNumber,
-      title: "LR edit",
-      message: editAbleData.branch.branchName,
-      description: editAbleData.branchId,
+      createdByRole: editAbleData.branch.branchName,
+      createdById: editAbleData.branchId,
       data: JSON.stringify(notificationData),
-      status: "editable",
+      status: "pending",
     };
 
     const response = await createNotificationApi(data);

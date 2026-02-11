@@ -509,12 +509,12 @@ export default function ViewBills({
   const editBillPaymentOnNotification = async () => {
     const data = {
       requestId: oldRecordData?.IDNumber,
-      title: "Bill record edit",
-      message: branch.branchName,
-      description: branch.branchId,
-      status: "editable",
+      entityType: "Bill",
+      actionType: "edit",
+      createdByRole: branch.branchName,
+      createdById: branch.branchId,
+      status: "pending",
       data: JSON.stringify(editAbleData),
-      fileId: oldRecordData?.id,
     };
     setIsLoading(true);
     const response = await createNotificationApi(data);
@@ -539,11 +539,11 @@ export default function ViewBills({
   ) => {
     const data = {
       requestId: record.IDNumber,
-      title: "Bill record delete",
-      message: branch.branchName,
-      description: branch.branchId,
-      status: "delete",
-      fileId: record.id,
+      entityType: "Bill record",
+      actionType: "delete",
+      createdByRole: branch.branchName,
+      createdById: branch.branchId,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
@@ -641,10 +641,11 @@ export default function ViewBills({
   const onDeleteBillHandlerOnNotification = async (bill: billInputs) => {
     const data = {
       requestId: bill.billNumber,
-      title: "Bill delete",
-      message: branch.branchName,
-      description: branch.branchId,
-      status: "delete",
+      entityType: "Bill",
+      actionType: "delete",
+      createdByRole: branch.branchName,
+      createdById: branch.branchId,
+      status: "pending",
     };
     const response = await createNotificationApi(data);
     if (response?.status === 200) {

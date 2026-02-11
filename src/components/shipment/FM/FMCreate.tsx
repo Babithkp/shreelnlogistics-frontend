@@ -323,10 +323,11 @@ export default function FMCreate({
     if (!selectedFMDataToEdit) return;
     const data = {
       requestId: selectedFMDataToEdit.fmNumber,
-      title: "FM edit",
-      message: branchData.branchName,
-      description: branchData.id,
-      status: "editable",
+      entityType:"FM",
+      actionType: "edit",
+      createdByRole: branchData.branchName,
+      createdById: branchData.id,
+      status: "pending",
       data: JSON.stringify(notificationData),
     };
     const response = await createNotificationApi(data);

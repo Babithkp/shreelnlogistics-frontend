@@ -73,6 +73,17 @@ const sectionLabels: Record<keyof SectionsState, string> = {
   reports: "Reports",
 };
 
+type NotificationConfig = {
+  getTitle: (n: Notification) => string;
+  getDescription?: (n: Notification) => string;
+  requiresApproval: boolean;
+  onApprove?: (n: Notification) => Promise<void>;
+  onDecline?: (n: Notification) => Promise<void>;
+  showNotedButton?: boolean;
+};
+
+
+
 export default function Header({
   title,
   setSections,
@@ -122,12 +133,15 @@ export default function Header({
   };
 
   const changeToReadHandler = async () => {
-    notifications.forEach((notification) => {
-      if (notification.status !== "read") {
-        changeNotificationStatusHandler(notification.id, "read");
-      }
-    });
+    const unread = notifications.filter(n => n.status !== "read");
+
+    await Promise.all(
+      unread.map(n =>
+        changeNotificationStatusHandler(n.id, "read"),
+      ),
+    );
   };
+
 
   const changeNotificationStatusHandler = async (
     id: string,
@@ -143,117 +157,13 @@ export default function Header({
     }
   };
 
-  function getLimitExceededMessage(notification: Notification): string {
-    if (notification.title === "Outstanding limit") {
-      const name = notification.description
-        .split("vendor")[1]
-        ?.split("has")[0]
-        ?.trim();
-      return `Alert - Outstanding limit exceeded for ${name}`;
-    } else if (notification.title === "Credit Limit") {
-      const name = notification.description
-        .split("client")[1]
-        ?.split("has")[0]
-        ?.trim();
-      return `Alert - Credit Limit exceeded for ${name}`;
-    } else if (
-      notification.title === "LR edit" ||
-      notification.title === "LR" ||
-      notification.title === "LR Decline"
-    ) {
-      return `Request to edit the LR (LR No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "FM edit" ||
-      notification.title === "FM edit approved" ||
-      notification.title === "FM Decline"
-    ) {
-      return `Request to edit the FM (FM No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "FM delete" ||
-      notification.title === "FM"
-    ) {
-      return `Request to delete the FM (FM No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "LR delete" ||
-      notification.title === "LR"
-    ) {
-      return `Request to delete the LR (LR No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "FM record" &&
-      notification.description === "declined"
-    ) {
-      return `Request to delete the FM Record Payment (FM No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "FM record edit" ||
-      notification.title === "FM record"
-    ) {
-      return `Request to edit the FM Record Payment (FM No. ${notification.requestId}) `;
-    } else if (notification.title === "FM record delete") {
-      return `Request to delete the FM Record Payment (FM No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Bill edit" ||
-      notification.title === "Bill"
-    ) {
-      return `Request to edit the Bill (Bill No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Bill delete" ||
-      notification.title === "Bill deleted"
-    ) {
-      return `Request to delete the Bill (Bill No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Bill record edit" ||
-      notification.title === "Bill record"
-    ) {
-      return `Request to edit the Bill Record Payment (Bill No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Bill record delete" ||
-      notification.title === "Bill record deleted"
-    ) {
-      return `Request to delete the Bill Record Payment (Bill No. ${notification.requestId}) `;
-    } else if (notification.title === "Vehicle edit") {
-      return `Vehicle from ${notification.description} has been edited by ${notification.message}`;
-    } else if (notification.title === "Vendor edit") {
-      return `Vendor from ${notification.description} has been edited by ${notification.message}`;
-    } else if (notification.title === "Vendor delete") {
-      return `Vendor from ${notification.description} has been deleted by ${notification.message}`;
-    } else if (notification.title === "Vehicle delete") {
-      return `Vehicle from ${notification.description} has been deleted by ${notification.message}`;
-    } else if (notification.title === "Client edit") {
-      return `Client  ${notification.description} has been edited by ${notification.message}`;
-    } else if (notification.title === "Client delete") {
-      return `Client  ${notification.description} has been deleted by ${notification.message}`;
-    } else if (notification.title === "Expense edit") {
-      return `Request to edit the Expense (Expense No. ${notification.requestId}) `;
-    } else if (notification.title === "Expense") {
-      return `Request to edit the Expense (Expense No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Expense delete" ||
-      notification.title === "Expense deleted"
-    ) {
-      return `Request to delete the Expense (Expense No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "POD edit" ||
-      notification.title === "POD"
-    ) {
-      return `Request to edit the POD of (LR No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "POD delete" ||
-      notification.title === "POD deleted"
-    ) {
-      return `Request to delete the POD of (LR No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Credit delete" ||
-      notification.title === "Credit deleted"
-    ) {
-      return `Request to delete the Credit of (Credit No. ${notification.requestId}) `;
-    } else if (
-      notification.title === "Credit edit" ||
-      notification.title === "Credit edited"
-    ) {
-      return `Request to edit  Credit of (Credit No. ${notification.requestId}) `;
-    } else {
-      return "Invalid description";
-    }
+  function getMessageTitle(notification: Notification): string {
+    if (notification.entityType === "Credit Limit") {
+      return `Alert - Credit Limit exceeded for ${notification.createdByRole}`;
+    } else if (notification.entityType === "Outstanding limit") {
+      return `Alert - Outstanding limit exceeded for ${notification.createdByRole}`;
+    } else
+      return `Request to ${notification.actionType} the ${notification.entityType} for ( ${notification.entityType} No. ${notification.requestId}) `;
   }
 
   async function fetchAdminNotifications() {
@@ -315,6 +225,28 @@ export default function Header({
     return { data: formatted };
   }
 
+  const onDeclineHandler = async (notification: Notification) => {
+    const data = {
+      requestId: notification.requestId,
+      entityType: notification.entityType,
+      actionType: "decline",
+      createdByRole: notification.createdByRole,
+      createdById: notification.createdById,
+      data: null,
+      status: "declined"
+    };
+
+    setIsLoading(true);
+    const response = await createNotificationForBranchApi(data);
+    if (response?.status === 200) {
+      toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else {
+      toast.error("Something Went Wrong, Check All Fields");
+    }
+    setIsLoading(false);
+  };
+
   const onLRUpdateHandler = async (
     id: string,
     data: JSON,
@@ -335,28 +267,6 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const onLREditDeclineHandler = async (notification: Notification) => {
-    const data = {
-      requestId: notification.id,
-      title: "LR Decline",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
 
   const onFMEditUpdateHandler = async (
     id: string,
@@ -368,27 +278,6 @@ export default function Header({
     if (response?.status === 200) {
       toast.success("Notification Sent");
       deleteNotificationHandler(notificationId);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
-
-  const onFmEditDeclineHandler = async (notification: Notification) => {
-    const data = {
-      requestId: notification.id,
-      title: "FM Decline",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
     } else {
       toast.error("Something Went Wrong, Check All Fields");
     }
@@ -422,52 +311,12 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const onLRDeleteDeclineHandler = async (notification: Notification) => {
-    const data = {
-      requestId: notification.id,
-      title: "LR",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
-
-  const onFMDeleteDeclineHandler = async (notification: Notification) => {
-    const data = {
-      requestId: notification.id,
-      title: "FM",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
-
   const editFMRecordPaymentOnNotification = async (
     notification: Notification,
   ) => {
-    const data = formatForUpdate(notification.data);
+    const data = formatForUpdate(notification.data!);
     const response = await updateRecordPaymentByNotificationApi(
-      notification.fileId,
+      notification.requestId,
       notification.requestId,
       data,
     );
@@ -479,31 +328,8 @@ export default function Header({
     }
   };
 
-  const editFMRecordPaymentDeclineOnNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "FM record",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
-
   const deleteFMRecordByNotification = async (notification: Notification) => {
     const response = await deleteFMRecordByNotificationApi(
-      notification.fileId,
       notification.requestId,
     );
     if (response?.status === 200) {
@@ -515,27 +341,6 @@ export default function Header({
     }
   };
 
-  const deleteFMRecordDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "FM record",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification?.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
 
   const updateBillByNotification = async (notification: Notification) => {
     const billId = notification.requestId;
@@ -554,28 +359,6 @@ export default function Header({
     }
   };
 
-  const updateBillDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Bill",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      setIsLoading(false);
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
 
   const deleteBillByNotification = async (notification: Notification) => {
     const data = {
@@ -593,33 +376,10 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const deleteBillDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Bill delete",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
-
   const updateBillRecordByNotification = async (notification: Notification) => {
     const data = {
-      data: formatForUpdate(notification.data).data,
+      data: formatForUpdate(notification.data!).data,
       billId: notification.requestId,
-      id: notification.fileId,
     };
     setIsLoading(true);
     const response = await updateBillRecordByNotificationApi(data);
@@ -633,33 +393,10 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const updateBillRecordDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Bill record",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      setIsLoading(false);
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
-
   const deleteBillRecordByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await deleteBillRecordByNotificationApi(
-      notification.fileId,
+      notification.requestId,
     );
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -670,31 +407,9 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const deleteBillRecordDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    setIsLoading(true);
-    const data = {
-      requestId: notification.requestId,
-      title: "Bill record deleted",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
 
   const updateCreditByNotification = async (notification: Notification) => {
-    const data = formatForUpdate(notification.data);
+    const data = formatForUpdate(notification.data!);
     setIsLoading(true);
     const response = await updateCreditByNotificationApi(
       notification.requestId,
@@ -709,57 +424,12 @@ export default function Header({
     setIsLoading(false);
   };
   const updateExpensesByNotification = async (notification: Notification) => {
-    const data = formatForUpdate(notification.data);
+    const data = formatForUpdate(notification.data!);
     setIsLoading(true);
     const response = await updateExpenseByNotificationApi(
       notification.requestId,
       data,
     );
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
-
-  const updateCreditDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Credit",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
-  const updateExpensesDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Expense",
-      message: "",
-      data: null,
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
     if (response?.status === 200) {
       toast.success("Notification Sent");
       deleteNotificationHandler(notification.id);
@@ -796,54 +466,11 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const deleteCreditDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Credit deleted",
-      message: "",
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
-  const deleteExpenseDeclineByNotification = async (
-    notification: Notification,
-  ) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "Expense deleted",
-      message: "",
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-    setIsLoading(true);
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-    setIsLoading(false);
-  };
-
   const updatePodByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await updatePODByNotificationApi(
-      formatForUpdate(notification.data),
-      notification.fileId,
+      formatForUpdate(notification.data!),
+      notification.requestId,
     );
     if (response?.status === 200) {
       toast.success("Data Updated");
@@ -854,28 +481,10 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const updatePodDeclineByNotification = async (notification: Notification) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "POD",
-      message: "",
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
-
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
-  };
 
   const deletePodByNotification = async (notification: Notification) => {
     setIsLoading(true);
-    const response = await deletePODByNotificationApi(notification.fileId);
+    const response = await deletePODByNotificationApi(notification.requestId);
     if (response?.status === 200) {
       toast.success("Notification Sent");
       deleteNotificationHandler(notification.id);
@@ -885,240 +494,343 @@ export default function Header({
     setIsLoading(false);
   };
 
-  const deletePodDeclineByNotification = async (notification: Notification) => {
-    const data = {
-      requestId: notification.requestId,
-      title: "POD deleted",
-      status: "declined",
-      branchId: notification.description,
-      description: "declined",
-    };
 
-    const response = await createNotificationForBranchApi(data);
-    if (response?.status === 200) {
-      toast.success("Notification Sent");
-      deleteNotificationHandler(notification.id);
-    } else {
-      toast.error("Something Went Wrong, Check All Fields");
-    }
+  const notificationConfig: Record<string, NotificationConfig> = {
+    "Credit Limit:info": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Alert - Credit Limit exceeded for ${n.createdByRole}`,
+    },
+
+    "Outstanding limit:info": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Alert - Outstanding limit exceeded for ${n.createdByRole}`,
+    },
+
+    "LR:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete LR (LR No. ${n.requestId})`,
+      getDescription: (n) =>
+        `Are you sure you want to remove this LR (LR No. ${n.requestId})? This action is permanent and cannot be undone.`,
+      onApprove: onLRDeleteHandler,
+      onDecline: onDeclineHandler,
+    },
+
+    "LR:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit LR (LR No. ${n.requestId})`,
+      onApprove: (n) =>
+        onLRUpdateHandler(n.requestId, n.data!, n.id),
+      onDecline: onDeclineHandler,
+    },
+
+    "LR:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+
+      getTitle: (n) =>
+        `Request for LR (LR No. ${n.requestId}) was declined`,
+    },
+
+    "LR:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+
+      getTitle: (n) =>
+        `Request for LR (LR No. ${n.requestId}) was approved`,
+    },
+
+    "FM:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete FM (FM No. ${n.requestId})`,
+      onApprove: onFMDeleteHandler,
+      onDecline: onDeclineHandler,
+    },
+
+    "FM:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit FM (FM No. ${n.requestId})`,
+      onApprove: (n) =>
+        onFMEditUpdateHandler(n.requestId, n.data!, n.id),
+      onDecline: onDeclineHandler,
+    },
+
+    "FM:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+
+      getTitle: (n) =>
+        `Request for FM (FM No. ${n.requestId}) was approved`,
+    },
+    "FM:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+
+      getTitle: (n) =>
+        `Request for FM (FM No. ${n.requestId}) was declined`,
+    },
+
+
+    "Bill:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete Bill (Bill No. ${n.requestId})`,
+      onApprove: deleteBillByNotification,
+      onDecline: onDeclineHandler,
+    },
+
+    "Bill:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit Bill (Bill No. ${n.requestId})`,
+      onApprove: updateBillByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Bill:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Bill (Bill No. ${n.requestId}) was approved`,
+    },
+    "Bill:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Bill (Bill No. ${n.requestId}) was declined`,
+    },
+
+    "POD:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit POD (LR No. ${n.requestId})`,
+      onApprove: updatePodByNotification,
+      onDecline: onDeclineHandler,
+    },
+
+    "POD:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete POD (LR No. ${n.requestId})`,
+      onApprove: deletePodByNotification,
+      onDecline: onDeclineHandler,
+    },
+
+    "POD:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for POD (LR No. ${n.requestId}) was approved`,
+    },
+    "POD:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for POD (LR No. ${n.requestId}) was declined`,
+    },
+
+    "Credit:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete Credit (Credit No. ${n.requestId})`,
+      onApprove: deleteCreditByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Credit:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit Credit (Credit No. ${n.requestId})`,
+      onApprove: updateCreditByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Credit:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Credit (Credit No. ${n.requestId}) was approved`,
+    },
+    "Credit:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Credit (Credit No. ${n.requestId}) was declined`,
+    },
+
+    "Expense:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete Expense (Expense No. ${n.requestId})`,
+      onApprove: deleteExpenseByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Expense:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit Expense (Expense No. ${n.requestId})`,
+      onApprove: updateExpensesByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Expense:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Expense (Expense No. ${n.requestId}) was approved`,
+    },
+    "Expense:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Expense (Expense No. ${n.requestId}) was declined`,
+    },
+
+    "Bill record:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete Bill record (Bill No. ${n.requestId})`,
+      onApprove: deleteBillRecordByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Bill record:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit Bill record (Bill No. ${n.requestId})`,
+      onApprove: updateBillRecordByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "Bill record:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Bill record (Bill No. ${n.requestId}) was approved`,
+    },
+    "Bill record:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for Bill record (Bill No. ${n.requestId}) was declined`,
+    },
+
+    "FM record:delete": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to delete FM record (FM No. ${n.requestId})`,
+      onApprove: deleteFMRecordByNotification,
+      onDecline: onDeclineHandler,
+    },
+    "FM record:edit": {
+      requiresApproval: true,
+      getTitle: (n) =>
+        `Request to edit FM record (FM No. ${n.requestId})`,
+      onApprove: editFMRecordPaymentOnNotification,
+      onDecline: onDeclineHandler,
+    },
+    "FM record:approved": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for FM record (FM No. ${n.requestId}) was approved`,
+    },
+    "FM record:decline": {
+      requiresApproval: false,
+      showNotedButton: true,
+      getTitle: (n) =>
+        `Request for FM record (FM No. ${n.requestId}) was declined`,
+    },
   };
 
-  const getNotificationTitle = (notification: Notification) => {
-    if (
-      notification.title === "LR edit" ||
-      notification.title === "FM edit" ||
-      notification.title === "Bill record edit" ||
-      notification.title === "LR delete" ||
-      notification.title === "FM delete" ||
-      notification.title === "Bill delete" ||
-      notification.title === "Vehicle edit" ||
-      notification.title === "Client edit" ||
-      notification.title === "Vendor edit" ||
-      notification.title === "POD edit" ||
-      notification.title === "POD" ||
-      notification.title === "Vendor delete" ||
-      notification.title === "Client delete" ||
-      notification.title === "Vehicle delete" ||
-      notification.title === "Bill record delete" ||
-      notification.title === "Expense edit" ||
-      notification.title === "Expense delete" ||
-      notification.title === "POD delete" ||
-      notification.title === "POD deleted" ||
-      notification.title === "Expense deleted" ||
-      notification.title === "Credit delete" ||
-      notification.title === "Credit edit" ||
-      notification.title === "Expense"
-    ) {
-      return notification.message ?? "Admin";
-    } else {
-      return "Admin";
-    }
-  };
 
-  const getApproveText = (description: string) => {
-    if (description === "Approved" || description === "deleted") {
-      return (
-        <p className="text-xs font-medium text-green-500">
-          Approved - value updated
-        </p>
-      );
-    }
-  };
 
-  const getNotedButton = (title: string, id: string) => {
-    if (
-      title === "LR" ||
-      title === "FM" ||
-      title === "FM edit approved" ||
-      title === "Bill" ||
-      title === "Bill update" ||
-      title === "Bill deleted" ||
-      title === "Bill record deleted" ||
-      title === "Bill record" ||
-      title === "LR Decline" ||
-      title === "FM Decline" ||
-      title === "Vehicle edit" ||
-      title === "Vendor edit" ||
-      title === "Client edit" ||
-      title === "Vendor delete" ||
-      title === "Client delete" ||
-      title === "Vehicle delete" ||
-      title === "Expense deleted" ||
-      title === "POD deleted" ||
-      title === "Credit deleted" ||
-      title === "Credit edited" ||
-      title === "Credit" ||
-      title === "FM record" ||
-      title === "POD" ||
-      title === "Expense"
-    ) {
-      return (
-        <Button
-          className="p-1 px-2 text-sm"
-          onClick={() => deleteNotificationHandler(id)}
-          disabled={isLoading}
-        >
-          Noted!
-        </Button>
-      );
-    }
-  };
+  function NotificationDetailsTable({
+    notification,
+  }: {
+    notification: Notification;
+  }) {
 
-  const getViewDetailsButton = (title: string) => {
     return (
-      title !== "LR" &&
-      title !== "FM" &&
-      title !== "FM edit" &&
-      title !== "FM edit approved" &&
-      title !== "Bill update" &&
-      title !== "Bill deleted" &&
-      title !== "Bill record deleted" &&
-      title !== "Bill record" &&
-      title !== "Bill" &&
-      title !== "LR Decline" &&
-      title !== "Vehicle edit" &&
-      title !== "Vendor edit" &&
-      title !== "Client edit" &&
-      title !== "Vendor delete" &&
-      title !== "Vehicle delete" &&
-      title !== "Client delete" &&
-      title !== "FM Decline" &&
-      title !== "Expense" &&
-      title !== "Expense deleted" &&
-      title !== "Credit deleted" &&
-      title !== "Credit edited" &&
-      title !== "Credit" &&
-      title !== "POD deleted" &&
-      title !== "POD" &&
-      title !== "FM record"
+      <>
+        {notification.entityType === "FM" ?
+          <table className="w-full">
+            <thead>
+              <tr className="bg-black/60 text-white">
+                <th className="px-2 ">Sl no.</th>
+                <th className="text-center">Field</th>
+                <th className="text-center">New</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(notification.data as Record<string, any>).map(
+                ([key, value], index) => (
+                  <tr key={key}>
+                    <td className="text-center">{index + 1}</td>
+                    <td className="capitalize text-center">{key}</td>
+                    <td className="text-center">
+                      {key === "LRDetails" ? typeof value === "object" &&
+                        value !== null
+                        ? Array.isArray(value)
+                          ? value?.map(
+                            (
+                              item: any,
+                              idx: number,
+                            ) => (
+                              <div key={idx}>
+                                LR#
+                                {item.lrNumber ||
+                                  JSON.stringify(item)}
+                              </div>
+                            ),
+                          )
+                          : Object?.entries(value)
+                            ?.map(
+                              ([k, v]) => `${k}: ${v}`,
+                            )
+                            .join(", ")
+                        : String(value) : String(value ?? "")}
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+          :
+          <table className="w-full">
+            <thead>
+              <tr className="bg-black/60 text-white">
+                <th className="px-2">Sl no.</th>
+                <th>Field</th>
+                <th>Old</th>
+                <th>New</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(notification.data as Record<string, any>).map(
+                ([key, value], index) => (
+                  <tr key={key}>
+                    <td className="text-center">{index + 1}</td>
+                    <td className="capitalize text-center">{key}</td>
+                    <td className="text-center">
+                      {String(value?.obj2 ?? "")}
+                    </td>
+                    <td className="text-center">
+                      {String(value?.obj1 ?? "")}
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+        }
+      </>
     );
-  };
+  }
 
-  const getModalTitle = (title: string, requestId: string) => {
-    if (
-      title === "LR edit" ||
-      title === "FM edit" ||
-      title === "Bill edit" ||
-      title === "Bill record edit" ||
-      title === "Expense edit" ||
-      title === "POD edit"
-    ) {
-      return `Change Request for ${title.split(" ")[0] === "POD" ? "LR" : title.split(" ")[0]} No. #${requestId}`;
-    } else if (title === "Credit edit") {
-      return `Change Request for Credit No. #${requestId}`;
-    } else {
-      return "Alert!";
-    }
-  };
 
-  const getDescriptionText = (
-    title: string,
-    requestId: string,
-    description: string,
-  ) => {
-    if (title === "FM delete") {
-      return `Are you sure you want to remove this FM ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "LR delete") {
-      return `Are you sure you want to remove this LR ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "FM record delete") {
-      return `Are you sure you want to remove this FM Record of ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "Credit Limit") {
-      return description;
-    } else if (title === "Bill delete") {
-      return `Are you sure you want to remove this Bill ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "Bill record delete") {
-      return `Are you sure you want to remove this Bill Record of  ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "Expense delete") {
-      return `Are you sure you want to remove this Expense ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "POD delete") {
-      return `Are you sure you want to remove this POD of LR No. ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "Credit delete") {
-      return `Are you sure you want to remove this Credit of ID ${requestId}? This action is permanent and cannot be undone.`;
-    } else if (title === "LR edit" || title === "Credit edit") {
-      return "";
-    } else {
-      return description;
-    }
-  };
 
-  const declineHandlers: Record<string, (n: Notification) => void> = {
-    "LR edit": onLREditDeclineHandler,
-    "FM edit": onFmEditDeclineHandler,
-    "LR delete": onLRDeleteDeclineHandler,
-    "FM delete": onFMDeleteDeclineHandler,
-    "FM record edit": editFMRecordPaymentDeclineOnNotification,
-    "FM record delete": deleteFMRecordDeclineByNotification,
-    "Bill delete": deleteBillDeclineByNotification,
-    "Bill record edit": updateBillRecordDeclineByNotification,
-    "Bill record delete": deleteBillRecordDeclineByNotification,
-    "Expense edit": updateExpensesDeclineByNotification,
-    "Expense delete": deleteExpenseDeclineByNotification,
-    "Credit delete": deleteCreditDeclineByNotification,
-    "Credit edit": updateCreditDeclineByNotification,
-    "POD edit": updatePodDeclineByNotification,
-    "POD delete": deletePodDeclineByNotification,
-  };
-
-  const getDeclineFunction = (title: string, notification: Notification) => {
-    const handler = declineHandlers[title];
-    if (handler) handler(notification);
-  };
-
-  const getActionFunction = (notification: Notification) => {
-    if (notification.title === "LR edit") {
-      onLRUpdateHandler(
-        notification.requestId,
-        notification.data,
-        notification.id,
-      );
-    } else if (notification.title === "FM delete") {
-      onFMDeleteHandler(notification);
-    } else if (notification.title === "LR delete") {
-      onLRDeleteHandler(notification);
-    } else if (notification.title === "FM record edit") {
-      editFMRecordPaymentOnNotification(notification);
-    } else if (notification.title === "FM record delete") {
-      deleteFMRecordByNotification(notification);
-    } else if (notification.title === "Bill delete") {
-      deleteBillByNotification(notification);
-    } else if (notification.title === "Bill record edit") {
-      updateBillRecordByNotification(notification);
-    } else if (notification.title === "Bill record delete") {
-      deleteBillRecordByNotification(notification);
-    } else if (notification.title === "Expense edit") {
-      updateExpensesByNotification(notification);
-    } else if (notification.title === "Credit edit") {
-      updateCreditByNotification(notification);
-    } else if (notification.title === "Expense delete") {
-      deleteExpenseByNotification(notification);
-    } else if (notification.title === "Credit delete") {
-      deleteCreditByNotification(notification);
-    } else if (notification.title === "POD edit") {
-      updatePodByNotification(notification);
-    } else if (notification.title === "POD delete") {
-      deletePodByNotification(notification);
-    } else deleteNotificationHandler(notification.id);
-  };
 
   useEffect(() => {
     const branchDetails = localStorage.getItem("branchDetails");
@@ -1180,271 +892,132 @@ export default function Header({
               <Badge>{isNewNotification.count}</Badge>
             )}
           </PopoverTrigger>
+
           <PopoverContent
             align="end"
             className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto bg-[#F0F8FF]"
           >
-            {notifications.map((notification) => (
-              <div
-                className="flex flex-col gap-2 rounded-md bg-white p-3"
-                key={notification.id}
-              >
-                <p className="text-sm font-medium">
-                  {getNotificationTitle(notification)}
-                </p>
-                <p className="text-primary text-xs font-medium">
-                  {getLimitExceededMessage(notification)}
-                </p>
-                {getApproveText(notification.description)}
-                {notification.description === "declined" && (
-                  <p className="text-sm text-red-500">
-                    Declined - value not updated
-                  </p>
-                )}
+            {notifications.map((notification) => {
+              const configKey = `${notification.entityType}:${notification.actionType}`;
+              const config = notificationConfig[configKey];
 
-                <div className="flex w-full items-center justify-between">
-                  <p className="text-xs">
-                    {formatDateTimeByAgo(new Date(notification.createdAt))}
+              if (!config) return null;
+
+              const isTerminalAction =
+                notification.actionType === "info" ||
+                notification.actionType === "decline" ||
+                notification.actionType === "approved";
+
+              const showNotedButton =
+                config.showNotedButton === true || isTerminalAction;
+
+              const showApprovalFlow =
+                config.requiresApproval === true && !isTerminalAction;
+
+              return (
+                <div
+                  key={notification.id}
+                  className="flex flex-col gap-2 rounded-md bg-white p-3"
+                >
+                  {/* CREATED BY */}
+                  <p className="text-sm font-medium">
+                    {notification.createdByRole}
                   </p>
-                  {getNotedButton(notification.title, notification.id)}
-                  {getViewDetailsButton(notification.title) &&
-                    notification.title !== "Bill edit" && (
-                      <Dialog>
-                        <DialogTrigger className="cursor-pointer rounded-lg p-1 px-2 text-sm outline">
-                          View details
-                        </DialogTrigger>
-                        <DialogContent
-                          className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
-                        >
-                          <DialogHeader>
-                            <DialogTitle>
-                              {getModalTitle(
-                                notification.title,
-                                notification.requestId,
-                              )}
-                            </DialogTitle>
-                            <DialogDescription></DialogDescription>
-                            <div className="font-medium text-black">
-                              {getDescriptionText(
-                                notification.title,
-                                notification.requestId,
-                                notification.description,
-                              )}
-                              {notification?.data && (
-                                <table className="w-full">
-                                  <thead className="">
-                                    <tr className="bg-black/60 text-white">
-                                      <th className="px-2 font-[500]">
-                                        Sl no.
-                                      </th>
-                                      <th className="p-2 text-center font-[500]">
-                                        Field name
-                                      </th>
-                                      <th className="text-center font-[500]">
-                                        Existing value
-                                      </th>
-                                      <th className="text-center font-[500]">
-                                        Updated value
-                                      </th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {notification?.data &&
-                                      Object.entries(
-                                        notification.data as Record<
-                                          string,
-                                          any
-                                        >,
-                                      ).map(([key, value], index) => (
-                                        <tr
-                                          key={key}
-                                          className="border-r border-b border-l border-black/40"
-                                        >
-                                          <td className="border-r border-black/40 p-2 text-center">
-                                            {index + 1}
-                                          </td>
-                                          <td className="border-r border-black/40 text-center capitalize">
-                                            {key}
-                                          </td>
-                                          <td className="border-r border-black/40 text-center">
-                                            {String(value?.obj2 ?? "")}
-                                          </td>
-                                          <td className="text-center">
-                                            {String(value?.obj1 ?? "")}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                  </tbody>
-                                </table>
-                              )}
-                            </div>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button
-                              variant={"outline"}
-                              onClick={() =>
-                                getDeclineFunction(
-                                  notification.title,
-                                  notification,
-                                )
-                              }
-                              disabled={isLoading}
-                            >
-                              {notification.title === "LR edit" ||
-                              notification.title === "FM edit" ||
-                              notification.title === "FM record edit" ||
-                              notification.title === "Bill record edit" ||
-                              notification.title === "Bill edit" ||
-                              notification.title === "POD edit" ||
-                              notification.title === "Credit edit" ||
-                              notification.title === "Expense edit"
-                                ? "Decline"
-                                : "Cancel"}
-                            </Button>
-                            <Button
-                              onClick={() => getActionFunction(notification)}
-                              disabled={isLoading}
-                            >
-                              {notification.title === "LR edit" ||
-                              notification.title === "FM record edit" ||
-                              notification.title === "Bill record edit" ||
-                              notification.title === "Bill edit" ||
-                              notification.title === "POD edit" ||
-                              notification.title === "Credit edit" ||
-                              notification.title === "Expense edit"
-                                ? "Approve"
-                                : notification.title === "FM delete" ||
-                                    notification.title === "LR delete" ||
-                                    notification.title === "Bill delete" ||
-                                    notification.title ===
-                                      "Bill record delete" ||
-                                    notification.title === "FM record delete" ||
-                                    notification.title === "POD delete" ||
-                                    notification.title === "Credit delete" ||
-                                    notification.title === "Expense delete"
-                                  ? "Delete"
-                                  : "Noted!"}
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  {(notification.title === "Bill edit" ||
-                    notification.title === "FM edit") && (
-                    <Dialog>
-                      <DialogTrigger className="cursor-pointer rounded-lg p-1 px-2 text-sm outline">
-                        View details
-                      </DialogTrigger>
-                      <DialogContent
-                        className={`${notification.data === null ? "" : "min-w-3xl"} max-h-[80%] overflow-y-auto`}
-                      >
-                        <DialogHeader>
-                          <DialogTitle>
-                            {getModalTitle(
-                              notification.title,
-                              notification.requestId,
-                            )}
-                          </DialogTitle>
-                          <DialogDescription></DialogDescription>
-                          <div className="font-medium text-black">
-                            {notification?.data && (
-                              <table className="w-full">
-                                <thead className="">
-                                  <tr className="bg-black/60 text-white">
-                                    <th className="px-2 font-[500]">Sl no.</th>
-                                    <th className="p-2 text-center font-[500]">
-                                      Field name
-                                    </th>
-                                    <th className="text-center font-[500]">
-                                      Value
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {notification?.data &&
-                                    Object.entries(
-                                      notification.data as billInputs,
-                                    )
-                                      .filter(
-                                        ([key]) =>
-                                          key !== "lrNumber" &&
-                                          key !== "branchId" &&
-                                          key !== "adminId",
-                                      )
-                                      .map(([key, value], index) => (
-                                        <tr
-                                          key={key}
-                                          className="border-r border-b border-l border-black/40"
-                                        >
-                                          <td className="border-r border-black/40 p-2 text-center">
-                                            {index + 1}
-                                          </td>
-                                          <td className="border-r border-black/40 text-center capitalize">
-                                            {key}
-                                          </td>
-                                          <td className="border-r border-black/40 text-center">
-                                            {typeof value === "object" &&
-                                            value !== null
-                                              ? Array.isArray(value)
-                                                ? value?.map(
-                                                    (
-                                                      item: any,
-                                                      idx: number,
-                                                    ) => (
-                                                      <div key={idx}>
-                                                        LR#
-                                                        {item.lrNumber ||
-                                                          JSON.stringify(item)}
-                                                      </div>
-                                                    ),
-                                                  )
-                                                : Object?.entries(value)
-                                                    ?.map(
-                                                      ([k, v]) => `${k}: ${v}`,
-                                                    )
-                                                    .join(", ")
-                                              : String(value)}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                </tbody>
-                              </table>
-                            )}
-                          </div>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button
-                            variant={"outline"}
-                            onClick={() =>
-                              notification.title === "Bill edit"
-                                ? updateBillDeclineByNotification(notification)
-                                : onFmEditDeclineHandler(notification)
-                            }
-                            disabled={isLoading}
-                          >
-                            Decline
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              notification.title === "Bill edit"
-                                ? updateBillByNotification(notification)
-                                : onFMEditUpdateHandler(
-                                    notification.requestId,
-                                    notification.data,
-                                    notification.id,
-                                  )
-                            }
-                            disabled={isLoading}
-                          >
-                            Approve
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+
+                  {/* TITLE */}
+                  <p className="text-xs font-medium text-blue-500">
+                    {config.getTitle(notification)}
+                  </p>
+
+                  {/* DECLINED MESSAGE */}
+                  {notification.actionType === "decline" && (
+                    <p className="text-xs font-medium text-red-500">
+                      Admin has declined this request
+                    </p>
                   )}
+
+                  <div className="flex w-full items-center justify-between">
+                    {/* TIME */}
+                    <p className="text-xs text-slate-500">
+                      {formatDateTimeByAgo(
+                        new Date(notification.createdAt),
+                      )}
+                    </p>
+
+                    {/* ACTIONS */}
+                    <div className="flex gap-2">
+                      {/* NOTED */}
+                      {showNotedButton && (
+                        <Button
+                          className="p-1 px-2 text-sm"
+                          onClick={() =>
+                            deleteNotificationHandler(notification.id)
+                          }
+                          disabled={isLoading}
+                        >
+                          Noted
+                        </Button>
+                      )}
+
+                      {/* APPROVAL FLOW */}
+                      {showApprovalFlow && (
+                        <Dialog>
+                          <DialogTrigger className="cursor-pointer rounded-lg p-1 px-2 text-sm outline">
+                            View details
+                          </DialogTrigger>
+
+                          <DialogContent className="max-h-[80%] overflow-y-auto min-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle>
+                                {config.getTitle(notification)}
+                              </DialogTitle>
+
+                              {config.getDescription && (
+                                <DialogDescription className="text-base font-medium text-black">
+                                  {config.getDescription(notification)}
+                                </DialogDescription>
+                              )}
+
+                              {notification.data && (
+                                <NotificationDetailsTable
+                                  notification={notification}
+                                />
+                              )}
+                            </DialogHeader>
+
+                            <DialogFooter>
+                              {config.onDecline && (
+                                <Button
+                                  variant="destructive"
+                                  onClick={() =>
+                                    config.onDecline?.(notification)
+                                  }
+                                  disabled={isLoading}
+                                >
+                                  Decline
+                                </Button>
+                              )}
+
+                              {config.onApprove && (
+                                <Button
+                                  onClick={() =>
+                                    config.onApprove?.(notification)
+                                  }
+                                  disabled={isLoading}
+                                >
+                                  Approve
+                                </Button>
+                              )}
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
             {notifications.length === 0 && (
               <p className="text-center text-sm text-slate-500">
                 No Notifications
@@ -1452,6 +1025,10 @@ export default function Header({
             )}
           </PopoverContent>
         </Popover>
+
+
+
+
         <button
           className="bg-primary size-fit cursor-pointer rounded-full p-1"
           onClick={() => [reFreshHandler()]}

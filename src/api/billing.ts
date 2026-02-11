@@ -1,6 +1,5 @@
 import axios from "axios";
-// const BASE_URL = "http://localhost:3000";
-const BASE_URL = "https://shreeln-backend.vercel.app";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const createBillApi = async (data: any) => {
   try {
