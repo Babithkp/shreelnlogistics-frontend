@@ -371,8 +371,6 @@ export default function Header({
   };
 
   const updateBillRecordByNotification = async (notification: Notification) => {
-    console.log(notification.data);
-    console.log(formatForUpdate(notification.data!).data);
 
     const data = {
       data: formatForUpdate(notification.data!).data,
@@ -718,13 +716,13 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${n.data}) was approved`,
+        `Request for Bill record (Bill No. ${(n.data as any).id}) was approved`,
     },
     "Bill record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${n.requestId}) was declined`,
+        `Request for Bill record (Bill No. ${(n.data as any).id}) was declined`,
     },
 
     "FM record:delete": {
@@ -746,13 +744,13 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${n.requestId}) was approved`,
+        `Request for FM record (FM No. ${(n.data as any).id}) was approved`,
     },
     "FM record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${n.requestId}) was declined`,
+        `Request for FM record (FM No. ${(n.data as any).id}) was declined`,
     },
   };
 
