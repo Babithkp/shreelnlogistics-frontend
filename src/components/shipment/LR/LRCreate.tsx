@@ -240,7 +240,6 @@ export default function LRCreate({
   }
 
 
-
   async function fetchClient() {
     const responseVechicles = await getAllVehiclesApi();
     const responseClients = await getAllClientsApi();
