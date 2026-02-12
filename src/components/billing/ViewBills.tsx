@@ -94,6 +94,18 @@ type BulkBillList = {
   pendingAmount: number;
 };
 
+type DiffField = {
+  obj1: any;
+  obj2: any;
+};
+
+
+type EditableData = {
+  id: string;
+  [key: string]: DiffField | string;
+};
+
+
 export default function ViewBills({
   sectionChangeHandler,
   setSelectedBillToEdit,
@@ -136,7 +148,7 @@ export default function ViewBills({
     null,
   );
   const [editAbleData, setEditAbleData] =
-    useState<Record<string, { obj1: any; obj2: any }>>();
+  useState<EditableData | undefined>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [BillList, setBillList] = useState<billInputs[]>([]);
@@ -387,7 +399,10 @@ export default function ViewBills({
       const recordData = filterOnlyCompletePrimitiveDiffs(
         getUnmatchingFields(data, oldRecordData),
       );
-      setEditAbleData(recordData);
+      setEditAbleData({
+        ...recordData,
+        id: data.id,
+      });
       setNotificationAlertOpen(true);
       return;
     }
@@ -509,7 +524,7 @@ export default function ViewBills({
   const editBillPaymentOnNotification = async () => {
     const data = {
       requestId: oldRecordData?.IDNumber,
-      entityType: "Bill",
+      entityType: "Bill record",
       actionType: "edit",
       createdByRole: branch.branchName,
       createdById: branch.branchId,
@@ -543,6 +558,7 @@ export default function ViewBills({
       actionType: "delete",
       createdByRole: branch.branchName,
       createdById: branch.branchId,
+      data: JSON.stringify(record.id),
       status: "pending",
     };
     const response = await createNotificationApi(data);

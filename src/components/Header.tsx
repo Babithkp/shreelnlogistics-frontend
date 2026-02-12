@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import {  Notification, SectionsState } from "@/types";
+import { Notification, SectionsState } from "@/types";
 import {
   deleteNotificationApi,
   getAllAdminNotificationsApi,
@@ -156,15 +156,6 @@ export default function Header({
       }
     }
   };
-
-  // function getMessageTitle(notification: Notification): string {
-  //   if (notification.entityType === "Credit Limit") {
-  //     return `Alert - Credit Limit exceeded for ${notification.createdByRole}`;
-  //   } else if (notification.entityType === "Outstanding limit") {
-  //     return `Alert - Outstanding limit exceeded for ${notification.createdByRole}`;
-  //   } else
-  //     return `Request to ${notification.actionType} the ${notification.entityType} for ( ${notification.entityType} No. ${notification.requestId}) `;
-  // }
 
   async function fetchAdminNotifications() {
     const response = await getAllAdminNotificationsApi();
@@ -314,10 +305,11 @@ export default function Header({
   const editFMRecordPaymentOnNotification = async (
     notification: Notification,
   ) => {
+
     const data = formatForUpdate(notification.data!);
     const response = await updateRecordPaymentByNotificationApi(
       notification.requestId,
-      notification.requestId,
+      (notification.data as any).id,
       data,
     );
     if (response?.status === 200) {
@@ -331,6 +323,7 @@ export default function Header({
   const deleteFMRecordByNotification = async (notification: Notification) => {
     const response = await deleteFMRecordByNotificationApi(
       notification.requestId,
+      notification.data as any,
     );
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -377,9 +370,13 @@ export default function Header({
   };
 
   const updateBillRecordByNotification = async (notification: Notification) => {
+    console.log(notification.data);
+    console.log(formatForUpdate(notification.data!).data);
+
     const data = {
       data: formatForUpdate(notification.data!).data,
       billId: notification.requestId,
+      id: (notification.data! as any).id,
     };
     setIsLoading(true);
     const response = await updateBillRecordByNotificationApi(data);
@@ -396,7 +393,7 @@ export default function Header({
   const deleteBillRecordByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await deleteBillRecordByNotificationApi(
-      notification.requestId,
+      (notification.data as any),
     );
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -514,8 +511,8 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete LR (LR No. ${n.requestId})`,
-      getDescription: (n) =>
-        `Are you sure you want to remove this LR (LR No. ${n.requestId})? This action is permanent and cannot be undone.`,
+      getDescription: () =>
+        `Are you sure you want to remove this Lorry Receipt ? This action is permanent and cannot be undone.`,
       onApprove: onLRDeleteHandler,
       onDecline: onDeclineHandler,
     },
@@ -549,6 +546,9 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete FM (FM No. ${n.requestId})`,
+      getDescription() {
+        return `Are you sure you want to delete this Freight Memo ? This action is permanent and cannot be undone.`;
+      },
       onApprove: onFMDeleteHandler,
       onDecline: onDeclineHandler,
     },
@@ -582,6 +582,9 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete Bill (Bill No. ${n.requestId})`,
+      getDescription() {
+        return `Are you sure you want to delete this Bill ? This action is permanent and cannot be undone.`;
+      },
       onApprove: deleteBillByNotification,
       onDecline: onDeclineHandler,
     },
@@ -618,6 +621,8 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete POD (LR No. ${n.requestId})`,
+      getDescription: () =>
+        `Are you sure you want to remove this POD ? This action is permanent and cannot be undone.`,
       onApprove: deletePodByNotification,
       onDecline: onDeclineHandler,
     },
@@ -639,6 +644,8 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete Credit (Credit No. ${n.requestId})`,
+      getDescription: () =>
+        `Are you sure you want to remove this Credit ? This action is permanent and cannot be undone.`,
       onApprove: deleteCreditByNotification,
       onDecline: onDeclineHandler,
     },
@@ -666,6 +673,8 @@ export default function Header({
       requiresApproval: true,
       getTitle: (n) =>
         `Request to delete Expense (Expense No. ${n.requestId})`,
+      getDescription: () =>
+        `Are you sure you want to remove this Expense ? This action is permanent and cannot be undone.`,
       onApprove: deleteExpenseByNotification,
       onDecline: onDeclineHandler,
     },
@@ -691,6 +700,7 @@ export default function Header({
 
     "Bill record:delete": {
       requiresApproval: true,
+      getDescription: () => "This Action will delete the Bill record. Are you sure you want to delete this Bill record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
         `Request to delete Bill record (Bill No. ${n.requestId})`,
       onApprove: deleteBillRecordByNotification,
@@ -718,6 +728,7 @@ export default function Header({
 
     "FM record:delete": {
       requiresApproval: true,
+      getDescription: () => "This Action will delete the FM record. Are you sure you want to delete this FM record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
         `Request to delete FM record (FM No. ${n.requestId})`,
       onApprove: deleteFMRecordByNotification,
@@ -751,10 +762,13 @@ export default function Header({
   }: {
     notification: Notification;
   }) {
+    if ((notification.entityType === "Bill record" || notification.entityType === "FM record") && notification.actionType === "delete") {
+      return null;
+    }
 
     return (
       <>
-        {notification.entityType === "FM" ?
+        {notification.entityType === "FM" || notification.entityType === "Bill" ?
           <table className="w-full">
             <thead>
               <tr className="bg-black/60 text-white">
@@ -770,7 +784,7 @@ export default function Header({
                     <td className="text-center">{index + 1}</td>
                     <td className="capitalize text-center">{key}</td>
                     <td className="text-center">
-                      {key === "LRDetails" ? typeof value === "object" &&
+                      {key === "LRDetails" || key === "lrData" || key === "Client" ? typeof value === "object" &&
                         value !== null
                         ? Array.isArray(value)
                           ? value?.map(
@@ -810,16 +824,18 @@ export default function Header({
             <tbody>
               {Object.entries(notification.data as Record<string, any>).map(
                 ([key, value], index) => (
-                  <tr key={key}>
-                    <td className="text-center">{index + 1}</td>
-                    <td className="capitalize text-center">{key}</td>
-                    <td className="text-center">
-                      {String(value?.obj2 ?? "")}
-                    </td>
-                    <td className="text-center">
-                      {String(value?.obj1 ?? "")}
-                    </td>
-                  </tr>
+                  <>
+                    {key !== "id" && (<tr key={key}>
+                      <td className="text-center">{index + 1}</td>
+                      <td className="capitalize text-center">{key}</td>
+                      <td className="text-center">
+                        {String(value?.obj2 ?? "")}
+                      </td>
+                      <td className="text-center">
+                        {String(value?.obj1 ?? "")}
+                      </td>
+                    </tr>)}
+                  </>
                 ),
               )}
             </tbody>
@@ -973,7 +989,7 @@ export default function Header({
                               </DialogTitle>
 
                               {config.getDescription && (
-                                <DialogDescription className="text-base font-medium text-black">
+                                <DialogDescription className="text-sm font-medium text-black">
                                   {config.getDescription(notification)}
                                 </DialogDescription>
                               )}

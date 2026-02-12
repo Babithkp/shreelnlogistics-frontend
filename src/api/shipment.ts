@@ -305,7 +305,7 @@ export const updateRecordPaymentByNotificationApi = async (
 ) => {
   try {
     const response = await axios.patch(
-      `${BASE_URL}/api/v1/updateRecordPaymentByNotification//${id}/${LRnumber}`,
+      `${BASE_URL}/api/v1/updateRecordPaymentByNotification/${id}/${LRnumber}`,
       data,
     );
     return response;
@@ -316,10 +316,11 @@ export const updateRecordPaymentByNotificationApi = async (
 
 export const deleteFMRecordByNotificationApi = async (
   IDNumber: string,
+  id: string,
 ) => {
   try {
     const response = await axios.delete(
-      `${BASE_URL}/api/v1/deleteFMRecordByNotification/${IDNumber}`,
+      `${BASE_URL}/api/v1/deleteFMRecordByNotification/${id}/${IDNumber}`,
     );
     return response;
   } catch (error) {

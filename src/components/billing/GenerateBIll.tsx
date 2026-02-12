@@ -451,12 +451,13 @@ export default function GenerateBIll({
 
   const onBillupdateByNotificationHandler = async () => {
     const data = {
+      entityType: "Bill",
+      actionType: "edit",
       requestId: selectedBillToEdit?.billNumber,
-      title: "Bill edit",
-      message: branchId.branchName,
-      description: branchId.branchId,
+      createdByRole: branchId.branchName,
+      createdById: branchId.branchId,
       data: JSON.stringify(notificationData),
-      status: "editable",
+      status: "pending",
     };
 
     const response = await createNotificationApi(data);

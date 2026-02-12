@@ -79,7 +79,7 @@ export function filterOnlyCompletePrimitiveDiffs(diff: Record<string, any>) {
         obj2: entry.obj2,
       };
     }
-  }
+  }  
   return cleaned;
 }
 

@@ -110,6 +110,19 @@ interface BulkFMList {
   amountInWords: string;
   pendingAmount: number;
 }
+type DiffField = {
+  obj1: any;
+  obj2: any;
+};
+
+
+type EditableData = {
+  id: string;
+  [key: string]: DiffField | string;
+};
+
+
+
 
 export default function FMList({
   data,
@@ -156,7 +169,7 @@ export default function FMList({
     null,
   );
   const [editAbleData, setEditAbleData] =
-    useState<Record<string, { obj1: any; obj2: any }>>();
+  useState<EditableData | undefined>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [FMList, setFMList] = useState<FMInputs[]>([]);
   const [FMListForBulk, setFMListForBulk] = useState<BulkFMList[]>([]);
@@ -337,7 +350,10 @@ export default function FMList({
       const recordData = filterOnlyCompletePrimitiveDiffs(
         getUnmatchingFields(data, oldRecordData),
       );
-      setEditAbleData(recordData);
+      setEditAbleData({
+        ...recordData,
+        id: data.id,
+      });
       setNotificationAlertOpen(true);
       return;
     }
@@ -491,6 +507,7 @@ export default function FMList({
       requestId: record.IDNumber,
       createdByRole: branchName,
       createdById: branch.branchId,
+      data: JSON.stringify(record.id),
       status: "pending",
     };
     const response = await createNotificationApi(data);
@@ -667,7 +684,7 @@ export default function FMList({
       createdById: branch.branchId,
       status: "pending",
       data: JSON.stringify(editAbleData),
-    };
+    };    
     setIsLoading(true);
     const response = await createNotificationApi(data);
     if (response?.status === 200) {
