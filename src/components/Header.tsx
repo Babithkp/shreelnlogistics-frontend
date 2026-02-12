@@ -185,6 +185,7 @@ export default function Header({
     const response = await getBranchNotificationsApi(branchId);
     if (response?.status === 200) {
       setNotifications(response.data.data);
+      console.log(response.data.data);
       const oneTimeMessages = response.data.data.filter(
         (message: Notification) => message.status !== "read",
       );
@@ -702,14 +703,14 @@ export default function Header({
       requiresApproval: true,
       getDescription: () => "This Action will delete the Bill record. Are you sure you want to delete this Bill record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
-        `Request to delete Bill record (Bill No. ${(n.data as any).id})`,
+        `Request to delete Bill record (Bill No. ${n.requestId})`,
       onApprove: deleteBillRecordByNotification,
       onDecline: onDeclineHandler,
     },
     "Bill record:edit": {
       requiresApproval: true,
       getTitle: (n) =>
-        `Request to edit Bill record (Bill No. ${(n.data as any).id})`,
+        `Request to edit Bill record (Bill No. ${n.requestId})`,
       onApprove: updateBillRecordByNotification,
       onDecline: onDeclineHandler,
     },
@@ -717,27 +718,27 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${(n.data as any).id}) was approved`,
+        `Request for Bill record (Bill No. ${n.data}) was approved`,
     },
     "Bill record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${(n.data as any).id}) was declined`,
+        `Request for Bill record (Bill No. ${n.requestId}) was declined`,
     },
 
     "FM record:delete": {
       requiresApproval: true,
       getDescription: () => "This Action will delete the FM record. Are you sure you want to delete this FM record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
-        `Request to delete FM record (FM No. ${(n.data as any).id})`,
+        `Request to delete FM record (FM No. ${n.requestId})`,
       onApprove: deleteFMRecordByNotification,
       onDecline: onDeclineHandler,
     },
     "FM record:edit": {
       requiresApproval: true,
       getTitle: (n) =>
-        `Request to edit FM record (FM No. ${(n.data as any).id})`,
+        `Request to edit FM record (FM No. ${n.requestId})`,
       onApprove: editFMRecordPaymentOnNotification,
       onDecline: onDeclineHandler,
     },
@@ -745,13 +746,13 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${(n.data as any).id}) was approved`,
+        `Request for FM record (FM No. ${n.requestId}) was approved`,
     },
     "FM record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${(n.data as any).id}) was declined`,
+        `Request for FM record (FM No. ${n.requestId}) was declined`,
     },
   };
 
