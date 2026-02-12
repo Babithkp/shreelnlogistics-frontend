@@ -702,7 +702,7 @@ export default function Header({
       requiresApproval: true,
       getDescription: () => "This Action will delete the Bill record. Are you sure you want to delete this Bill record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
-        `Request to delete Bill record (Bill No. ${n.requestId})`,
+        `Request to delete Bill record (Bill No. ${(n.data as any).id})`,
       onApprove: deleteBillRecordByNotification,
       onDecline: onDeclineHandler,
     },
