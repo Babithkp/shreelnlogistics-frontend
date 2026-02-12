@@ -709,7 +709,7 @@ export default function Header({
     "Bill record:edit": {
       requiresApproval: true,
       getTitle: (n) =>
-        `Request to edit Bill record (Bill No. ${n.requestId})`,
+        `Request to edit Bill record (Bill No. ${(n.data as any).id})`,
       onApprove: updateBillRecordByNotification,
       onDecline: onDeclineHandler,
     },
@@ -717,27 +717,27 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${n.requestId}) was approved`,
+        `Request for Bill record (Bill No. ${(n.data as any).id}) was approved`,
     },
     "Bill record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for Bill record (Bill No. ${n.requestId}) was declined`,
+        `Request for Bill record (Bill No. ${(n.data as any).id}) was declined`,
     },
 
     "FM record:delete": {
       requiresApproval: true,
       getDescription: () => "This Action will delete the FM record. Are you sure you want to delete this FM record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
-        `Request to delete FM record (FM No. ${n.requestId})`,
+        `Request to delete FM record (FM No. ${(n.data as any).id})`,
       onApprove: deleteFMRecordByNotification,
       onDecline: onDeclineHandler,
     },
     "FM record:edit": {
       requiresApproval: true,
       getTitle: (n) =>
-        `Request to edit FM record (FM No. ${n.requestId})`,
+        `Request to edit FM record (FM No. ${(n.data as any).id})`,
       onApprove: editFMRecordPaymentOnNotification,
       onDecline: onDeclineHandler,
     },
@@ -745,13 +745,13 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${n.requestId}) was approved`,
+        `Request for FM record (FM No. ${(n.data as any).id}) was approved`,
     },
     "FM record:decline": {
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${n.requestId}) was declined`,
+        `Request for FM record (FM No. ${(n.data as any).id}) was declined`,
     },
   };
 
