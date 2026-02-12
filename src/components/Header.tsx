@@ -715,14 +715,31 @@ export default function Header({
     "Bill record:approved": {
       requiresApproval: false,
       showNotedButton: true,
-      getTitle: (n) =>
-        `Request for Bill record (Bill No. ${(n.data as any).id}) was approved`,
+      getTitle: (n) => {
+        let billNo = "N/A";
+        if (typeof n.data === "string") {
+          const parsed = JSON.parse(n.data);
+          billNo = parsed?.id ?? "N/A";
+        } else {
+          billNo = (n.data as any)?.id ?? "N/A";
+        }
+        return `Request for Bill record (Bill No. ${billNo}) was approved`
+      }
     },
+
     "Bill record:decline": {
       requiresApproval: false,
       showNotedButton: true,
-      getTitle: (n) =>
-        `Request for Bill record (Bill No. ${(n.data as any).id}) was declined`,
+      getTitle: (n) => {
+        let billNo = "N/A";
+        if (typeof n.data === "string") {
+          const parsed = JSON.parse(n.data);
+          billNo = parsed?.id ?? "N/A";
+        } else {
+          billNo = (n.data as any)?.id ?? "N/A";
+        }
+        return `Request for Bill record (Bill No. ${billNo}) was declined`
+      }
     },
 
     "FM record:delete": {
