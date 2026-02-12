@@ -241,7 +241,7 @@ export default function LRCreate({
 
 
 
-  async function fetchVendors() {
+  async function fetchClient() {
     const responseVechicles = await getAllVehiclesApi();
     const responseClients = await getAllClientsApi();
     if (responseVechicles?.status === 200 && responseClients?.status === 200) {
@@ -370,7 +370,7 @@ export default function LRCreate({
         branchName: branchDetails.branchName,
       });
     }
-    fetchVendors();
+    fetchClient();
   }, []);
 
   return (

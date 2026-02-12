@@ -89,8 +89,6 @@ export const getRecentPaymentsForPageApi = async (
 };
 
 export const filterBranchBymonthApi = async (data: any) => {
-  console.log("Filter Branch By Month");
-
   try {
     const response = await axios.post(
       `${BASE_URL}/api/v1/filterBranchBymonth`,
