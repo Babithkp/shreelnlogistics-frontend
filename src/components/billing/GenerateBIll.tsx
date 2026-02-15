@@ -1001,7 +1001,7 @@ export default function GenerateBIll({
                           className="border-primary border"
                           id="hamali"
                         />
-                        <Label htmlFor="hamali">Hamali</Label>
+                        <Label htmlFor="hamali">Extra point</Label>
                         <input
                           disabled={selectedBillToEdit?.WriteOff != null}
                           placeholder="LR#"
@@ -1032,7 +1032,7 @@ export default function GenerateBIll({
               </div>
               {(errors.hamali?.lrnumber || errors.hamali?.amount) && (
                 <p className="text-red-500">
-                  Hamali LR# and Amount is required
+                  Extra point LR# and Amount is required
                 </p>
               )}
               <div className="flex">

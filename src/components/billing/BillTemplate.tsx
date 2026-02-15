@@ -362,7 +362,7 @@ const BillTemplate = ({
                 }}
               >
                 <View style={{ flexDirection: "row", gap: 2 }}>
-                  <Text>Hamali</Text>
+                  <Text>Extra point</Text>
                   <Text>({billInputs?.hamali?.lrnumber})</Text>
                 </View>
                 <Text>{billInputs?.hamali?.amount.toFixed(2)}</Text>
