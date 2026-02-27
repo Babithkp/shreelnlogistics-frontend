@@ -1,18 +1,19 @@
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { TbRadar2 } from "react-icons/tb";
 import { Button } from "../ui/button";
-import { getAllRecordPaymentApi, getAllStatementsApi } from "@/api/branch";
+import {
+  getAllRecordPaymentApi,
+  getAllStatementsApi,
+} from "@/api/branch";
 import { useEffect, useState } from "react";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
-import {
-  CreditInputs,
-  PaymentRecord,
-} from "@/types";
+import { CreditInputs, PaymentRecord } from "@/types";
 import { getAllCreditApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 import { toast } from "react-toastify";
 import { Skeleton } from "antd";
+import { LuSearch } from "react-icons/lu";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: any;
@@ -29,14 +30,41 @@ interface ExtendedPaymentRecord extends PaymentRecord {
 export default function Statements() {
   const [branchId, setBranchId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
-
-
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    ExtendedPaymentRecord[]
+  >([]);
   const [paymentTotals, setPaymentTotals] = useState({
     totalValue: 0,
     totalCr: 0,
     totalDr: 0,
   });
   const [exportDate, setExportDate] = useState("");
+  const [search, setSearch] = useState("");
+
+  const onSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    const filteredTransactions = transactions.filter((transaction) => {
+      const textToSearch = search.trim().toLowerCase();
+      return (
+        transaction.IDNumber?.toLowerCase().includes(textToSearch) ||
+        transaction.creditId?.toLowerCase().includes(textToSearch) ||
+        transaction.fMId?.toLowerCase().includes(textToSearch)
+      );
+    });
+    console.log(filteredTransactions);
+    
+    setFilteredTransactions(filteredTransactions);
+  };
+
+  useEffect(() => {
+    if (search.trim().length === 0) {
+      setFilteredTransactions(transactions);
+    }
+  }, [search]);
 
   const onExportDateHandler = async (e: any) => {
     setExportDate(e.target.value);
@@ -51,7 +79,10 @@ export default function Statements() {
   };
 
   const exportFilteredRecordExcel = async () => {
-    exportRecordExcel(formatRecordData(transactions), `Cash Statement-${exportDate}`)
+    exportRecordExcel(
+      formatRecordData(transactions),
+      `Cash Statement-${exportDate}`,
+    );
     if (!branchId) {
       fetchTransactions();
     } else if (branchId) {
@@ -59,10 +90,7 @@ export default function Statements() {
     }
     setExportDate("");
     toast.success("File Downloaded");
-  }
-
-
-
+  };
 
   const exportRecordExcel = async (data: any[], filename: string) => {
     const workbook = new ExcelJS.Workbook();
@@ -102,10 +130,6 @@ export default function Statements() {
     saveAs(blob, `${filename}.xlsx`);
   };
 
-
-
-
-
   const formatRecordData = (data: ExtendedPaymentRecord[]) => {
     return data.map((record) => ({
       Date: new Date(record.date).toLocaleDateString(),
@@ -116,10 +140,6 @@ export default function Statements() {
       "Dr.": record.fMId ? record.amount : "-",
     }));
   };
-
-
-
-
 
   function summarizePayments(paymentRecords: ExtendedPaymentRecord[]) {
     let totalValue = 0;
@@ -148,16 +168,13 @@ export default function Statements() {
     const time1 = new Date().getTime();
     const recordResponse = await getAllRecordPaymentApi();
     const creditResponse = await getAllCreditApi();
-    if (
-      recordResponse?.status === 200 &&
-      creditResponse?.status === 200
-    ) {
+    if (recordResponse?.status === 200 && creditResponse?.status === 200) {
       const allTransactions: ExtendedPaymentRecord[] = recordResponse.data.data;
       const allCredits: CreditInputs[] = creditResponse.data.data;
       const filteredTransactions = branchId
         ? allTransactions.filter(
-          (transaction) => transaction.branchesId === branchId,
-        )
+            (transaction) => transaction.branchesId === branchId,
+          )
         : allTransactions;
       const filteredCredits = branchId
         ? allCredits.filter((credit) => credit.branchesId === branchId)
@@ -171,6 +188,7 @@ export default function Statements() {
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
       setTransactions(sortedTransactions as ExtendedPaymentRecord[]);
+      setFilteredTransactions(sortedTransactions as ExtendedPaymentRecord[]);
 
       setPaymentTotals(
         summarizePayments(sortedTransactions as ExtendedPaymentRecord[]),
@@ -229,12 +247,27 @@ export default function Statements() {
         </div>
       </div>
 
-      {(
+      {
         <section className="flex w-full flex-col justify-between gap-5 rounded-md bg-white p-5">
-          <div className="h-[63Vh] ">
-            <div className="flex justify-between pr-2">
+          <div className="h-[63Vh]">
+            <form
+              className="flex justify-between pr-2"
+              onSubmit={onSearchSubmit}
+            >
               <p className="pb-2 text-lg font-medium">Cash Statement</p>
               <div className="flex gap-2">
+                <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
+                  <LuSearch size={18} />
+                  <input
+                    placeholder="Search"
+                    className="outline-none placeholder:font-medium"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="cursor-pointer rounded-xl p-5">
+                  <LuSearch size={30} className="mx-3 scale-125" />
+                </Button>
                 <div className="rounded-md bg-blue-50 p-1 pr-3">
                   <input
                     type="date"
@@ -243,76 +276,87 @@ export default function Statements() {
                     value={exportDate}
                   />
                 </div>
-                <Button onClick={exportFilteredRecordExcel}>Export</Button>
+                <Button onClick={exportFilteredRecordExcel} type="button">
+                  Export
+                </Button>
               </div>
-            </div>
-            <div className="overflow-y-auto pr-2 h-[60vh]">
-              {
-                transactions.length > 0 ?
+            </form>
+            <div className="h-[60vh] overflow-y-auto pr-2">
+              {filteredTransactions.length > 0 ? (
                 <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                      <p>Date</p>
-                    </th>
-                    <th className="text-start font-[400] text-[#797979]">
-                      <div className="flex items-center gap-2">
-                        <p>Description</p>
-                      </div>
-                    </th>
-                    <th className="text-start font-[400] text-[#797979]">
-                      <div className="flex items-center gap-2">
-                        <p>Branch</p>
-                      </div>
-                    </th>
-                    <th className="text-start font-[400] text-[#797979]">
-                      Billed value
-                    </th>
-                    <th className="text-start font-[400] text-[#797979]">Cr.</th>
-                    <th className="text-center font-[400] text-[#797979]">Dr.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((record) => (
-                    <tr
-                      className="hover:bg-accent cursor-pointer"
-                      key={record.id}
-                    >
-                      <td className="py-2">
-                        {new Date(record.date).toLocaleDateString()}
-                      </td>
-                      <td className="py-2">
-                        {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
-                        {record.IDNumber ?? record.creditId}
-                      </td>
-                      <td className="py-2">
-                        {record.Admin?.branchName || record.Branches?.branchName}
-                      </td>
-                      <td className="py-2">
-                        {formatter.format(parseFloat(record.amount))}
-                      </td>
-                      {record.billId || record.creditId ? (
+                  <thead>
+                    <tr>
+                      <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
+                        <p>Date</p>
+                      </th>
+                      <th className="text-start font-[400] text-[#797979]">
+                        <div className="flex items-center gap-2">
+                          <p>Description</p>
+                        </div>
+                      </th>
+                      <th className="text-start font-[400] text-[#797979]">
+                        <div className="flex items-center gap-2">
+                          <p>Branch</p>
+                        </div>
+                      </th>
+                      <th className="text-start font-[400] text-[#797979]">
+                        Billed value
+                      </th>
+                      <th className="text-start font-[400] text-[#797979]">
+                        Cr.
+                      </th>
+                      <th className="text-center font-[400] text-[#797979]">
+                        Dr.
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTransactions.map((record) => (
+                      <tr
+                        className="hover:bg-accent cursor-pointer"
+                        key={record.id}
+                      >
+                        <td className="py-2">
+                          {new Date(record.date).toLocaleDateString()}
+                        </td>
+                        <td className="py-2">
+                          {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
+                          {record.IDNumber ?? record.creditId}
+                        </td>
+                        <td className="py-2">
+                          {record.Admin?.branchName ||
+                            record.Branches?.branchName}
+                        </td>
                         <td className="py-2">
                           {formatter.format(parseFloat(record.amount))}
                         </td>
-                      ) : (
-                        <td className="py-2">-</td>
-                      )}
-                      {record.fMId ? (
-                        <td className="py-2 text-center">
-                          {formatter.format(parseFloat(record.amount))}
-                        </td>
-                      ) : (
-                        <td className="py-2 text-center">-</td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>:
-                <div className="flex w-full h-full items-center justify-center">
-                  <Skeleton active  rootClassName="w-full h-full" paragraph={{ rows: 50 }} />
+                        {record.billId || record.creditId ? (
+                          <td className="py-2">
+                            {formatter.format(parseFloat(record.amount))}
+                          </td>
+                        ) : (
+                          <td className="py-2">-</td>
+                        )}
+                        {record.fMId ? (
+                          <td className="py-2 text-center">
+                            {formatter.format(parseFloat(record.amount))}
+                          </td>
+                        ) : (
+                          <td className="py-2 text-center">-</td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Skeleton
+                    active
+                    rootClassName="w-full h-full"
+                    paragraph={{ rows: 50 }}
+                  />
                 </div>
-              }
+              )}
             </div>
           </div>
           <div className="flex justify-end pr-10">
@@ -333,7 +377,7 @@ export default function Statements() {
             </div>
           </div>
         </section>
-      )}
+      }
     </div>
   );
 }

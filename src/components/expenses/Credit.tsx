@@ -133,24 +133,18 @@ export default function Credit({ setSection }: { setSection: any }) {
     }
   }
 
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      const text = search.trim().toLowerCase();
-
-      if (!text) {
-        setFilteredCredits(credits);
-        return;
-      }
-
-      if (branch.isAdmin) {
-        filterExpenseByTitle(text);
-      } else {
-        filterExpenseByTitle(text, branch.id);
-      }
-    }, 300);
-
-    return () => clearTimeout(delay);
-  }, [search, credits]);
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (search.trim().length === 0) {
+      setFilteredCredits(credits);
+      return;
+    }
+    if (branch.isAdmin) {
+      filterExpenseByTitle(search.trim());
+    } else {
+      filterExpenseByTitle(search.trim(), branch.id);
+    }
+  };
 
   const onSubmit = async (data: CreditInputs) => {
     if (branch.isAdmin) {
@@ -361,7 +355,7 @@ export default function Credit({ setSection }: { setSection: any }) {
       <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">All Credits</p>
-          <div className="flex items-center gap-5">
+          <form className="flex items-center gap-5" onSubmit={handleSearch}>
             <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
               <LuSearch size={18} />
               <input
@@ -371,6 +365,9 @@ export default function Credit({ setSection }: { setSection: any }) {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button type="submit" className="cursor-pointer rounded-xl p-5">
+              <LuSearch size={30} className="mx-3 scale-125" />
+            </Button>
             <Button
               className="border-primary cursor-pointer rounded-2xl p-5"
               variant={"outline"}
@@ -421,7 +418,7 @@ export default function Credit({ setSection }: { setSection: any }) {
                 </div>
               </div>
             )}
-          </div>
+          </form>
         </div>
         <div className="overflow-y-auto pr-2">
           <table className="w-full">
@@ -440,7 +437,9 @@ export default function Credit({ setSection }: { setSection: any }) {
                     <p>Expense Date</p>
                   </div>
                 </th>
-                <th className="text-start font-[400] text-[#797979]">Category</th>
+                <th className="text-start font-[400] text-[#797979]">
+                  Category
+                </th>
                 <th className="font-[400] text-[#797979]">Branch</th>
                 <th className="font-[400] text-[#797979]">Amount</th>
               </tr>
@@ -649,10 +648,11 @@ export default function Credit({ setSection }: { setSection: any }) {
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${linkTo !== "FM"
-                  ? "border-muted cursor-not-allowed"
-                  : "border-primary"
-                  }`}
+                className={`rounded-md border p-2 ${
+                  linkTo !== "FM"
+                    ? "border-muted cursor-not-allowed"
+                    : "border-primary"
+                }`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -919,7 +919,7 @@ export default function Credit({ setSection }: { setSection: any }) {
               <label className="font-medium">Transaction ID</label>
               <p>{selectedCredit?.transactionNumber}</p>
             </div>
-            <div className=" flex flex-col items-start gap-2 capitalize">
+            <div className="flex flex-col items-start gap-2 capitalize">
               <label className="font-medium">Amount in words</label>
               <p>{selectedCredit?.amountInWords}</p>
             </div>

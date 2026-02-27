@@ -9,10 +9,14 @@ import Expense from "./Expense";
 import Credit from "./Credit";
 import { ExpensesInputs } from "@/types";
 
-export default function Expenses({expenseData}: {expenseData: {
-  data: ExpensesInputs[];
-  count: number;
-}}) {
+export default function Expenses({
+  expenseData,
+}: {
+  expenseData: {
+    data: ExpensesInputs[];
+    count: number;
+  };
+}) {
   const [section, setSection] = useState({
     expenses: true,
     credits: false,
@@ -38,7 +42,7 @@ export default function Expenses({expenseData}: {expenseData: {
 
   useEffect(() => {
     fetchExpenses();
-    fetchCredits()
+    fetchCredits();
   }, []);
 
   return (
@@ -69,17 +73,21 @@ export default function Expenses({expenseData}: {expenseData: {
             </div>
             <div className="font-medium">
               <p className="text-muted text-sm">Total Credit</p>
-              <p className="text-xl">{formatter.format(
+              <p className="text-xl">
+                {formatter.format(
                   credits.reduce(
                     (acc, data) => acc + (parseFloat(data.amount) || 0),
                     0,
                   ),
-                )}</p>
+                )}
+              </p>
             </div>
           </div>
         </div>
       </section>
-      {section.expenses && <Expense setSection={setSection} data={expenseData} />}
+      {section.expenses && (
+        <Expense setSection={setSection} data={expenseData} />
+      )}
       {section.credits && <Credit setSection={setSection} />}
     </div>
   );

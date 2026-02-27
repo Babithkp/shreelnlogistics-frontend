@@ -152,7 +152,11 @@ export default function Expense({
       setFilteredExpenses(expenses);
       return;
     }
-    filterExpenseByTitle(search);
+    if (branch.isAdmin) {
+      filterExpenseByTitle(search.trim());
+    } else {
+      filterExpenseByTitle(search.trim(), branch.id);
+    }
   };
 
   useEffect(() => {
@@ -384,10 +388,7 @@ export default function Expense({
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button
-              type="submit"
-              className="cursor-pointer rounded-xl p-5"
-            >
+            <Button type="submit" className="cursor-pointer rounded-xl p-5">
               <LuSearch size={30} className="mx-3 scale-125" />
             </Button>
             <Button
@@ -449,16 +450,14 @@ export default function Expense({
           <table className="w-full">
             <thead>
               <tr>
-                <th className=" gap-2 text-start font-[400] text-[#797979] ">
+                <th className="gap-2 text-start font-[400] text-[#797979]">
                   Exp ID
                 </th>
+                <th className="text-start font-[400] text-[#797979]">Title</th>
+                <th className="text-start font-[400] text-[#797979]">Date</th>
                 <th className="text-start font-[400] text-[#797979]">
-                    Title
+                  Category
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
-                    Date
-                </th>
-                <th className="text-start font-[400] text-[#797979]">Category</th>
                 <th className="font-[400] text-[#797979]">Branch</th>
                 <th className="font-[400] text-[#797979]">Amount</th>
               </tr>
@@ -473,12 +472,12 @@ export default function Expense({
                     setIsDetailsModalOpen(true),
                   ]}
                 >
-                  <td className="py-2 ">{expense.expenseId}</td>
-                  <td className="py-2 w-[30rem] text-sm">{expense.title}</td>
+                  <td className="py-2">{expense.expenseId}</td>
+                  <td className="w-[30rem] py-2 text-sm">{expense.title}</td>
                   <td className="py-2">
                     {new Date(expense.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2 w-40">{expense.category}</td>
+                  <td className="w-40 py-2">{expense.category}</td>
                   {expense.Branches && (
                     <td className="py-2 text-center">
                       {expense.Branches?.branchName}
@@ -667,10 +666,11 @@ export default function Expense({
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${linkTo !== "FM"
+                className={`rounded-md border p-2 ${
+                  linkTo !== "FM"
                     ? "border-muted cursor-not-allowed"
                     : "border-primary"
-                  }`}
+                }`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -788,11 +788,14 @@ export default function Expense({
           </div>
         </form>
       </Modal>
-      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen} >
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogTrigger className="hidden"></DialogTrigger>
-        <DialogContent className="min-w-7xl " style={{
-          fontFamily: "DM Sans, sans-serif",
-        }}>
+        <DialogContent
+          className="min-w-7xl"
+          style={{
+            fontFamily: "DM Sans, sans-serif",
+          }}
+        >
           <DialogHeader className="flex flex-row items-start justify-between">
             <DialogTitle className="text-2xl">
               Expense ID - {selectedExpense?.expenseId}
@@ -841,7 +844,7 @@ export default function Expense({
                   <AlertDialogTrigger className="cursor-pointer">
                     <RiDeleteBin6Line size={20} color="red" />
                   </AlertDialogTrigger>
-                  <AlertDialogContent >
+                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Alert!</AlertDialogTitle>
                       <AlertDialogDescription className="font-medium text-black">
@@ -939,7 +942,7 @@ export default function Expense({
               <label className="font-medium">Transaction ID</label>
               <p>{selectedExpense?.transactionNumber}</p>
             </div>
-            <div className=" flex flex-col items-start gap-2 capitalize">
+            <div className="flex flex-col items-start gap-2 capitalize">
               <label className="font-medium">Amount in words</label>
               <p>{selectedExpense?.amountInWords}</p>
             </div>
@@ -955,9 +958,11 @@ export default function Expense({
         onOpenChange={setNotificationAlertOpen}
       >
         <AlertDialogTrigger className="cursor-pointer"></AlertDialogTrigger>
-        <AlertDialogContent style={{
-          fontFamily: "DM Sans, sans-serif",
-        }}>
+        <AlertDialogContent
+          style={{
+            fontFamily: "DM Sans, sans-serif",
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Alert!</AlertDialogTitle>
             <AlertDialogDescription className="font-medium text-black">
