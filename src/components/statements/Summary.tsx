@@ -1,24 +1,22 @@
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { TbRadar2 } from "react-icons/tb";
 import { Button } from "../ui/button";
-import {
-  getAllRecordPaymentApi,
-  getAllStatementsApi,
-} from "@/api/branch";
+import { getAllRecordPaymentApi, getAllStatementsApi } from "@/api/branch";
 import { useEffect, useState } from "react";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { CreditInputs, PaymentRecord } from "@/types";
-import { getAllCreditApi } from "@/api/expense";
+import { getAllCreditApi, getAllExpensesApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
 import { toast } from "react-toastify";
 import { Skeleton } from "antd";
 import { LuSearch } from "react-icons/lu";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
-  billId: any;
-  creditId: any;
-  fMId: any;
+  billId: string;
+  creditId: string;
+  fMId: string;
+  expenseId: string;
   branchesId: string;
   Admin?: {
     branchName: string;
@@ -28,7 +26,6 @@ interface ExtendedPaymentRecord extends PaymentRecord {
   };
 }
 export default function Statements() {
-  const [branchId, setBranchId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<
     ExtendedPaymentRecord[]
@@ -52,10 +49,11 @@ export default function Statements() {
       return (
         transaction.IDNumber?.toLowerCase().includes(textToSearch) ||
         transaction.creditId?.toLowerCase().includes(textToSearch) ||
-        transaction.fMId?.toLowerCase().includes(textToSearch)
+        transaction.fMId?.toLowerCase().includes(textToSearch) ||
+        transaction.expenseId?.toLowerCase().includes(textToSearch)
       );
     });
-    
+
     setFilteredTransactions(filteredTransactions);
   };
 
@@ -73,20 +71,16 @@ export default function Statements() {
         ...response.data.data.payments,
         ...response.data.data.credits,
       ];
-      setTransactions(combinedTransactions as ExtendedPaymentRecord[]);
+      setFilteredTransactions(combinedTransactions as ExtendedPaymentRecord[]);
     }
   };
 
   const exportFilteredRecordExcel = async () => {
     exportRecordExcel(
-      formatRecordData(transactions),
+      formatRecordData(filteredTransactions),
       `Cash Statement-${exportDate}`,
     );
-    if (!branchId) {
-      fetchTransactions();
-    } else if (branchId) {
-      fetchTransactions(branchId);
-    }
+    setFilteredTransactions(transactions);
     setExportDate("");
     toast.success("File Downloaded");
   };
@@ -132,11 +126,19 @@ export default function Statements() {
   const formatRecordData = (data: ExtendedPaymentRecord[]) => {
     return data.map((record) => ({
       Date: new Date(record.date).toLocaleDateString(),
-      Description: record.IDNumber,
+      Description: record.IDNumber
+        ? record.IDNumber
+        : record.expenseId
+          ? "EXP " + record.expenseId
+          : "CR " + record.creditId,
       Branch: record.Admin?.branchName || record.Branches?.branchName,
       "Billed value": record.amount,
       "Cr.": record.billId ? record.amount : "-",
-      "Dr.": record.fMId ? record.amount : "-",
+      "Dr.": record.fMId
+        ? record.amount
+        : record.expenseId
+          ? record.amount
+          : "-",
     }));
   };
 
@@ -149,7 +151,7 @@ export default function Statements() {
       const amount = parseFloat(record.amount || "0");
       totalValue += amount;
 
-      if (record.fMId) {
+      if (record.fMId || record.expenseId) {
         totalDr += amount;
       } else {
         totalCr += amount;
@@ -167,9 +169,15 @@ export default function Statements() {
     const time1 = new Date().getTime();
     const recordResponse = await getAllRecordPaymentApi();
     const creditResponse = await getAllCreditApi();
-    if (recordResponse?.status === 200 && creditResponse?.status === 200) {
+    const expenseResponse = await getAllExpensesApi();
+    if (
+      recordResponse?.status === 200 &&
+      creditResponse?.status === 200 &&
+      expenseResponse?.status === 200
+    ) {
       const allTransactions: ExtendedPaymentRecord[] = recordResponse.data.data;
       const allCredits: CreditInputs[] = creditResponse.data.data;
+      const allExpenses: ExtendedPaymentRecord[] = expenseResponse.data.data;
       const filteredTransactions = branchId
         ? allTransactions.filter(
             (transaction) => transaction.branchesId === branchId,
@@ -178,10 +186,13 @@ export default function Statements() {
       const filteredCredits = branchId
         ? allCredits.filter((credit) => credit.branchesId === branchId)
         : allCredits;
-
+      const filteredExpenses = branchId
+        ? allExpenses.filter((expense) => expense.branchesId === branchId)
+        : allExpenses;
       const combinedTransactions = [
         ...filteredTransactions,
         ...filteredCredits,
+        ...filteredExpenses,
       ];
       const sortedTransactions = combinedTransactions.sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -210,7 +221,6 @@ export default function Statements() {
         fetchTransactions();
       } else {
         fetchTransactions(branchDetails.id);
-        setBranchId(branchDetails.id);
       }
     }
   }, []);
@@ -319,8 +329,16 @@ export default function Statements() {
                           {new Date(record.date).toLocaleDateString()}
                         </td>
                         <td className="py-2">
-                          {record.creditId ? "CR" : record.fMId ? "FM" : ""}{" "}
-                          {record.IDNumber ?? record.creditId}
+                          {record.creditId
+                            ? "CR"
+                            : record.fMId
+                              ? "FM"
+                              : record.expenseId
+                                ? "EXP"
+                                : ""}{" "}
+                          {record.IDNumber ??
+                            record.creditId ??
+                            record.expenseId}
                         </td>
                         <td className="py-2">
                           {record.Admin?.branchName ||
@@ -336,7 +354,7 @@ export default function Statements() {
                         ) : (
                           <td className="py-2">-</td>
                         )}
-                        {record.fMId ? (
+                        {record.fMId || record.expenseId ? (
                           <td className="py-2 text-center">
                             {formatter.format(parseFloat(record.amount))}
                           </td>

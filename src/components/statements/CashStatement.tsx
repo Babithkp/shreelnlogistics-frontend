@@ -26,7 +26,6 @@ interface ExtendedPaymentRecord extends PaymentRecord {
   };
 }
 export default function CashStatement() {
-  const [branchId, setBranchId] = useState<string | null>(null);
   const [paymentRecord, setPaymentRecord] = useState<ExtendedPaymentRecord[]>(
     [],
   );
@@ -103,11 +102,7 @@ export default function CashStatement() {
       formatRecordData(filteredPaymentRecord),
       `Cash Statement-${exportDate}`,
     );
-    if (!branchId) {
-      fetchTransactions();
-    } else if (branchId) {
-      fetchTransactions(branchId);
-    }
+    setFilteredPaymentRecord(paymentRecord);
     setExportDate("");
     toast.success("File Downloaded");
   };
@@ -325,7 +320,6 @@ export default function CashStatement() {
         fetchTransactions();
       } else {
         fetchTransactions(branchDetails.id);
-        setBranchId(branchDetails.id);
       }
     }
   }, []);
