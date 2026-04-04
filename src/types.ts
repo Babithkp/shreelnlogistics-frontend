@@ -13,6 +13,7 @@ export type Section =
   | "reports"
   | "settings"
   | "cashStatement";
+  
 export type SectionsState = Record<Section, boolean>;
 
 export type Notification = {
