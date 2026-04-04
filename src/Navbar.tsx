@@ -16,7 +16,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { Section, SectionsState } from "./types";
 import { VscGraph } from "react-icons/vsc";
 
-type DropDowns = "shipment" | "partner" | "billing";
+type DropDowns = "shipment" | "partner" | "statements";
 
 type DropDownState = Record<DropDowns, boolean>;
 
@@ -37,6 +37,7 @@ export default function Navbar({
   const [dropDown, setDropDown] = useState({
     shipment: false,
     partner: false,
+    statements: false,
   });
   const navigate = useNavigate();
   const onLogoutHandler = () => {
@@ -58,6 +59,7 @@ export default function Navbar({
       return updatedSections;
     });
   };
+
   const sectionChangeHandler = (section: Section) => {
     if (
       section !== "LR" &&
@@ -65,9 +67,11 @@ export default function Navbar({
       section !== "vendor" &&
       section !== "client" &&
       section !== "reports" &&
+      section !== "summary" &&
+      section !== "cashStatement" &&
       section !== "Bill"
     ) {
-      setDropDown({ shipment: false, partner: false });
+      setDropDown({ shipment: false, partner: false, statements: false });
     }
     setSections((prev: any) => {
       const updatedSections: SectionsState = Object.keys(prev).reduce(
@@ -236,18 +240,49 @@ export default function Navbar({
           />
           <p className={`${sections.expenses ? "text-black" : ""}`}>Expenses</p>
         </button>
+        <div className="w-full">
         <button
           className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
-          onClick={() => sectionChangeHandler("statements")}
+          onClick={() => sectionDropChangeHandler("statements")}
         >
           <RiFileExcel2Line
             size={24}
-            color={`${sections.statements ? "#2196F3" : "#A3AED0"}`}
+            color={`${dropDown.statements ? "#2196F3" : "#A3AED0"}`}
           />
-          <p className={`${sections.statements ? "text-black" : ""}`}>
+          <p className={`${dropDown.statements ? "text-black" : ""}`}>
             Statements
           </p>
         </button>
+          {dropDown.statements && (
+            <AnimatePresence>
+              <motion.div
+                key="lr-section"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full"
+              >
+                <button
+                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  onClick={() => sectionChangeHandler("summary")}
+                >
+                  <p className={`${sections.summary ? "text-black" : ""}`}>
+                    Summary
+                  </p>
+                </button>
+                <button
+                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  onClick={() => sectionChangeHandler("cashStatement")}
+                >
+                  <p className={`${sections.cashStatement ? "text-black" : ""}`}>
+                    Cash Statement
+                  </p>
+                </button>
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
         <button
           className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
           onClick={() => sectionChangeHandler("pod")}

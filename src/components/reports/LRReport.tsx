@@ -1,4 +1,4 @@
-import { ClientInputs, LrInputs } from "@/types";
+import { BranchInputs, ClientInputs, LrInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -17,14 +17,17 @@ export default function LRReport({
   branchName,
   isAdmin,
   branch,
+  branchList,
 }: {
   client: ClientInputs[];
   branchName: string;
   isAdmin: boolean;
   branch: any;
+  branchList: BranchInputs[];
 }) {
   const [LRData, setLRData] = useState<LrInputs[]>([]);
   const [filterLoading, setFilterLoading] = useState(false);
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [filterInputs, setFilterInputs] = useState<{
     name: string;
     from: string;
@@ -42,10 +45,21 @@ export default function LRReport({
     }
     setFilterLoading(true);
     if (isAdmin) {
-      const response = await filterLRForClientApi(filterInputs);
-      if (response?.status === 200) {
-        const allLR = response.data.data;
-        setLRData(allLR);
+      if (selectedBranchId) {
+        const response = await filterLRForClientForBranchApi(
+          filterInputs,
+          selectedBranchId,
+        );
+        if (response?.status === 200) {
+          const allLR = response.data.data;
+          setLRData(allLR);
+        }
+      } else {
+        const response = await filterLRForClientApi(filterInputs);
+        if (response?.status === 200) {
+          const allLR = response.data.data;
+          setLRData(allLR);
+        }
       }
     } else if (branch.branchId) {
       const response = await filterLRForClientForBranchApi(
@@ -162,6 +176,24 @@ export default function LRReport({
           placeholder="Select a Client"
           className="w-[48%] bg-transparent"
         />
+        {isAdmin && (
+          <AntSelect
+            options={[
+              { value: null, label: "All" },
+              ...branchList?.map((branch: BranchInputs) => ({
+                value: branch.id,
+                label: branch.branchName,
+              })),
+            ]}
+            onChange={(value) => {
+              setSelectedIdBranch(value);
+            }}
+            value={selectedBranchId || null}
+            size="large"
+            placeholder="Select a Branch"
+            className="w-[30%] bg-transparent"
+          />
+        )}
         <div className="flex w-[20%] items-center gap-2">
           <p>From:</p>
           <div className="rounded-md bg-blue-50 p-1 pr-3">

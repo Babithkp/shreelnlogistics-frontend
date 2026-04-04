@@ -55,7 +55,6 @@ export default function Statements() {
         transaction.fMId?.toLowerCase().includes(textToSearch)
       );
     });
-    console.log(filteredTransactions);
     
     setFilteredTransactions(filteredTransactions);
   };
@@ -254,7 +253,7 @@ export default function Statements() {
               className="flex justify-between pr-2"
               onSubmit={onSearchSubmit}
             >
-              <p className="pb-2 text-lg font-medium">Cash Statement</p>
+              <p className="pb-2 text-lg font-medium">Summary</p>
               <div className="flex gap-2">
                 <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
                   <LuSearch size={18} />

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { BiFilterAlt } from "react-icons/bi";
-import { CreditInputs } from "@/types";
+import { BranchInputs, CreditInputs } from "@/types";
 import { formatter } from "@/lib/utils";
-
+import { Select as AntSelect } from "antd";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
@@ -15,11 +15,14 @@ export default function CreditReport({
   branchName,
   isAdmin,
   branch,
+  branchList,
 }: {
   branchName: string;
   isAdmin: boolean;
   branch: any;
+  branchList: BranchInputs[];
 }) {
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [filterLoading, setFilterLoading] = useState(false);
   const [creditData, setCreditData] = useState<CreditInputs[]>([]);
   const [filterInputs, setFilterInputs] = useState<{
@@ -33,9 +36,19 @@ export default function CreditReport({
   const onFilterHandler = async () => {
     setFilterLoading(true);
     if (isAdmin) {
-      const response = await filterCreditByDateApi(filterInputs);
-      if (response?.status === 200) {
-        setCreditData(response.data.data);
+      if (selectedBranchId) {
+        const response = await filterCreditByDateForBranchApi(
+          filterInputs,
+          selectedBranchId,
+        );
+        if (response?.status === 200) {
+          setCreditData(response.data.data);
+        }
+      } else {
+        const response = await filterCreditByDateApi(filterInputs);
+        if (response?.status === 200) {
+          setCreditData(response.data.data);
+        }
       }
     } else if (branch.branchId) {
       const response = await filterCreditByDateForBranchApi(
@@ -129,6 +142,24 @@ export default function CreditReport({
   return (
     <>
       <section className="flex w-full items-center justify-between gap-3">
+        {isAdmin && (
+          <AntSelect
+            options={[
+              { value: null, label: "All" },
+              ...branchList?.map((branch: BranchInputs) => ({
+                value: branch.id,
+                label: branch.branchName,
+              })),
+            ]}
+            onChange={(value) => {
+              setSelectedIdBranch(value);
+            }}
+            value={selectedBranchId || null}
+            size="large"
+            placeholder="Select a Branch"
+            className="w-[30%] bg-transparent"
+          />
+        )}
         <div className="flex w-[20%] items-center gap-2">
           <p>From:</p>
           <div className="rounded-md bg-blue-50 p-1 pr-3">
@@ -161,18 +192,21 @@ export default function CreditReport({
             />
           </div>
         </div>
-        <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+        <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
           {filterLoading ? "Loading..." : "Filter"}
         </Button>
         <Button
           variant={"outline"}
-          className="rounded-md bg-[#B0BEC5] w-[20%] py-4 text-white"
+          className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
           disabled={filterLoading}
           onClick={() => [setCreditData([])]}
         >
           Reset
         </Button>
-        <Button className="rounded-md w-[20%]" onClick={exportCreditExcelHandler}>
+        <Button
+          className="w-[20%] rounded-md"
+          onClick={exportCreditExcelHandler}
+        >
           Download
         </Button>
       </section>

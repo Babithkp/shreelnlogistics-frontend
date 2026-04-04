@@ -6,12 +6,13 @@ export type Section =
   | "outstanding"
   | "branch"
   | "expenses"
-  | "statements"
+  | "summary"
   | "vendor"
   | "client"
   | "pod"
   | "reports"
-  | "settings";
+  | "settings"
+  | "cashStatement";
 export type SectionsState = Record<Section, boolean>;
 
 export type Notification = {

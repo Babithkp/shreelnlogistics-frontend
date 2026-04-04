@@ -4,7 +4,7 @@ import {
   filterFMLRByVendorApi,
   filterFMLRByVendorForBranchApi,
 } from "@/api/partner";
-import { FMInputs, LrInputs, VendorInputs } from "@/types";
+import { BranchInputs, FMInputs, LrInputs, VendorInputs } from "@/types";
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
@@ -16,12 +16,15 @@ export default function FmReport({
   isAdmin,
   branchName,
   vendor,
+  branchList,
 }: {
   branch: any;
   isAdmin: boolean;
   branchName: string;
   vendor: VendorInputs[];
+  branchList: BranchInputs[];
 }) {
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [FMStatement, setFMStatement] = useState<FMInputs[]>([]);
   const [pendingLRs, setPendingLRs] = useState<LrInputs[]>([]);
   const [FilteredFMStatement, setFilteredFMStatement] = useState<FMInputs[]>(
@@ -46,13 +49,26 @@ export default function FmReport({
     setPendingLRs([]);
     setFilterLoading(true);
     if (isAdmin) {
-      const response = await filterFMLRByVendorApi(filterInputs);
-      if (response?.status === 200) {
-        const AllFM = response.data.data;
+      if (selectedBranchId) {
+        const response = await filterFMLRByVendorForBranchApi(
+          filterInputs,
+          selectedBranchId,
+        );
+        if (response?.status === 200) {
+          const AllFM = response.data.data;
+          setFMStatement(AllFM.FMs);
+          setFilteredFMStatement(AllFM.FMs);
+          setPendingLRs(AllFM.LRs);
+        }
+      } else {
+        const response = await filterFMLRByVendorApi(filterInputs);
+        if (response?.status === 200) {
+          const AllFM = response.data.data;
 
-        setFMStatement(AllFM.FMs);
-        setFilteredFMStatement(AllFM.FMs);
-        setPendingLRs(AllFM.LRs);
+          setFMStatement(AllFM.FMs);
+          setFilteredFMStatement(AllFM.FMs);
+          setPendingLRs(AllFM.LRs);
+        }
       }
     } else if (branch.branchId) {
       const response = await filterFMLRByVendorForBranchApi(
@@ -260,7 +276,7 @@ export default function FmReport({
 
   return (
     <>
-      <section className="flex flex-col  gap-3">
+      <section className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <AntSelect
             showSearch
@@ -282,6 +298,24 @@ export default function FmReport({
             placeholder="Select a vendor"
             className="w-[48%] bg-transparent"
           />
+          {isAdmin && (
+            <AntSelect
+              options={[
+                { value: null, label: "All" },
+                ...branchList?.map((branch: BranchInputs) => ({
+                  value: branch.id,
+                  label: branch.branchName,
+                })),
+              ]}
+              onChange={(value) => {
+                setSelectedIdBranch(value);
+              }}
+              value={selectedBranchId || null}
+              size="large"
+              placeholder="Select a Branch"
+              className="w-[30%] bg-transparent"
+            />
+          )}
           <AntSelect
             showSearch
             options={[
@@ -299,7 +333,7 @@ export default function FmReport({
           />
         </div>
         <div className="flex justify-between">
-          <div className="flex  items-center gap-2">
+          <div className="flex items-center gap-2">
             <p>From:</p>
             <div className="rounded-md bg-blue-50 p-1 pr-3">
               <input
@@ -331,12 +365,12 @@ export default function FmReport({
               />
             </div>
           </div>
-          <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+          <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
             {filterLoading ? "Loading..." : "Filter"}
           </Button>
           <Button
             variant={"outline"}
-            className="rounded-md bg-[#B0BEC5] py-4 text-white w-[20%]"
+            className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
             disabled={filterLoading}
             onClick={() => [
               setFMStatement([]),
@@ -346,7 +380,7 @@ export default function FmReport({
           >
             Reset
           </Button>
-          <Button className="rounded-md w-[20%]" onClick={exportFMExcelHandler}>
+          <Button className="w-[20%] rounded-md" onClick={exportFMExcelHandler}>
             Download
           </Button>
         </div>

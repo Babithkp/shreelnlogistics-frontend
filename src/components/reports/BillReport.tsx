@@ -1,4 +1,4 @@
-import { billInputs, ClientInputs, LrInputs } from "@/types";
+import { billInputs, BranchInputs, ClientInputs, LrInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -17,12 +17,15 @@ export default function BillReport({
   isAdmin,
   branchName = "All",
   client,
+  branchList,
 }: {
   branch: any;
   isAdmin: boolean;
   branchName: string;
   client: ClientInputs[];
+  branchList: BranchInputs[];
 }) {
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [billData, setBillData] = useState<billInputs[]>([]);
   const [filteredBillData, setFilteredBillData] = useState<billInputs[]>([]);
   const [pendingLRs, setPendingLRs] = useState<LrInputs[]>([]);
@@ -55,12 +58,25 @@ export default function BillReport({
     setPendingLRs([]);
     setFilterLoading(true);
     if (isAdmin) {
-      const response = await filterBillLRByClientApi(filterInputs);
-      if (response?.status === 200) {
-        const allBill = response.data.data;
-        setBillData(allBill.bills);
-        setFilteredBillData(allBill.bills);
-        setPendingLRs(allBill.LRs);
+      if (selectedBranchId) {
+        const response = await filterBillLRByClientForBranchApi(
+          filterInputs,
+          selectedBranchId,
+        );
+        if (response?.status === 200) {
+          const allBill = response.data.data;
+          setBillData(allBill.bills);
+          setFilteredBillData(allBill.bills);
+          setPendingLRs(allBill.LRs);
+        }
+      } else {
+        const response = await filterBillLRByClientApi(filterInputs);
+        if (response?.status === 200) {
+          const allBill = response.data.data;
+          setBillData(allBill.bills);
+          setFilteredBillData(allBill.bills);
+          setPendingLRs(allBill.LRs);
+        }
       }
     } else if (branch.branchId) {
       const response = await filterBillLRByClientForBranchApi(
@@ -204,7 +220,7 @@ export default function BillReport({
 
   return (
     <>
-      <section className="flex flex-col  gap-3"> 
+      <section className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <AntSelect
             showSearch
@@ -226,6 +242,24 @@ export default function BillReport({
             placeholder="Select a Client"
             className="w-[48%] bg-transparent"
           />
+          {isAdmin && (
+            <AntSelect
+              options={[
+                { value: null, label: "All" },
+                ...branchList?.map((branch: BranchInputs) => ({
+                  value: branch.id,
+                  label: branch.branchName,
+                })),
+              ]}
+              onChange={(value) => {
+                setSelectedIdBranch(value);
+              }}
+              value={selectedBranchId || null}
+              size="large"
+              placeholder="Select a Branch"
+              className="w-[30%] bg-transparent"
+            />
+          )}
           <AntSelect
             showSearch
             options={[
@@ -242,7 +276,7 @@ export default function BillReport({
           />
         </div>
         <div className="flex justify-between">
-          <div className="flex  items-center gap-2">
+          <div className="flex items-center gap-2">
             <p>From:</p>
             <div className="rounded-md bg-blue-50 p-1 pr-3">
               <input
@@ -258,7 +292,7 @@ export default function BillReport({
               />
             </div>
           </div>
-          <div className="flex  items-center gap-2">
+          <div className="flex items-center gap-2">
             <p>To:</p>
             <div className="rounded-md bg-blue-50 p-1 pr-3">
               <input
@@ -274,12 +308,12 @@ export default function BillReport({
               />
             </div>
           </div>
-          <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+          <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
             {filterLoading ? "Loading..." : "Filter"}
           </Button>
           <Button
             variant={"outline"}
-            className="rounded-md bg-[#B0BEC5] py-4 text-white w-[20%]"
+            className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
             disabled={filterLoading}
             onClick={() => [
               setFilteredBillData([]),
@@ -289,7 +323,10 @@ export default function BillReport({
           >
             Reset
           </Button>
-          <Button className="rounded-md w-[20%]" onClick={exportBillExcelHandler}>
+          <Button
+            className="w-[20%] rounded-md"
+            onClick={exportBillExcelHandler}
+          >
             Download
           </Button>
         </div>
@@ -327,7 +364,9 @@ export default function BillReport({
                   <td className="py-2">{data.billNumber}</td>
                   <td className="py-2 text-center">{data.Client.name}</td>
                   <td className="py-2 text-center">{data.Client.GSTIN}</td>
-                  <td className="py-2 text-center max-w-30">{data.Client.address.substring(0, 30)}...</td>
+                  <td className="max-w-30 py-2 text-center">
+                    {data.Client.address.substring(0, 30)}...
+                  </td>
                   <td className="py-2 text-center">
                     {new Date(data.date).toLocaleDateString()}
                   </td>

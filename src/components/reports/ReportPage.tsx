@@ -6,11 +6,19 @@ import LRReport from "./LRReport";
 import ExpenseReport from "./ExpenseReport";
 import CreditReport from "./CreditReport";
 import Writeoff from "./Writeoff";
+import { getAllBranchDetailsApi } from "@/api/branch";
 
 type Sections = "LRs" | "FMs" | "Bills" | "Expenses" | "Credits" | "Writeoffs";
 
-export default function ReportPage({ clients, vendors }: { clients: ClientInputs[], vendors: VendorInputs[] }) {
+export default function ReportPage({
+  clients,
+  vendors,
+}: {
+  clients: ClientInputs[];
+  vendors: VendorInputs[];
+}) {
   const [branchName, setBranchName] = useState("");
+  const [branchList, setBranchList] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [branch, setBranch] = useState({
     branchId: "",
@@ -59,6 +67,14 @@ export default function ReportPage({ clients, vendors }: { clients: ClientInputs
         });
       }
     }
+
+    async function getBranchList() {
+      const response = await getAllBranchDetailsApi();
+      if (response?.status === 200) {
+        setBranchList(response.data.data);
+      }
+    }
+    getBranchList();
   }, []);
 
   return (
@@ -102,13 +118,58 @@ export default function ReportPage({ clients, vendors }: { clients: ClientInputs
         </p>
       </nav>
       {section.FMs && (
-        <FmReport branchName={branchName} isAdmin={isAdmin} branch={branch}  vendor={vendors}  />
-      )} 
-      {section.Bills && <BillReport branchName={branchName} isAdmin={isAdmin} branch={branch} client={clients}/>}
-      {section.LRs && <LRReport client={clients} branchName={branchName} isAdmin={isAdmin} branch={branch}/>}
-      {section.Expenses && <ExpenseReport branchName={branchName} isAdmin={isAdmin} branch={branch}/>}
-      {section.Credits && <CreditReport branchName={branchName} isAdmin={isAdmin} branch={branch}/>} 
-      {section.Writeoffs && <Writeoff branchName={branchName} isAdmin={isAdmin} branch={branch} clients={clients} vendors={vendors} />} 
+        <FmReport
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          vendor={vendors}
+          branchList={branchList}
+        />
+      )}
+      {section.Bills && (
+        <BillReport
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          client={clients}
+          branchList={branchList}
+        />
+      )}
+      {section.LRs && (
+        <LRReport
+          client={clients}
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          branchList={branchList}
+        />
+      )}
+      {section.Expenses && (
+        <ExpenseReport
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          branchList={branchList}
+        />
+      )}
+      {section.Credits && (
+        <CreditReport
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          branchList={branchList}
+        />
+      )}
+      {section.Writeoffs && (
+        <Writeoff
+          branchName={branchName}
+          isAdmin={isAdmin}
+          branch={branch}
+          clients={clients}
+          vendors={vendors}
+          branchList={branchList}
+        />
+      )}
     </div>
   );
 }

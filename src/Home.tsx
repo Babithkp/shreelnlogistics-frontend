@@ -26,7 +26,7 @@ import {
   getGeneralSettingsApi,
 } from "./api/settings";
 import OutStandingPage from "./components/outstanding/OutStandingPage";
-import Statements from "./components/statements/Statements";
+import Summary from "./components/statements/Summary";
 import { getBillByBranchIdApi, getBillDetailsApi } from "./api/billing";
 import {
   billInputs,
@@ -53,6 +53,7 @@ import { getExpenseByPageApi } from "./api/expense";
 import { getPodByPageApi } from "./api/pod";
 import ReportPage from "./components/reports/ReportPage";
 import Loader from "./Loader";
+import CashStatement from "./components/statements/CashStatement";
 
 export interface Setting {
   ProfileInputs: ProfileInputs;
@@ -71,7 +72,8 @@ export default function Home() {
     outstanding: false,
     branch: false,
     expenses: false,
-    statements: false,
+    summary: false,
+    cashStatement: false,
     pod: false,
     settings: false,
     reports: false,
@@ -222,28 +224,16 @@ export default function Home() {
   }
 
   async function fetchDashboardData() {
-    const dashboardData = localStorage.getItem("dashboardData");
-    if (dashboardData) {
-      const data = JSON.parse(dashboardData);
-      setDashboardData(data);
-    }
     const response = await getDashboardDataApi();
     if (response?.status === 200) {
       setDashboardData(response.data.data);
-      localStorage.setItem("dashboardData", JSON.stringify(response.data.data));
-    }
+    }    
   }
 
   async function fetchDashboardDataForBranch(branchId: string) {
-    const dashboardData = localStorage.getItem("dashboardData");
-    if (dashboardData) {
-      const data = JSON.parse(dashboardData);
-      setDashboardData(data);
-    }
     const response = await getDashboardDataForBranchApi(branchId);
     if (response?.status === 200) {
       setDashboardData(response.data.data);
-      localStorage.setItem("dashboardData", JSON.stringify(response.data.data));
     }
   }
 
@@ -373,7 +363,8 @@ export default function Home() {
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses expenseData={expenseData} />}
         {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}
-        {sections.statements && <Statements />}
+        {sections.summary && <Summary />}
+        {sections.cashStatement && <CashStatement />} 
         {sections.reports && <ReportPage clients={clients} vendors={vendors} />}
       </div>
     </main>

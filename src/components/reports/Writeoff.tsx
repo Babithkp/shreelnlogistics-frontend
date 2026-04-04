@@ -1,4 +1,4 @@
-import { ClientInputs, VendorInputs, WriteOffInputs } from "@/types";
+import { BranchInputs, ClientInputs, VendorInputs, WriteOffInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { Button } from "../ui/button";
 import { useState } from "react";
@@ -13,13 +13,16 @@ export default function Writeoff({
   branchName,
   branch,
   isAdmin,
+  branchList,
 }: {
   clients: ClientInputs[];
   vendors: VendorInputs[];
   branchName: string;
   branch: any;
   isAdmin: boolean;
+  branchList: BranchInputs[];
 }) {
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [writeoffData, setWriteoffData] = useState<WriteOffInputs[]>([]);
   const [filterLoading, setFilterLoading] = useState(false);
   const [filterInputs, setFilterInputs] = useState<{
@@ -46,7 +49,7 @@ export default function Writeoff({
         to: filterInputs.to,
         clientName: filterInputs.clientName,
         vendorName: filterInputs.vendorName,
-        branchId: isAdmin ? null : branch.branchId,
+        branchId: isAdmin ? selectedBranchId : branch.branchId,
       });
       if (response?.status === 200) {
         const allWriteOff = response.data.data;
@@ -163,6 +166,24 @@ export default function Writeoff({
             placeholder="Select a Client"
             className="w-[48%] bg-transparent"
           />
+          {isAdmin && (
+          <AntSelect
+            options={[
+              { value: null, label: "All" },
+              ...branchList?.map((branch: BranchInputs) => ({
+                value: branch.id,
+                label: branch.branchName,
+              })),
+            ]}
+            onChange={(value) => {
+              setSelectedIdBranch(value);
+            }}
+            value={selectedBranchId || null}
+            size="large"
+            placeholder="Select a Branch"
+            className="w-[30%] bg-transparent"
+          />
+        )}
           <AntSelect
             showSearch
             options={[

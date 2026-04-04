@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { BiFilterAlt } from "react-icons/bi";
-import { ExpensesInputs } from "@/types";
+import { BranchInputs, ExpensesInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 import {
   filterExpensesByDateApi,
@@ -10,17 +10,20 @@ import {
 import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
-
+import { Select as AntSelect } from "antd";
 
 export default function ExpenseReport({
   branchName,
   isAdmin,
   branch,
+  branchList,
 }: {
   branchName: string;
   isAdmin: boolean;
   branch: any;
+  branchList: BranchInputs[];
 }) {
+  const [selectedBranchId, setSelectedIdBranch] = useState<string>();
   const [filterLoading, setFilterLoading] = useState(false);
   const [expenseData, setExpenseData] = useState<ExpensesInputs[]>([]);
   const [filterInputs, setFilterInputs] = useState<{
@@ -34,9 +37,19 @@ export default function ExpenseReport({
   const onFilterHandler = async () => {
     setFilterLoading(true);
     if (isAdmin) {
-      const response = await filterExpensesByDateApi(filterInputs);
-      if (response?.status === 200) {
-        setExpenseData(response.data.data);
+      if (selectedBranchId) {
+        const response = await filterExpensesByDateForBranchApi(
+          filterInputs,
+          selectedBranchId,
+        );
+        if (response?.status === 200) {
+          setExpenseData(response.data.data);
+        }
+      } else {
+        const response = await filterExpensesByDateApi(filterInputs);
+        if (response?.status === 200) {
+          setExpenseData(response.data.data);
+        }
       }
     } else if (branch.branchId) {
       const response = await filterExpensesByDateForBranchApi(
@@ -49,7 +62,6 @@ export default function ExpenseReport({
     }
     setFilterLoading(false);
   };
-
 
   const exportToExcelWithImage = async (
     data: any[],
@@ -109,8 +121,10 @@ export default function ExpenseReport({
       Title: expense.title,
       Date: expense.date,
       Category: expense.category,
-      Branch: expense.Branches ? expense.Branches.branchName : expense.Admin.branchName,
-      "Amount": expense.amount,
+      Branch: expense.Branches
+        ? expense.Branches.branchName
+        : expense.Admin.branchName,
+      Amount: expense.amount,
     }));
   };
 
@@ -130,6 +144,24 @@ export default function ExpenseReport({
   return (
     <>
       <section className="flex w-full items-center justify-between gap-3">
+        {isAdmin && (
+          <AntSelect
+            options={[
+              { value: null, label: "All" },
+              ...branchList?.map((branch: BranchInputs) => ({
+                value: branch.id,
+                label: branch.branchName,
+              })),
+            ]}
+            onChange={(value) => {
+              setSelectedIdBranch(value);
+            }}
+            value={selectedBranchId || null}
+            size="large"
+            placeholder="Select a Branch"
+            className="w-[30%] bg-transparent"
+          />
+        )}
         <div className="flex w-[20%] items-center gap-2">
           <p>From:</p>
           <div className="rounded-md bg-blue-50 p-1 pr-3">
@@ -162,18 +194,18 @@ export default function ExpenseReport({
             />
           </div>
         </div>
-        <Button className="rounded-md w-[20%]" onClick={onFilterHandler}>
+        <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
           {filterLoading ? "Loading..." : "Filter"}
         </Button>
         <Button
           variant={"outline"}
-          className="rounded-md bg-[#B0BEC5]  py-4 text-white w-[20%]"
+          className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
           disabled={filterLoading}
           onClick={() => [setExpenseData([])]}
         >
           Reset
         </Button>
-        <Button className="rounded-md w-[20%]" onClick={exportBillExcelHandler}>
+        <Button className="w-[20%] rounded-md" onClick={exportBillExcelHandler}>
           Download
         </Button>
       </section>

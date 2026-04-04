@@ -389,6 +389,8 @@ export default function Pod({
           (lr: any) => !Array.isArray(lr.pod) || lr.pod.length === 0,
         ),
       );
+      console.log(response.data.data.filter((lr:LrInputs)=> lr.lrNumber === "9724")); 
+      
     }
   }
 
