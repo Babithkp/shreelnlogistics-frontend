@@ -22,6 +22,7 @@ export const getAllBranchDetailsApi = async () => {
   }
 };
 
+
 export const updateBranchDetailsApi = async (data: any) => {
   try {
     const response = await axios.post(`${BASE_URL}/api/v1/updateBranch`, data);
