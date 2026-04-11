@@ -67,8 +67,8 @@ const sectionLabels: Record<keyof SectionsState, string> = {
   outstanding: "Outstanding",
   branch: "Branches",
   expenses: "Expenses",
-  cashStatement:"cashStatement",
-  summary:"summary",
+  cashStatement: "cashStatement",
+  summary: "summary",
   pod: "POD",
   settings: "Settings",
   reports: "Reports",
@@ -82,8 +82,6 @@ type NotificationConfig = {
   onDecline?: (n: Notification) => Promise<void>;
   showNotedButton?: boolean;
 };
-
-
 
 export default function Header({
   title,
@@ -134,15 +132,12 @@ export default function Header({
   };
 
   const changeToReadHandler = async () => {
-    const unread = notifications.filter(n => n.status !== "read");
+    const unread = notifications.filter((n) => n.status !== "read");
 
     await Promise.all(
-      unread.map(n =>
-        changeNotificationStatusHandler(n.id, "read"),
-      ),
+      unread.map((n) => changeNotificationStatusHandler(n.id, "read")),
     );
   };
-
 
   const changeNotificationStatusHandler = async (
     id: string,
@@ -226,7 +221,7 @@ export default function Header({
       createdByRole: notification.createdByRole,
       createdById: notification.createdById,
       data: null,
-      status: "declined"
+      status: "declined",
     };
 
     setIsLoading(true);
@@ -259,7 +254,6 @@ export default function Header({
     }
     setIsLoading(false);
   };
-
 
   const onFMEditUpdateHandler = async (
     id: string,
@@ -307,7 +301,6 @@ export default function Header({
   const editFMRecordPaymentOnNotification = async (
     notification: Notification,
   ) => {
-
     const data = formatForUpdate(notification.data!);
     const response = await updateRecordPaymentByNotificationApi(
       notification.requestId,
@@ -336,7 +329,6 @@ export default function Header({
     }
   };
 
-
   const updateBillByNotification = async (notification: Notification) => {
     const billId = notification.requestId;
     const data = {
@@ -353,7 +345,6 @@ export default function Header({
       toast.error("Something Went Wrong, Check All Fields");
     }
   };
-
 
   const deleteBillByNotification = async (notification: Notification) => {
     const data = {
@@ -372,7 +363,6 @@ export default function Header({
   };
 
   const updateBillRecordByNotification = async (notification: Notification) => {
-
     const data = {
       data: formatForUpdate(notification.data!).data,
       billId: notification.requestId,
@@ -393,7 +383,7 @@ export default function Header({
   const deleteBillRecordByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await deleteBillRecordByNotificationApi(
-      (notification.data as any),
+      notification.data as any,
     );
     if (response?.status === 200) {
       toast.success("Notification Sent");
@@ -403,7 +393,6 @@ export default function Header({
     }
     setIsLoading(false);
   };
-
 
   const updateCreditByNotification = async (notification: Notification) => {
     const data = formatForUpdate(notification.data!);
@@ -451,11 +440,16 @@ export default function Header({
   };
   const deleteExpenseByNotification = async (notification: Notification) => {
     setIsLoading(true);
+    console.log(notification.requestId);
+
     const response = await deleteExpenseByNotificationApi(
       notification.requestId,
     );
     if (response?.status === 200) {
       toast.success("Notification Sent");
+      deleteNotificationHandler(notification.id);
+    } else if (response?.status === 203) {
+      toast.error("Expense Not Found, Already Deleted");
       deleteNotificationHandler(notification.id);
     } else {
       toast.error("Something Went Wrong, Check All Fields");
@@ -478,7 +472,6 @@ export default function Header({
     setIsLoading(false);
   };
 
-
   const deletePodByNotification = async (notification: Notification) => {
     setIsLoading(true);
     const response = await deletePODByNotificationApi(notification.requestId);
@@ -491,13 +484,11 @@ export default function Header({
     setIsLoading(false);
   };
 
-
   const notificationConfig: Record<string, NotificationConfig> = {
     "Credit Limit:info": {
       requiresApproval: false,
       showNotedButton: true,
-      getTitle: (n) =>
-        `Alert - Credit Limit exceeded for ${n.createdByRole}`,
+      getTitle: (n) => `Alert - Credit Limit exceeded for ${n.createdByRole}`,
     },
 
     "Outstanding limit:info": {
@@ -509,8 +500,7 @@ export default function Header({
 
     "LR:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete LR (LR No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete LR (LR No. ${n.requestId})`,
       getDescription: () =>
         `Are you sure you want to remove this Lorry Receipt ? This action is permanent and cannot be undone.`,
       onApprove: onLRDeleteHandler,
@@ -519,10 +509,8 @@ export default function Header({
 
     "LR:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit LR (LR No. ${n.requestId})`,
-      onApprove: (n) =>
-        onLRUpdateHandler(n.requestId, n.data!, n.id),
+      getTitle: (n) => `Request to edit LR (LR No. ${n.requestId})`,
+      onApprove: (n) => onLRUpdateHandler(n.requestId, n.data!, n.id),
       onDecline: onDeclineHandler,
     },
 
@@ -530,22 +518,19 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
 
-      getTitle: (n) =>
-        `Request for LR (LR No. ${n.requestId}) was declined`,
+      getTitle: (n) => `Request for LR (LR No. ${n.requestId}) was declined`,
     },
 
     "LR:approved": {
       requiresApproval: false,
       showNotedButton: true,
 
-      getTitle: (n) =>
-        `Request for LR (LR No. ${n.requestId}) was approved`,
+      getTitle: (n) => `Request for LR (LR No. ${n.requestId}) was approved`,
     },
 
     "FM:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete FM (FM No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete FM (FM No. ${n.requestId})`,
       getDescription() {
         return `Are you sure you want to delete this Freight Memo ? This action is permanent and cannot be undone.`;
       },
@@ -555,10 +540,8 @@ export default function Header({
 
     "FM:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit FM (FM No. ${n.requestId})`,
-      onApprove: (n) =>
-        onFMEditUpdateHandler(n.requestId, n.data!, n.id),
+      getTitle: (n) => `Request to edit FM (FM No. ${n.requestId})`,
+      onApprove: (n) => onFMEditUpdateHandler(n.requestId, n.data!, n.id),
       onDecline: onDeclineHandler,
     },
 
@@ -566,22 +549,18 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
 
-      getTitle: (n) =>
-        `Request for FM (FM No. ${n.requestId}) was approved`,
+      getTitle: (n) => `Request for FM (FM No. ${n.requestId}) was approved`,
     },
     "FM:decline": {
       requiresApproval: false,
       showNotedButton: true,
 
-      getTitle: (n) =>
-        `Request for FM (FM No. ${n.requestId}) was declined`,
+      getTitle: (n) => `Request for FM (FM No. ${n.requestId}) was declined`,
     },
-
 
     "Bill:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete Bill (Bill No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete Bill (Bill No. ${n.requestId})`,
       getDescription() {
         return `Are you sure you want to delete this Bill ? This action is permanent and cannot be undone.`;
       },
@@ -591,8 +570,7 @@ export default function Header({
 
     "Bill:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit Bill (Bill No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit Bill (Bill No. ${n.requestId})`,
       onApprove: updateBillByNotification,
       onDecline: onDeclineHandler,
     },
@@ -611,16 +589,14 @@ export default function Header({
 
     "POD:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit POD (LR No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit POD (LR No. ${n.requestId})`,
       onApprove: updatePodByNotification,
       onDecline: onDeclineHandler,
     },
 
     "POD:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete POD (LR No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete POD (LR No. ${n.requestId})`,
       getDescription: () =>
         `Are you sure you want to remove this POD ? This action is permanent and cannot be undone.`,
       onApprove: deletePodByNotification,
@@ -630,20 +606,17 @@ export default function Header({
     "POD:approved": {
       requiresApproval: false,
       showNotedButton: true,
-      getTitle: (n) =>
-        `Request for POD (LR No. ${n.requestId}) was approved`,
+      getTitle: (n) => `Request for POD (LR No. ${n.requestId}) was approved`,
     },
     "POD:decline": {
       requiresApproval: false,
       showNotedButton: true,
-      getTitle: (n) =>
-        `Request for POD (LR No. ${n.requestId}) was declined`,
+      getTitle: (n) => `Request for POD (LR No. ${n.requestId}) was declined`,
     },
 
     "Credit:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete Credit (Credit No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete Credit (Credit No. ${n.requestId})`,
       getDescription: () =>
         `Are you sure you want to remove this Credit ? This action is permanent and cannot be undone.`,
       onApprove: deleteCreditByNotification,
@@ -651,8 +624,7 @@ export default function Header({
     },
     "Credit:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit Credit (Credit No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit Credit (Credit No. ${n.requestId})`,
       onApprove: updateCreditByNotification,
       onDecline: onDeclineHandler,
     },
@@ -671,8 +643,7 @@ export default function Header({
 
     "Expense:delete": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to delete Expense (Expense No. ${n.requestId})`,
+      getTitle: (n) => `Request to delete Expense (Expense No. ${n.requestId})`,
       getDescription: () =>
         `Are you sure you want to remove this Expense ? This action is permanent and cannot be undone.`,
       onApprove: deleteExpenseByNotification,
@@ -680,8 +651,7 @@ export default function Header({
     },
     "Expense:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit Expense (Expense No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit Expense (Expense No. ${n.requestId})`,
       onApprove: updateExpensesByNotification,
       onDecline: onDeclineHandler,
     },
@@ -700,7 +670,8 @@ export default function Header({
 
     "Bill record:delete": {
       requiresApproval: true,
-      getDescription: () => "This Action will delete the Bill record. Are you sure you want to delete this Bill record? This action is permanent and cannot be undone.",
+      getDescription: () =>
+        "This Action will delete the Bill record. Are you sure you want to delete this Bill record? This action is permanent and cannot be undone.",
       getTitle: (n) =>
         `Request to delete Bill record (Bill No. ${n.requestId})`,
       onApprove: deleteBillRecordByNotification,
@@ -708,8 +679,7 @@ export default function Header({
     },
     "Bill record:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit Bill record (Bill No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit Bill record (Bill No. ${n.requestId})`,
       onApprove: updateBillRecordByNotification,
       onDecline: onDeclineHandler,
     },
@@ -724,8 +694,8 @@ export default function Header({
         } else {
           billNo = (n.data as any)?.id ?? "N/A";
         }
-        return `Request for Bill record (Bill No. ${billNo}) was approved`
-      }
+        return `Request for Bill record (Bill No. ${billNo}) was approved`;
+      },
     },
 
     "Bill record:decline": {
@@ -739,22 +709,21 @@ export default function Header({
         } else {
           billNo = (n.data as any)?.id ?? "N/A";
         }
-        return `Request for Bill record (Bill No. ${billNo}) was declined`
-      }
+        return `Request for Bill record (Bill No. ${billNo}) was declined`;
+      },
     },
 
     "FM record:delete": {
       requiresApproval: true,
-      getDescription: () => "This Action will delete the FM record. Are you sure you want to delete this FM record? This action is permanent and cannot be undone.",
-      getTitle: (n) =>
-        `Request to delete FM record (FM No. ${n.requestId})`,
+      getDescription: () =>
+        "This Action will delete the FM record. Are you sure you want to delete this FM record? This action is permanent and cannot be undone.",
+      getTitle: (n) => `Request to delete FM record (FM No. ${n.requestId})`,
       onApprove: deleteFMRecordByNotification,
       onDecline: onDeclineHandler,
     },
     "FM record:edit": {
       requiresApproval: true,
-      getTitle: (n) =>
-        `Request to edit FM record (FM No. ${n.requestId})`,
+      getTitle: (n) => `Request to edit FM record (FM No. ${n.requestId})`,
       onApprove: editFMRecordPaymentOnNotification,
       onDecline: onDeclineHandler,
     },
@@ -772,24 +741,27 @@ export default function Header({
     },
   };
 
-
-
   function NotificationDetailsTable({
     notification,
   }: {
     notification: Notification;
   }) {
-    if ((notification.entityType === "Bill record" || notification.entityType === "FM record") && notification.actionType === "delete") {
+    if (
+      (notification.entityType === "Bill record" ||
+        notification.entityType === "FM record") &&
+      notification.actionType === "delete"
+    ) {
       return null;
     }
 
     return (
       <>
-        {notification.entityType === "FM" || notification.entityType === "Bill" ?
+        {notification.entityType === "FM" ||
+        notification.entityType === "Bill" ? (
           <table className="w-full">
             <thead>
               <tr className="bg-black/60 text-white">
-                <th className="px-2 ">Sl no.</th>
+                <th className="px-2">Sl no.</th>
                 <th className="text-center">Field</th>
                 <th className="text-center">New</th>
               </tr>
@@ -799,36 +771,31 @@ export default function Header({
                 ([key, value], index) => (
                   <tr key={key}>
                     <td className="text-center">{index + 1}</td>
-                    <td className="capitalize text-center">{key}</td>
+                    <td className="text-center capitalize">{key}</td>
                     <td className="text-center">
-                      {key === "LRDetails" || key === "lrData" || key === "Client" ? typeof value === "object" &&
-                        value !== null
-                        ? Array.isArray(value)
-                          ? value?.map(
-                            (
-                              item: any,
-                              idx: number,
-                            ) => (
-                              <div key={idx}>
-                                LR#
-                                {item.lrNumber ||
-                                  JSON.stringify(item)}
-                              </div>
-                            ),
-                          )
-                          : Object?.entries(value)
-                            ?.map(
-                              ([k, v]) => `${k}: ${v}`,
-                            )
-                            .join(", ")
-                        : String(value) : String(value ?? "")}
+                      {key === "LRDetails" ||
+                      key === "lrData" ||
+                      key === "Client"
+                        ? typeof value === "object" && value !== null
+                          ? Array.isArray(value)
+                            ? value?.map((item: any, idx: number) => (
+                                <div key={idx}>
+                                  LR#
+                                  {item.lrNumber || JSON.stringify(item)}
+                                </div>
+                              ))
+                            : Object?.entries(value)
+                                ?.map(([k, v]) => `${k}: ${v}`)
+                                .join(", ")
+                          : String(value)
+                        : String(value ?? "")}
                     </td>
                   </tr>
                 ),
               )}
             </tbody>
           </table>
-          :
+        ) : (
           <table className="w-full">
             <thead>
               <tr className="bg-black/60 text-white">
@@ -842,28 +809,27 @@ export default function Header({
               {Object.entries(notification.data as Record<string, any>).map(
                 ([key, value], index) => (
                   <>
-                    {key !== "id" && (<tr key={key}>
-                      <td className="text-center">{index + 1}</td>
-                      <td className="capitalize text-center">{key}</td>
-                      <td className="text-center">
-                        {String(value?.obj2 ?? "")}
-                      </td>
-                      <td className="text-center">
-                        {String(value?.obj1 ?? "")}
-                      </td>
-                    </tr>)}
+                    {key !== "id" && (
+                      <tr key={key}>
+                        <td className="text-center">{index + 1}</td>
+                        <td className="text-center capitalize">{key}</td>
+                        <td className="text-center">
+                          {String(value?.obj2 ?? "")}
+                        </td>
+                        <td className="text-center">
+                          {String(value?.obj1 ?? "")}
+                        </td>
+                      </tr>
+                    )}
                   </>
                 ),
               )}
             </tbody>
           </table>
-        }
+        )}
       </>
     );
   }
-
-
-
 
   useEffect(() => {
     const branchDetails = localStorage.getItem("branchDetails");
@@ -906,8 +872,8 @@ export default function Header({
                 outstanding: false,
                 branch: false,
                 expenses: false,
-                cashStatement:false,
-                summary:false,
+                cashStatement: false,
+                summary: false,
                 vendor: false,
                 client: false,
                 pod: false,
@@ -973,9 +939,7 @@ export default function Header({
                   <div className="flex w-full items-center justify-between">
                     {/* TIME */}
                     <p className="text-xs text-slate-500">
-                      {formatDateTimeByAgo(
-                        new Date(notification.createdAt),
-                      )}
+                      {formatDateTimeByAgo(new Date(notification.createdAt))}
                     </p>
 
                     {/* ACTIONS */}
@@ -1000,7 +964,7 @@ export default function Header({
                             View details
                           </DialogTrigger>
 
-                          <DialogContent className="max-h-[80%] overflow-y-auto min-w-4xl">
+                          <DialogContent className="max-h-[80%] min-w-4xl overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>
                                 {config.getTitle(notification)}
@@ -1059,9 +1023,6 @@ export default function Header({
             )}
           </PopoverContent>
         </Popover>
-
-
-
 
         <button
           className="bg-primary size-fit cursor-pointer rounded-full p-1"
