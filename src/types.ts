@@ -145,6 +145,7 @@ export interface FMInputs {
   sizeH: string;
   ftl: string;
   WriteOff: WriteOffInputs;
+  Vendors: VendorInputs;
 }
 
 export interface PaymentRecord {

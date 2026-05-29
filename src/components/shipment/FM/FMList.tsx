@@ -180,6 +180,9 @@ export default function FMList({
   const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
 
+  console.log(data);
+  
+
   const itemsPerPage = 50;
 
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
@@ -906,7 +909,7 @@ export default function FMList({
                     key={data.fmNumber}
                   >
                     <td className="border py-2">{data.fmNumber}</td>
-                    <td className="border py-2">{data.vendorName}</td>
+                    <td className="border py-2">{data.Vendors?.name}</td>
                     <td className="border py-2">
                       {new Date(data.date).toLocaleDateString()}
                     </td>

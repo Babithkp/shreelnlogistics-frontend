@@ -269,7 +269,7 @@ export const FMTemplate = ({
               }}
             >
               <Text>Broker Name: </Text>
-              <Text> {FmData?.vendorName}</Text>
+              <Text> {FmData?.Vendors.name}</Text>
             </View>
             <View
               style={{
@@ -566,7 +566,7 @@ export const FMTemplate = ({
                   textTransform: "capitalize",
                 }}
               >
-                {FmData?.amountInwords} rupees only
+                {FmData?.amountInwords}
               </Text>
             </View>
           </View>

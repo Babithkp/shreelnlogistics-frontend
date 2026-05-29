@@ -737,7 +737,7 @@ export default function Header({
       requiresApproval: false,
       showNotedButton: true,
       getTitle: (n) =>
-        `Request for FM record (FM No. ${(n.data as any).id}) was declined`,
+        `Request for FM record (FM No. ${(n.data as any)?.id}) was declined`,
     },
   };
 
