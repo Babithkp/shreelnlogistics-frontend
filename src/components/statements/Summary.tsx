@@ -24,6 +24,9 @@ interface ExtendedPaymentRecord extends PaymentRecord {
   Branches?: {
     branchName: string;
   };
+  Bill?: {
+    tds: number;
+  };
 }
 export default function Statements() {
   const [transactions, setTransactions] = useState<ExtendedPaymentRecord[]>([]);
@@ -183,6 +186,7 @@ export default function Statements() {
             (transaction) => transaction.branchesId === branchId,
           )
         : allTransactions;
+
       const filteredCredits = branchId
         ? allCredits.filter((credit) => credit.branchesId === branchId)
         : allCredits;
@@ -349,7 +353,12 @@ export default function Statements() {
                         </td>
                         {record.billId || record.creditId ? (
                           <td className="py-2">
-                            {formatter.format(parseFloat(record.amount))}
+                            {record.billId
+                              ? formatter.format(
+                                parseFloat(record.amount) -
+                                (parseFloat(record.amount) * (record.Bill?.tds || 0)) / 100
+                              )
+                              : formatter.format(parseFloat(record.amount))}
                           </td>
                         ) : (
                           <td className="py-2">-</td>

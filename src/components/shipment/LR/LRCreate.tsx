@@ -804,7 +804,7 @@ export default function LRCreate({
                               placeholder="Select vehicle... "
                               options={vehicles.map((vehicle) => ({
                                 value: vehicle.id,
-                                label: `${vehicle.vehicleNumber}-${vehicle.vendorName}`,
+                                label: `${vehicle.vehicleNumber}-${vehicle?.vendor?.name}`,
                               }))}
                               filterOption={(input, option) => {
                                 if (!option || !option.label) return false;

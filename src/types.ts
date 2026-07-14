@@ -196,6 +196,7 @@ export type VehicleInputs = {
   driverPhone: string;
   insurance: string;
   panNumber: string;
+  vendor: VendorInputs
   RC: string;
   LR: LrInputs[];
 };

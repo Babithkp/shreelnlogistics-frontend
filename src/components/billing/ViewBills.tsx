@@ -886,7 +886,7 @@ export default function ViewBills({
                   )}
                   <td className="py-2 text-center border">
                     {formatter.format(
-                      data.subTotal * (data?.tds ? data?.tds / 100 : 0.01),
+                      data.subTotal * (data?.tds ? data?.tds / 100 : 0.00),
                     )}
                   </td>
                 </tr>
@@ -1139,6 +1139,7 @@ export default function ViewBills({
                   <SelectValue placeholder="Select a TDS" />%
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="0">0</SelectItem>
                   <SelectItem value="1">1</SelectItem>
                   <SelectItem value="2">2</SelectItem>
                 </SelectContent>

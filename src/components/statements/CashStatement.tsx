@@ -24,6 +24,9 @@ interface ExtendedPaymentRecord extends PaymentRecord {
   Branches?: {
     branchName: string;
   };
+  Bill?: {
+    tds: number;
+  };
 }
 export default function CashStatement() {
   const [paymentRecord, setPaymentRecord] = useState<ExtendedPaymentRecord[]>(
@@ -443,7 +446,14 @@ export default function CashStatement() {
                         </td>
                         {
                           <td className="py-2">
-                            {formatter.format(parseFloat(record.amount))}
+                            {record.billId
+                              ? formatter.format(
+                                  parseFloat(record.amount) -
+                                    (parseFloat(record.amount) *
+                                      (record.Bill?.tds || 0)) /
+                                      100,
+                                )
+                              : formatter.format(parseFloat(record.amount))}
                           </td>
                         }
                       </tr>
