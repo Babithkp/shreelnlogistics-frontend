@@ -170,6 +170,7 @@ export default function FmReport({
       "FM#": FM.fmNumber,
       "Vendor Name": FM.vendorName,
       Date: new Date(FM.date).toLocaleDateString(),
+      "vehicle No": FM.vehicleNo,
       "Hire Value": FM.hire,
       "Advance Paid": parseFloat(FM.advance) - FM.outStandingAdvance,
       "Advance Paid Date": getAdvancePaidDate(FM),
@@ -232,6 +233,15 @@ export default function FmReport({
     } else if (value === "Cleared") {
       setFilteredFMStatement(
         FMStatement.filter((FM) => FM.outStandingBalance === "0"),
+      );
+    } else if (value === "Balance Pending") {
+      setFilteredFMStatement(
+        FMStatement.filter(
+          (FM) =>
+            parseFloat(FM.advance) > FM.outStandingAdvance &&
+            FM.outStandingAdvance === 0 &&
+            FM.outStandingBalance !== "0",
+        ),
       );
     }
   };
@@ -322,7 +332,8 @@ export default function FmReport({
               { label: "All", value: "All" },
               { label: "Adance Paid", value: "Adance Paid" },
               { label: "Advance Pending", value: "Advance Pending" },
-              { label: "Cleared", value: "Cleared" },
+              { label: "Balance Pending", value: "Balance Pending" },
+              { label: "Balance Cleared", value: "Cleared" },
             ]}
             onChange={(value) => {
               onCategoryFilterHandler(value);

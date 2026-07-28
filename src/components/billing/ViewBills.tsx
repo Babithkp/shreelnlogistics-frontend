@@ -99,12 +99,10 @@ type DiffField = {
   obj2: any;
 };
 
-
 type EditableData = {
   id: string;
   [key: string]: DiffField | string;
 };
-
 
 export default function ViewBills({
   sectionChangeHandler,
@@ -147,8 +145,7 @@ export default function ViewBills({
   const [oldRecordData, setOldRecordData] = useState<PaymentRecord | null>(
     null,
   );
-  const [editAbleData, setEditAbleData] =
-  useState<EditableData | undefined>();
+  const [editAbleData, setEditAbleData] = useState<EditableData | undefined>();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [BillList, setBillList] = useState<billInputs[]>([]);
@@ -522,6 +519,7 @@ export default function ViewBills({
   };
 
   const editBillPaymentOnNotification = async () => {
+    // if ()
     const data = {
       requestId: oldRecordData?.IDNumber,
       entityType: "Bill record",
@@ -810,89 +808,95 @@ export default function ViewBills({
             </div>
           </div>
           <div className="overflow-y-auto pr-2">
-          <table className={`w-full ${showPreview ? "text-xs" : ""} scroll-auto`}>
-            <thead>
-              <tr>
-                <th className="items-center  text-start font-[400] text-[#797979] border">
-                  Bill ID
-                </th>
-                <th className="text-start font-[400] text-[#797979] border">
-                  Client Name
-                </th>
-                <th className="text-start font-[400] text-[#797979] border">
+            <table
+              className={`w-full ${showPreview ? "text-xs" : ""} scroll-auto`}
+            >
+              <thead>
+                <tr>
+                  <th className="items-center border text-start font-[400] text-[#797979]">
+                    Bill ID
+                  </th>
+                  <th className="border text-start font-[400] text-[#797979]">
+                    Client Name
+                  </th>
+                  <th className="border text-start font-[400] text-[#797979]">
                     Date
-                </th>
-                <th className="text-start font-[400] text-[#797979] border ">
-                  Freight Amount
-                </th>
-                <th className="text-start font-[400] text-[#797979] border ">
-                  Payment Recieved
-                </th>
-                <th className="text-start font-[400] text-[#797979] border ">
-                  Payment Recieved Date
-                </th>
-                {!showPreview && (
-                  <>
-                    <th className="text-start font-[400] text-[#797979] border ">
-                      Pending Payment
-                    </th>
-                    <th className="font-[400] text-[#797979] border">Deduction</th>
-                  </>
-                )}
-                <th className="font-[400] text-[#797979] border">TDS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBills.map((data) => (
-                <tr
-                  className={`hover:bg-accent cursor-pointer ${selectedBill?.billNumber === data.billNumber ? "bg-accent" : ""}`}
-                  key={data.id}
-                  onClick={() => [
-                    selectBillForPreview(data),
-                    setEmailIds(data.Client.email),
-                  ]}
-                >
-                  <td className="py-2 border">{data.billNumber}</td>
-                  <td className="py-2 border">{data.Client?.name}</td>
-                  <td className="py-2 border">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 border">{formatter.format(data.subTotal)}</td>
-                  <td className="py-2 border">
-                    {formatter.format(
-                      parseFloat(data.zeroToThirty) +
-                        parseFloat(data.thirtyToSixty) +
-                        parseFloat(data.sixtyPlus),
-                    )}
-                  </td>
-                  <td className="py-2 text-center border">
-                    {data.PaymentRecords.length > 0
-                      ? new Date(
-                          data.PaymentRecords[
-                            data.PaymentRecords.length - 1
-                          ].date,
-                        ).toLocaleDateString()
-                      : "-"}
-                  </td>
+                  </th>
+                  <th className="border text-start font-[400] text-[#797979]">
+                    Freight Amount
+                  </th>
+                  <th className="border text-start font-[400] text-[#797979]">
+                    Payment Recieved
+                  </th>
+                  <th className="border text-start font-[400] text-[#797979]">
+                    Payment Recieved Date
+                  </th>
                   {!showPreview && (
                     <>
-                      <td className="py-2 border">
-                        {formatter.format(data.pendingAmount)}
-                      </td>
-                      <td className="py-2 text-center border">
-                        {data.WriteOff?.amount || 0}
-                      </td>
+                      <th className="border text-start font-[400] text-[#797979]">
+                        Pending Payment
+                      </th>
+                      <th className="border font-[400] text-[#797979]">
+                        Deduction
+                      </th>
                     </>
                   )}
-                  <td className="py-2 text-center border">
-                    {formatter.format(
-                      data.subTotal * (data?.tds ? data?.tds / 100 : 0.00),
-                    )}
-                  </td>
+                  <th className="border font-[400] text-[#797979]">TDS</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredBills.map((data) => (
+                  <tr
+                    className={`hover:bg-accent cursor-pointer ${selectedBill?.billNumber === data.billNumber ? "bg-accent" : ""}`}
+                    key={data.id}
+                    onClick={() => [
+                      selectBillForPreview(data),
+                      setEmailIds(data.Client.email),
+                    ]}
+                  >
+                    <td className="border py-2">{data.billNumber}</td>
+                    <td className="border py-2">{data.Client?.name}</td>
+                    <td className="border py-2">
+                      {new Date(data.date).toLocaleDateString()}
+                    </td>
+                    <td className="border py-2">
+                      {formatter.format(data.subTotal)}
+                    </td>
+                    <td className="border py-2">
+                      {formatter.format(
+                        parseFloat(data.zeroToThirty) +
+                          parseFloat(data.thirtyToSixty) +
+                          parseFloat(data.sixtyPlus),
+                      )}
+                    </td>
+                    <td className="border py-2 text-center">
+                      {data.PaymentRecords.length > 0
+                        ? new Date(
+                            data.PaymentRecords[
+                              data.PaymentRecords.length - 1
+                            ].date,
+                          ).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    {!showPreview && (
+                      <>
+                        <td className="border py-2">
+                          {formatter.format(data.pendingAmount)}
+                        </td>
+                        <td className="border py-2 text-center">
+                          {data.WriteOff?.amount || 0}
+                        </td>
+                      </>
+                    )}
+                    <td className="border py-2 text-center">
+                      {formatter.format(
+                        data.subTotal * (data?.tds ? data?.tds / 100 : 0.0),
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </motion.div>
         <motion.div

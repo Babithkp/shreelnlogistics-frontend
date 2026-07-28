@@ -265,7 +265,7 @@ export default function BillReport({
             options={[
               { label: "All", value: "All" },
               { label: "Payment Pending", value: "Payment Pending" },
-              { label: "Cleared", value: "Cleared" },
+              { label: "Payment Received", value: "Cleared" },
             ]}
             onChange={(value) => {
               onCategoryFilterHandler(value);
