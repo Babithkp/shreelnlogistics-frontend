@@ -9,7 +9,7 @@ import {
   filterLRForClientForBranchApi,
 } from "@/api/partner";
 import { formatter } from "@/lib/utils";
-import { saveAs } from "file-saver";
+import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 
 export default function LRReport({
@@ -122,10 +122,7 @@ export default function LRReport({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatLRData = (data: LrInputs[]) => {
@@ -139,18 +136,18 @@ export default function LRReport({
     }));
   };
 
-  const exportBillExcelHandler = () => {
+  const exportBillExcelHandler = async () => {
     if (LRData.length === 0) {
       toast.error("No FMs to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatLRData(LRData),
       "LR Statement " + new Date().toDateString(),
       filterInputs.name,
       LRData.reduce((acc, FM) => acc + FM.totalAmt, 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   return (

@@ -4,7 +4,7 @@ import { BiFilterAlt } from "react-icons/bi";
 import { BranchInputs, CreditInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 import { Select as AntSelect } from "antd";
-import { saveAs } from "file-saver";
+import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
 import {
@@ -108,10 +108,7 @@ export default function CreditReport({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatLRData = (data: CreditInputs[]) => {
@@ -127,17 +124,17 @@ export default function CreditReport({
     }));
   };
 
-  const exportCreditExcelHandler = () => {
+  const exportCreditExcelHandler = async () => {
     if (creditData.length === 0) {
       toast.error("No FMs to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatLRData(creditData),
       "Credit Statement " + new Date().toDateString(),
       creditData.reduce((acc, credit) => acc + parseFloat(credit.amount), 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
   return (
     <>

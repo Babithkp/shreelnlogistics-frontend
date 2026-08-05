@@ -116,7 +116,7 @@ export default function Navbar({
               color={`${dropDown.shipment ? "#2196F3" : "#A3AED0"}`}
             />
             <p className={`${dropDown.shipment ? "text-black" : ""}`}>
-              Shipment Management
+              Shipments
             </p>
           </button>
           {dropDown.shipment && (

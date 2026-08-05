@@ -7,7 +7,7 @@ import {
   filterExpensesByDateApi,
   filterExpensesByDateForBranchApi,
 } from "@/api/expense";
-import { saveAs } from "file-saver";
+import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
 import { Select as AntSelect } from "antd";
@@ -109,10 +109,7 @@ export default function ExpenseReport({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatLRData = (data: ExpensesInputs[]) => {
@@ -128,17 +125,17 @@ export default function ExpenseReport({
     }));
   };
 
-  const exportBillExcelHandler = () => {
+  const exportBillExcelHandler = async () => {
     if (expenseData.length === 0) {
       toast.error("No FMs to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatLRData(expenseData),
       "Expenses Statement " + new Date().toDateString(),
       expenseData.reduce((acc, expense) => acc + parseFloat(expense.amount), 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   return (

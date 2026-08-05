@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { useState } from "react";
 import { filterWriteOffApi } from "@/api/writeoff";
 import { toast } from "react-toastify";
-import { saveAs } from "file-saver";
+import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 
 export default function Writeoff({
@@ -110,10 +110,7 @@ export default function Writeoff({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatWriteoffData = (data: WriteOffInputs[]) => {
@@ -126,18 +123,18 @@ export default function Writeoff({
     }));
   };
 
-  const exportBillExcelHandler = () => {
+  const exportBillExcelHandler = async () => {
     if (writeoffData.length === 0) {
       toast.error("No Write Off to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatWriteoffData(writeoffData),
       "Write off Statement " + new Date().toDateString(),
       filterInputs.clientName || filterInputs.vendorName,
       writeoffData.reduce((acc, FM) => acc + parseFloat(FM.amount), 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   return (

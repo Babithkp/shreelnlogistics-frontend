@@ -5,8 +5,8 @@ import {
   filterFMLRByVendorForBranchApi,
 } from "@/api/partner";
 import { BranchInputs, FMInputs, LrInputs, VendorInputs } from "@/types";
-import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
+import { saveExcelFile } from "@/lib/exportFile";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
 import { BiFilterAlt } from "react-icons/bi";
@@ -159,10 +159,7 @@ export default function FmReport({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatFMData = (data: FMInputs[]) => {
@@ -193,12 +190,12 @@ export default function FmReport({
     }));
   };
 
-  const exportFMExcelHandler = () => {
+  const exportFMExcelHandler = async () => {
     if (FilteredFMStatement.length === 0) {
       toast.error("No FMs to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatFMData(FilteredFMStatement),
       "Vendor Statement " + new Date().toDateString(),
       filterInputs.name,
@@ -212,7 +209,7 @@ export default function FmReport({
       formatLRData(pendingLRs),
       pendingLRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   const onCategoryFilterHandler = (value: string) => {

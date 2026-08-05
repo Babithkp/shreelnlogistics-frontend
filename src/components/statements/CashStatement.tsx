@@ -3,8 +3,8 @@ import { TbRadar2 } from "react-icons/tb";
 import { Button } from "../ui/button";
 import { getAllRecordPaymentApi, getAllStatementsApi } from "@/api/branch";
 import { useEffect, useState } from "react";
-import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
+import { saveExcelFile } from "@/lib/exportFile";
 import { PaymentRecord } from "@/types";
 import { getAllCreditApi, getAllExpensesApi } from "@/api/expense";
 import { formatter } from "@/lib/utils";
@@ -100,14 +100,14 @@ export default function CashStatement() {
   };
 
   const exportFilteredRecordExcel = async () => {
-    exportRecordExcel(
+    const saved = await exportRecordExcel(
       formatCreditData(filteredCredits),
       formatRecordData(filteredPaymentRecord),
       `Cash Statement-${exportDate}`,
     );
     setFilteredPaymentRecord(paymentRecord);
     setExportDate("");
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   const exportRecordExcel = async (
@@ -196,11 +196,7 @@ export default function CashStatement() {
 
     // Export
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatRecordData = (data: ExtendedPaymentRecord[]) => {

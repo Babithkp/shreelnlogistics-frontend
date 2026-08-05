@@ -9,7 +9,7 @@ import {
 } from "@/api/partner";
 import { BiFilterAlt } from "react-icons/bi";
 import { formatter } from "@/lib/utils";
-import { saveAs } from "file-saver";
+import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 
 export default function BillReport({
@@ -162,10 +162,7 @@ export default function BillReport({
 
     // Generate and download the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
+    return saveExcelFile(buffer, filename);
   };
 
   const formatFMData = (data: billInputs[]) => {
@@ -201,12 +198,12 @@ export default function BillReport({
     }));
   };
 
-  const exportBillExcelHandler = () => {
+  const exportBillExcelHandler = async () => {
     if (filteredBillData.length === 0) {
       toast.error("No FMs to export");
       return;
     }
-    exportToExcelWithImage(
+    const saved = await exportToExcelWithImage(
       formatFMData(filteredBillData),
       "Client Statement " + new Date().toDateString(),
       filterInputs.name,
@@ -215,7 +212,7 @@ export default function BillReport({
       formatLRData(pendingLRs),
       pendingLRs.reduce((acc, lr) => acc + lr.totalAmt, 0),
     );
-    toast.success("File Downloaded");
+    if (saved) toast.success("File Downloaded");
   };
 
   return (
