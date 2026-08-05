@@ -131,7 +131,7 @@ export default function LRReport({
       Date: lr.date,
       Origin: lr.from,
       Destination: lr.to,
-      "Vehicle Number": lr.Vehicle.vehicleNumber,
+      "Vehicle Number": lr.Vehicle?.vehicleNumber ?? "-",
       "Freight Amount": lr.totalAmt,
     }));
   };
