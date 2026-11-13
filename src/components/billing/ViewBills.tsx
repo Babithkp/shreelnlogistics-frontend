@@ -291,9 +291,9 @@ export default function ViewBills({
         IDNumber: selectedBill.billNumber,
         vendorName: selectedBill.Client?.name || "",
         amount:
-          (selectedBill.pendingAmount as unknown as string) ||
-          selectedBill.pendingAmount?.toString?.() ||
-          "",
+          selectedBill.pendingAmount != null
+            ? String(selectedBill.pendingAmount)
+            : "",
         date: new Date().toISOString().split("T")[0],
         reason: "",
         checked: false,
@@ -494,8 +494,11 @@ export default function ViewBills({
         resetWriteOff();
         setShowPreview(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      toast.error(
+        error?.response?.data?.message || "Failed to Create Write Off",
+      );
     }
     setIsLoading(false);
   };
@@ -1534,8 +1537,11 @@ export default function ViewBills({
                 <label>Write off reason</label>
                 <textarea
                   className="border-primary rounded-md border p-2"
-                  {...registerWriteOff("reason")}
+                  {...registerWriteOff("reason", { required: true })}
                 />
+                {errorsWriteOff.reason && (
+                  <p className="text-red-500">Reason is required</p>
+                )}
               </div>
             </div>
             <div className="w-full">
