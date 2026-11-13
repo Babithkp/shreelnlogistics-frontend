@@ -453,8 +453,11 @@ export default function FMList({
       } else {
         toast.error("Something Went Wrong, Check All Fields");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      toast.error(
+        error?.response?.data?.message || "Failed to Create Write Off",
+      );
     }
     setIsLoading(false);
   };
