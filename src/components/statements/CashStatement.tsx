@@ -11,6 +11,7 @@ import { formatter } from "@/lib/utils";
 import { toast } from "react-toastify";
 import { Skeleton } from "antd";
 import { LuSearch } from "react-icons/lu";
+import { Download } from "lucide-react";
 
 interface ExtendedPaymentRecord extends PaymentRecord {
   billId: string;
@@ -366,58 +367,62 @@ export default function CashStatement() {
       </div>
 
       {
-        <section className="flex w-full flex-col justify-between gap-5 rounded-md bg-white p-5">
+        <section className="flex w-full flex-col justify-between gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="h-[63Vh] space-y-2">
             <form
-              className="flex justify-between pr-2"
+              className="flex items-center justify-between pb-2 pr-2"
               onSubmit={onSearchSubmit}
             >
-              <p className="pb-2 text-lg font-medium">Cash Statement</p>
-              <div className="flex gap-2">
-                <div className="bg-secondary flex items-center gap-2 rounded-full p-2 px-5">
-                  <LuSearch size={18} />
+              <p className="text-lg font-semibold text-slate-900">Cash Statement</p>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm transition-colors focus-within:border-primary focus-within:bg-white">
+                  <LuSearch size={16} className="text-slate-400" />
                   <input
                     placeholder="Search"
-                    className="outline-none placeholder:font-medium"
+                    className="w-48 bg-transparent outline-none placeholder:text-slate-400"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="cursor-pointer rounded-xl p-5">
-                  <LuSearch size={30} className="mx-3 scale-125" />
+                <Button
+                  type="submit"
+                  className="h-10 cursor-pointer rounded-lg bg-primary px-4 text-white hover:bg-primary/90"
+                >
+                  <LuSearch size={18} />
                 </Button>
-                <div className="rounded-md bg-blue-50 p-1 pr-3">
+                <div className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm transition-colors focus-within:border-primary focus-within:bg-white">
                   <input
                     type="date"
-                    className="ml-2 w-full bg-transparent outline-none"
+                    className="bg-transparent text-slate-700 outline-none"
                     onChange={onExportDateHandler}
                     value={exportDate}
                   />
                 </div>
-                <Button onClick={exportFilteredRecordExcel} type="button">
+                <Button
+                  onClick={exportFilteredRecordExcel}
+                  type="button"
+                  className="h-10 cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                >
+                  <Download size={16} />
                   Export
                 </Button>
               </div>
             </form>
             <div className="flex h-[60vh] gap-2 overflow-y-auto pr-2">
               {filteredCredits.length > 0 ? (
-                <table className="w-full border-2">
-                  <thead>
-                    <tr>
-                      <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                        <p>Date</p>
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 z-10 bg-white">
+                    <tr className="border-b border-slate-100">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Date
                       </th>
-                      <th className="text-start font-[400] text-[#797979]">
-                        <div className="flex items-center gap-2">
-                          <p>Description</p>
-                        </div>
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Description
                       </th>
-                      <th className="text-start font-[400] text-[#797979]">
-                        <div className="flex items-center gap-2">
-                          <p>Branch</p>
-                        </div>
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Branch
                       </th>
-                      <th className="text-start font-[400] text-[#797979]">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                         Cr.
                       </th>
                     </tr>
@@ -425,23 +430,23 @@ export default function CashStatement() {
                   <tbody>
                     {filteredCredits.map((record) => (
                       <tr
-                        className="hover:bg-accent cursor-pointer"
+                        className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
                         key={record.id}
                       >
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 font-medium text-slate-900">
                           {new Date(record.date).toLocaleDateString()}
                         </td>
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {record.billId && record.IDNumber}
 
                           {record.creditId && "CR " + record.creditId}
                         </td>
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {record.Admin?.branchName ||
                             record.Branches?.branchName}
                         </td>
                         {
-                          <td className="py-2">
+                          <td className="px-3 py-2.5 text-slate-700">
                             {record.billId
                               ? formatter.format(
                                   parseFloat(record.amount) -
@@ -465,24 +470,21 @@ export default function CashStatement() {
                   />
                 </div>
               )}
+              <div className="w-px shrink-0 self-stretch bg-slate-200" />
               {filteredPaymentRecord.length > 0 ? (
-                <table className="w-full border-2">
-                  <thead>
-                    <tr>
-                      <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                        <p>Date</p>
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 z-10 bg-white">
+                    <tr className="border-b border-slate-100">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Date
                       </th>
-                      <th className="text-start font-[400] text-[#797979]">
-                        <div className="flex items-center gap-2">
-                          <p>Description</p>
-                        </div>
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Description
                       </th>
-                      <th className="text-start font-[400] text-[#797979]">
-                        <div className="flex items-center gap-2">
-                          <p>Branch</p>
-                        </div>
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                        Branch
                       </th>
-                      <th className="text-center font-[400] text-[#797979]">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                         Dr.
                       </th>
                     </tr>
@@ -490,24 +492,24 @@ export default function CashStatement() {
                   <tbody>
                     {filteredPaymentRecord.map((record) => (
                       <tr
-                        className="hover:bg-accent cursor-pointer"
+                        className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
                         key={record.id}
                       >
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 font-medium text-slate-900">
                           {new Date(record.date).toLocaleDateString()}
                         </td>
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {record.IDNumber
                             ? "FM " + record.IDNumber
                             : "EXP " + record.expenseId}
                         </td>
-                        <td className="py-2">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {record.Admin?.branchName ||
                           record.Branches?.branchName
                             ? record.Branches?.branchName
                             : "Bengaluru - Admin"}
                         </td>
-                        <td className="py-2 text-center">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {formatter.format(parseFloat(record.amount))}
                         </td>
                       </tr>

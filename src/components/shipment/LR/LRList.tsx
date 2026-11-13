@@ -5,7 +5,7 @@ import {
   MdOutlineChevronRight,
   MdOutlineFileDownload,
 } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import {
   deleteLRApi,
   filterLRDetailsApi,
@@ -17,6 +17,7 @@ import {
 import { motion } from "motion/react";
 import { RxCross2 } from "react-icons/rx";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { Pencil, Mail, Paperclip } from "lucide-react";
 import LRTemplate from "./LRTemplate";
 import { PDFViewer } from "@react-pdf/renderer";
 import {
@@ -48,7 +49,6 @@ import { ProfileInputs } from "@/components/settings/Settings";
 import { getCompanyProfileApi } from "@/api/settings";
 import { LrInputs } from "@/types";
 import { createNotificationApi } from "@/api/admin";
-import { LuSearch } from "react-icons/lu";
 type Sections = "LRList" | "createNew";
 const defaultGreeting =
   "Greetings from Shree LN Logistics, \nPlease find attached the Lorry Receipt (LR) for the following shipment.";
@@ -66,6 +66,8 @@ export default function LRList({
   sectionChangeHandler,
   setSelectedLRDataToEdit,
   setFormStatus,
+  searchValue,
+  searchSubmitRef,
 }: {
   data: {
     data: LrInputs[];
@@ -74,6 +76,8 @@ export default function LRList({
   sectionChangeHandler: (section: Sections) => void;
   setSelectedLRDataToEdit: (data: LrInputs) => void;
   setFormStatus: (status: "edit" | "create") => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [LRData, setLRData] = useState<ExtendedLRInputs[]>(data.data);
   const [filteredLRs, setFilteredLRs] = useState<ExtendedLRInputs[]>(data.data);
@@ -87,7 +91,7 @@ export default function LRList({
   const [companyProfile, setCompanyProfile] = useState<ProfileInputs>();
   const [branchId, setBranchId] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [search, setSearch] = useState("");
+  const search = searchValue;
   const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -160,8 +164,7 @@ export default function LRList({
     }
   }
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (search.trim().length === 0) {
       setFilteredLRs(LRData);
       return;
@@ -172,6 +175,10 @@ export default function LRList({
       filterLRDetailsForBranch(branchId, search);
     }
   };
+
+  useEffect(() => {
+    searchSubmitRef.current = handleSearch;
+  });
 
   useEffect(() => {
     if (search.trim().length === 0) {
@@ -311,57 +318,40 @@ export default function LRList({
 
   return (
     <section className="relative flex gap-5">
-      <form
-        className="absolute -top-18 right-[13vw] flex items-center gap-2"
-        onSubmit={handleSearch}
-      >
-        <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button className="cursor-pointer rounded-xl p-6">
-          <LuSearch size={30} className="mx-3 scale-125" />
-        </Button>
-      </form>
       <motion.div
         animate={{ width: showPreview ? "50%" : "100%" }}
         transition={{ duration: 0.3 }}
-        className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+        className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm`}
       >
         <div className={`flex items-center justify-between`}>
-          <p className="text-xl font-medium">LRs</p>
-          <div className="flex gap-5">
+          <p className="text-xl font-semibold text-slate-900">LRs</p>
+          <div className="flex items-center gap-5">
             <Button
-              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              className="gap-2 rounded-xl bg-primary px-5 text-white hover:bg-primary/90"
               onClick={() => [
                 sectionChangeHandler("createNew"),
                 setFormStatus("create"),
               ]}
             >
-              <MdOutlineAdd size={34} />
+              <MdOutlineAdd size={20} />
               Create new
             </Button>
             {!search && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
+              <div className="flex items-center gap-3 text-sm text-slate-500">
                 <p>
-                  {startIndex}-{endIndex}
+                  {startIndex}-{endIndex}{" "}
+                  <span className="text-slate-400">of</span> {totalItems}
                 </p>
-                <p>of</p>
-                <p>{totalItems}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={handlePrev}
                     disabled={currentPage === 1}
-                    className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                    className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === 1 ? "opacity-40" : ""}`}
                   >
                     <MdOutlineChevronLeft size={20} />
                   </button>
                   <button
-                    className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                    className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === totalPages ? "opacity-40" : ""}`}
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
                   >
@@ -372,48 +362,59 @@ export default function LRList({
             )}
           </div>
         </div>
-        <div className="overflow-y-auto pr-2">
-
-          <table className={`w-full ${showPreview ? "text-xs" : ""} `}>
-            <thead>
-              <tr>
-                <th className="flex items-center gap-2 text-start font-[400] text-[#797979] border">
-                  <p>LR#</p>
+        <div className="overflow-y-auto pr-1">
+          <table className={`w-full ${showPreview ? "text-xs" : "text-sm"}`}>
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  LR#
                 </th>
-                <th className="text-start font-[400] text-[#797979] border">
-                  <div className="flex items-center gap-2">
-                    <p>Client Name</p>
-                  </div>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  Client Name
                 </th>
-                <th className="text-start font-[400] text-[#797979] border">
-                  <div className="flex items-center gap-2">
-                    <p>Date</p>
-                  </div>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  Date
                 </th>
-                <th className="flex items-center gap-2 text-start font-[400] text-[#797979] border">
-                  <p>From</p>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  From
                 </th>
-                <th className="text-start font-[400] text-[#797979] border">To</th>
-                {!showPreview && <th className="text-start font-[400] text-[#797979] border">Branch</th>}
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  To
+                </th>
+                {!showPreview && (
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    Branch
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
               {filteredLRs?.map((data) => (
                 <tr
-                  className={`hover:bg-accent cursor-pointer ${selectedLR?.lrNumber === data.lrNumber ? "bg-accent" : ""}`}
+                  className={`cursor-pointer border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 ${
+                    selectedLR?.lrNumber === data.lrNumber
+                      ? "bg-primary/5"
+                      : ""
+                  }`}
                   key={data.lrNumber}
                   onClick={() => selectLRForPreview(data)}
                 >
-                  <td className="py-2 border">{data.lrNumber}</td>
-                  <td className="py-2 border">{data.client.name}</td>
-                  <td className="py-2 border">
+                  <td className="px-3 py-2.5 font-medium text-slate-900">
+                    {data.lrNumber}
+                  </td>
+                  <td className="px-3 py-2.5 text-slate-700">
+                    {data.client.name}
+                  </td>
+                  <td className="px-3 py-2.5 text-slate-700">
                     {new Date(data.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2 border">{data.from}</td>
-                  <td className="py-2 border">{data.to}</td>
-                  {!showPreview && <td className="py-2 border">
-                    {data.branch?.branchName || data.admin?.branchName}
-                  </td>}
+                  <td className="px-3 py-2.5 text-slate-700">{data.from}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{data.to}</td>
+                  {!showPreview && (
+                    <td className="px-3 py-2.5 text-slate-700">
+                      {data.branch?.branchName || data.admin?.branchName}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -421,7 +422,7 @@ export default function LRList({
         </div>
       </motion.div>
       <motion.div
-        className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
+        className="hidden h-[84vh] flex-col gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
         animate={{
           width: showPreview ? "50%" : "0%",
           display: showPreview ? "flex" : "none",
@@ -430,165 +431,255 @@ export default function LRList({
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-medium">LR# {selectedLR?.lrNumber}</h3>
-          <button className="bg-primary/50 cursor-pointer rounded-full p-1">
-            <RxCross2
-              size={20}
-              color="white"
-              onClick={() => setShowPreview(false)}
-            />
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                LR #{selectedLR?.lrNumber}
+              </p>
+              <p className="text-xs text-slate-500">
+                {selectedLR?.client?.name}
+              </p>
+            </div>
+          </div>
+          <button
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            onClick={() => setShowPreview(false)}
+          >
+            <RxCross2 size={18} />
           </button>
         </div>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-between border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2">
             <Button
-              className="rounded-2xl"
+              className="gap-2 rounded-lg bg-primary px-4 text-white hover:bg-primary/90"
               onClick={() => [
                 setSelectedLRDataToEdit(selectedLR!),
                 setFormStatus("edit"),
               ]}
             >
+              <Pencil size={14} />
               Edit details
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <DialogTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
+              <DialogTrigger className="flex cursor-pointer items-center gap-2 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+                <Mail size={14} />
                 Send mail
               </DialogTrigger>
-              <DialogContent className="h-[80vh] min-w-7xl overflow-y-auto">
+              <DialogContent className="h-[85vh] min-w-7xl overflow-y-auto rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-2xl">Send Mail</DialogTitle>
-                </DialogHeader>
-                <DialogDescription></DialogDescription>
-                <div className="flex flex-col gap-5">
-                  <div className="flex border-b pb-1 text-sm">
-                    <p>To</p>
-                    <input
-                      type="text"
-                      className="w-[90%] pl-2"
-                      value={emailIds}
-                      onChange={(e) => setEmailIds(e.target.value)}
-                    />
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Mail size={20} />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-xl font-semibold text-slate-900">
+                        Send Mail
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-slate-500">
+                        Email the Lorry Receipt PDF to one or more recipients
+                      </DialogDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-5 border-b pb-1 text-sm">
-                    <p>Subject</p>
-                    <p>
-                      Lorry Receipt for You Shipment - #{selectedLR?.lrNumber}
+                </DialogHeader>
+                <div className="flex flex-col gap-5">
+                  <div className="rounded-xl border border-slate-100 p-4">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-slate-500">
+                          To
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                          value={emailIds}
+                          onChange={(e) => setEmailIds(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-slate-500">
+                          Subject
+                        </label>
+                        <p className="text-sm text-slate-900">
+                          Lorry Receipt for You Shipment - #
+                          {selectedLR?.lrNumber}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-100 p-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-medium text-slate-500">
+                        Message
+                      </label>
+                      <p className="text-sm text-slate-700">Hi there,</p>
+                      <textarea
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                        rows={3}
+                        value={mailGreeting}
+                        onChange={(e) => setMailGreeting(e.target.value)}
+                      ></textarea>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-3">
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Shipment
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.consigneeName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          LR Number
+                        </p>
+                        <p className="text-slate-900">
+                          #{selectedLR?.lrNumber}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Date
+                        </p>
+                        <p className="text-slate-900">{selectedLR?.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Consignor
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.consignorName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Consignee
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.consigneeName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Origin
+                        </p>
+                        <p className="text-slate-900">{selectedLR?.from}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Destination
+                        </p>
+                        <p className="text-slate-900">{selectedLR?.to}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Vehicle Number
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.Vehicle?.vehicleNumber}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Driver Contact
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.Vehicle?.driverPhone}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          No. of Packages
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.noOfPackages}
+                        </p>
+                      </div>
+                      <div className="col-span-2 sm:col-span-3">
+                        <p className="text-xs font-medium text-slate-500">
+                          Description
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedLR?.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-700">
+                    <p>Best Regards,</p>
+                    <p className="font-medium text-slate-900">Shivam Jha</p>
+                    <p>CEO</p>
+                    <p>Shree LN Logistics</p>
+                    <p>{selectedLR?.admin?.contactNumber}</p>
+                    <p>{selectedLR?.branch?.contactNumber}</p>
+                    <p>Website: www.shreelnlogistics.com</p>
+                    <div className="py-4">
+                      <img src={logo} alt="logo" className="h-10 w-auto" />
+                    </div>
+                    <p className="w-100 text-slate-500">
+                      Flat No.203, 3rd Floor, Sai Godavari Apartment,
+                      Kuduregere Road, Madanayakanahalli, Bangalore Rural
                     </p>
                   </div>
-                  <div className="flex flex-col gap-3">
-                    <p>Hi there,</p>
-                    <textarea
-                      value={mailGreeting}
-                      onChange={(e) => setMailGreeting(e.target.value)}
-                    ></textarea>
-                    <div>
-                      <div className="flex">
-                        <label>Shipment</label>
-                        <p>: {selectedLR?.consigneeName}</p>
-                      </div>
-                      <div className="flex">
-                        <label>LR Number</label>
-                        <p>: #{selectedLR?.lrNumber}</p> ``
-                      </div>
-                      <div className="flex">
-                        <label>Date</label>
-                        <p>: {selectedLR?.date}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Consignor</label>
-                        <p>: {selectedLR?.consignorName}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Consignee</label>
-                        <p>: {selectedLR?.consigneeName}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Origin</label>
-                        <p>: {selectedLR?.from}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Destination</label>
-                        <p>: {selectedLR?.to}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Vehicle Number</label>
-                        <p>: {selectedLR?.Vehicle?.vehicleNumber}</p>
-                      </div>
-                      <div className="flex">
-                        <label>Driver Contact</label>
-                        <p>: {selectedLR?.Vehicle?.driverPhone}</p>
-                      </div>
-                      <div className="flex">
-                        <label>No. of Packages</label>
-                        <p>: {selectedLR?.noOfPackages}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <label>Description</label>
-                        <p className="w-150">: {selectedLR?.description}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p>Best Regards,</p>
-                      <p>Shivam Jha</p>
-                      <p>CEO</p>
-                      <p>Shree LN Logistics</p>
-                      <p>{selectedLR?.admin?.contactNumber}</p>
-                      <p>{selectedLR?.branch?.contactNumber}</p>
-                      <p>Website: www.shreelnlogistics.com</p>
-                      <div className="py-5">
-                        <img src={logo} alt="logo" />
-                      </div>
-                      <p className="w-100">
-                        Flat No.203, 3rd Floor, Sai Godavari Apartment,
-                        Kuduregere Road, Madanayakanahalli, Bangalore Rural
+
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-slate-500">
+                      Attachments
+                    </p>
+                    <div className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2">
+                      <Paperclip size={16} className="text-slate-400" />
+                      <p className="flex items-center gap-2 text-sm text-slate-700">
+                        LR #{selectedLR?.lrNumber}
+                        <span className="text-xs text-slate-400">
+                          ({attachment?.size.toString().substring(0, 3)}kb)
+                        </span>
                       </p>
+                      <RxCross2 size={14} className="text-slate-400" />
                     </div>
-                    <div>
-                      <p className="text-sm">Attachments</p>
-                      <div className="my-1 flex w-[30%] items-center justify-between rounded-md bg-[#E9EDF7] px-5 py-1">
-                        <p className="flex items-center gap-5">
-                          LR #{selectedLR?.lrNumber}{" "}
-                          <span className="text-sm text-[#A3AED0]">
-                            ({attachment?.size.toString().substring(0, 3)}kb)
-                          </span>
-                        </p>
-                        <RxCross2 size={15} />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-5">
-                      <Button
-                        variant={"outline"}
-                        className="border-primary text-primary"
-                        onClick={() => setIsOpen(false)}
-                        disabled={isLoading}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => [getPdfFile(), onSendEmailHandler()]}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <VscLoading size={20} className="animate-spin" />
-                        ) : (
-                          "Send Mail"
-                        )}
-                      </Button>
-                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                    <Button
+                      variant="outline"
+                      className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                      onClick={() => setIsOpen(false)}
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="gap-2 rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                      onClick={() => [getPdfFile(), onSendEmailHandler()]}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <VscLoading size={18} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Mail size={14} />
+                          Send Mail
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={downloadPdfFile} className="cursor-pointer">
-              <MdOutlineFileDownload size={20} />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={downloadPdfFile}
+              className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"
+            >
+              <MdOutlineFileDownload size={18} />
             </button>
             {!isAdmin && (
               <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
+                <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                  <RiDeleteBin6Line size={18} />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -613,8 +704,8 @@ export default function LRList({
             )}
             {isAdmin && (
               <AlertDialog>
-                <AlertDialogTrigger className="cursor-pointer">
-                  <RiDeleteBin6Line size={20} color="red" />
+                <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                  <RiDeleteBin6Line size={18} />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -638,9 +729,11 @@ export default function LRList({
             )}
           </div>
         </div>
-        <PDFViewer className="h-full w-full">
-          <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />
-        </PDFViewer>
+        <div className="flex-1 overflow-hidden rounded-xl border border-slate-100">
+          <PDFViewer className="h-full w-full">
+            <LRTemplate LRData={selectedLR} companyProfile={companyProfile} />
+          </PDFViewer>
+        </div>
       </motion.div>
     </section>
   );

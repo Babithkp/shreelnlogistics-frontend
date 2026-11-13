@@ -1,6 +1,26 @@
-import { TbEdit } from "react-icons/tb";
-import { RxDotFilled } from "react-icons/rx";
 import { Modal } from "antd";
+import {
+  Pencil,
+  Plus,
+  MapPin,
+  Mail,
+  FileText,
+  Phone,
+  Globe,
+  Grid3x3,
+  Settings as SettingsIcon,
+  Truck,
+  Wallet,
+  Hash,
+  ReceiptText,
+  Landmark,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "../ui/button";
@@ -68,10 +88,124 @@ export interface BankDetailsInputs {
   ifscCode: string;
 }
 
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+  onEdit,
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon size={20} />
+        </div>
+        <div>
+          <p className="text-base font-semibold text-slate-900">{title}</p>
+          <p className="text-xs text-slate-500">{subtitle}</p>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        className="gap-1.5 rounded-full border-primary/30 text-primary hover:bg-primary/5"
+        onClick={onEdit}
+      >
+        <Pencil size={14} /> Edit
+      </Button>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+        <Icon size={16} />
+      </div>
+      <div>
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className="text-sm whitespace-pre-line text-slate-900">
+          {value || "-"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Tag({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
+      <Icon size={14} className="text-slate-400" />
+      {label}
+    </span>
+  );
+}
+
+function PasswordField({
+  label,
+  error,
+  registration,
+}: {
+  label: string;
+  error?: string;
+  registration: ReturnType<
+    ReturnType<typeof useForm<EditBranchPassword>>["register"]
+  >;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <div
+        className={`flex items-center gap-2 rounded-xl border bg-slate-50 px-3 py-2.5 transition-colors focus-within:border-primary focus-within:bg-white ${
+          error ? "border-red-300" : "border-slate-200"
+        }`}
+      >
+        <Lock size={16} className="shrink-0 text-slate-400" />
+        <input
+          type={visible ? "text" : "password"}
+          className="w-full bg-transparent text-sm text-slate-900 outline-none"
+          {...registration}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setVisible((prev) => !prev)}
+          className="shrink-0 cursor-pointer text-slate-400 hover:text-slate-600"
+        >
+          {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      </div>
+      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+    </div>
+  );
+}
+
 export default function Settings({ data }: { data?: Setting }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isGeneralSettingsModalOpen, setIsGeneralSettingsModalOpen] =
-    useState(false);
+  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isBankDetailsModalOpen, setIsBankDetailsModalOpen] = useState(false);
   const [profileData, setProfileData] = useState<ProfileInputs>();
   const [generalData, setGeneralData] = useState<GeneralSettingsInputs>({
@@ -109,22 +243,24 @@ export default function Settings({ data }: { data?: Setting }) {
   } = useForm<EditBranchPassword>();
 
   const addExpenseType = () => {
+    if (!generalData.expenseInput.trim()) return;
     setGeneralData((prev) => ({
       ...prev,
       expenseTypes: [
         ...prev.expenseTypes,
-        { state: true, name: generalData.expenseInput },
+        { state: true, name: generalData.expenseInput.trim() },
       ],
       expenseInput: "",
       expenseInputState: false,
     }));
   };
   const addVehicleType = () => {
+    if (!generalData.vehicleInput.trim()) return;
     setGeneralData((prev) => ({
       ...prev,
       vehicleTypes: [
         ...prev.vehicleTypes,
-        { state: true, name: generalData.vehicleInput },
+        { state: true, name: generalData.vehicleInput.trim() },
       ],
       vehicleInput: "",
       vehicleInputState: false,
@@ -206,7 +342,8 @@ export default function Settings({ data }: { data?: Setting }) {
       const response = await createGeneralSettingsApi(data);
       if (response?.status === 200) {
         toast.success("Generatal Settings has been Created");
-        setIsGeneralSettingsModalOpen(false);
+        setIsVehicleModalOpen(false);
+        setIsExpenseModalOpen(false);
         setGeneralData({
           id: "",
           expenseTypes: [],
@@ -234,7 +371,8 @@ export default function Settings({ data }: { data?: Setting }) {
       const response = await updateGeneralSettingsApi(generalData.id, data);
       if (response?.status === 200) {
         toast.success("Profile Settings has been updated");
-        setIsGeneralSettingsModalOpen(false);
+        setIsVehicleModalOpen(false);
+        setIsExpenseModalOpen(false);
         setGeneralData({
           id: "",
           expenseTypes: [],
@@ -408,221 +546,229 @@ export default function Settings({ data }: { data?: Setting }) {
 
   return (
     <>
-      <section>
-        <div className="flex flex-col gap-3">
-          <p className="text-2xl font-medium">Basic Settings</p>
-          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10">
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-medium">Profile Details</p>
-              <TbEdit
-                size={24}
-                color="black"
-                onClick={() => setIsProfileModalOpen(true)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div className="flex justify-between">
-              <div className="flex flex-col gap-5 text-sm">
-                <div>
-                  <label className="font-medium">Address (regd office)</label>
-                  <p className="w-[30%]">{profileData?.address}</p>
-                </div>
-                <div>
-                  <label className="font-medium">Email ID</label>
-                  <p className="w-[20%]">{profileData?.email}</p>
-                </div>
-                <div>
-                  <label className="font-medium">Company GSTIN</label>
-                  <p className="w-[20%]">{profileData?.GSTIN}</p>
-                </div>
-              </div>
-              <div className="flex w-[50%] flex-col gap-5 text-sm">
-                <div>
-                  <label className="font-medium">Contact Number</label>
-                  <p className="w-[20%]">{profileData?.contactNumber}</p>
-                </div>
-                <div>
-                  <label className="font-medium">
-                    Alternate Contact Number
-                  </label>
-                  <p className="w-[20%]">
-                    {profileData?.alternateContactNumber}
-                  </p>
-                </div>
-                <div>
-                  <label className="font-medium">Website URL</label>
-                  <p className="w-[20%]">{profileData?.websiteURL}</p>
-                </div>
-                <div>
-                  <label className="font-medium">HSN/ SAC</label>
-                  <p className="w-[20%]">{profileData?.HSN}</p>
-                </div>
-              </div>
-            </div>
+      <div className="flex flex-col gap-5">
+        <SectionCard>
+          <SectionHeader
+            icon={Grid3x3}
+            title="Profile Details"
+            subtitle="Your company / office information"
+            onEdit={() => setIsProfileModalOpen(true)}
+          />
+          <div className="mt-6 grid grid-cols-1 gap-x-10 gap-y-5 md:grid-cols-2">
+            <InfoRow
+              icon={MapPin}
+              label="Address (Regd. Office)"
+              value={profileData?.address}
+            />
+            <InfoRow
+              icon={Phone}
+              label="Contact Number"
+              value={profileData?.contactNumber}
+            />
+            <InfoRow icon={Mail} label="Email ID" value={profileData?.email} />
+            <InfoRow
+              icon={Phone}
+              label="Alternate Contact Number"
+              value={profileData?.alternateContactNumber}
+            />
+            <InfoRow
+              icon={FileText}
+              label="Company GSTIN"
+              value={profileData?.GSTIN}
+            />
+            <InfoRow
+              icon={Globe}
+              label="Website URL"
+              value={profileData?.websiteURL}
+            />
+            <div className="hidden md:block" />
+            <InfoRow icon={Grid3x3} label="HSN/ SAC" value={profileData?.HSN} />
           </div>
-          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10 ">
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-medium">General Settings</p>
-              <TbEdit
-                size={24}
-                color="black"
-                onClick={() => setIsGeneralSettingsModalOpen(true)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div className="flex justify-between text-sm max-h-[40vh] overflow-y-auto">
-              <div className="flex w-1/2 flex-col gap-3">
-                <label className="font-medium">Vehicle List</label>
-                <div className="grid grid-cols-3 gap-6">
-                  {generalData.vehicleTypes.map((vehicle, index) => (
-                    <p className="flex text-center" key={index}>
-                      <RxDotFilled size={20} /> {vehicle.name}
+        </SectionCard>
+
+        <SectionCard>
+          <SectionHeader
+            icon={SettingsIcon}
+            title="General Settings"
+            subtitle="Manage vehicle list and expense categories"
+            onEdit={() => setIsVehicleModalOpen(true)}
+          />
+          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-slate-100 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Truck size={16} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Vehicle List
                     </p>
-                  ))}
-                </div>
-              </div>
-              <div className="flex w-[50%] flex-col gap-3">
-                <label className="font-medium">Expense Categories</label>
-                <div className="grid grid-cols-3 gap-6">
-                  {generalData.expenseTypes.map((expense, index) => (
-                    <p className="flex text-center" key={index}>
-                      <RxDotFilled size={20} /> {expense.name}
+                    <p className="text-xs text-slate-500">
+                      Manage all vehicle types used in operations
                     </p>
-                  ))}
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  className="shrink-0 gap-1 rounded-full border-primary/30 text-xs text-primary hover:bg-primary/5"
+                  onClick={() => setIsVehicleModalOpen(true)}
+                >
+                  <Plus size={14} /> Add Vehicle
+                </Button>
+              </div>
+              <div className="mt-4 flex max-h-[40vh] flex-wrap gap-2 overflow-y-auto">
+                {generalData.vehicleTypes.map((vehicle, index) => (
+                  <Tag key={index} icon={Truck} label={vehicle.name} />
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-100 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Wallet size={16} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Expense Categories
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Manage all expense categories
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="shrink-0 gap-1 rounded-full border-primary/30 text-xs text-primary hover:bg-primary/5"
+                  onClick={() => setIsExpenseModalOpen(true)}
+                >
+                  <Plus size={14} /> Add Category
+                </Button>
+              </div>
+              <div className="mt-4 flex max-h-[40vh] flex-wrap gap-2 overflow-y-auto">
+                {generalData.expenseTypes.map((expense, index) => (
+                  <Tag key={index} icon={FileText} label={expense.name} />
+                ))}
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10">
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-medium">Other Settings</p>
-              <TbEdit
-                size={24}
-                color="black"
-                onClick={() => setIsOtherSettingsModalOpen(true)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div className="flex justify-between pr-25">
-              <div className="flex gap-3">
-                <label className="font-medium">Currect Bill Number:</label>
-                <p>{otherSettings.billId}</p>
-              </div>
-              <div className="flex gap-3">
-                <label className="font-medium">Current Expense ID:</label>
-                <p>{otherSettings.expenseId}</p>
-              </div>
-              <div className="flex gap-3">
-                <label className="font-medium">Credit ID:</label>
-                <p>{otherSettings.creditId}</p>
-              </div>
-            </div>
+        </SectionCard>
+
+        <SectionCard>
+          <SectionHeader
+            icon={Hash}
+            title="Other Settings"
+            subtitle="Running document ID counters"
+            onEdit={() => setIsOtherSettingsModalOpen(true)}
+          />
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <InfoRow
+              icon={ReceiptText}
+              label="Current Bill Number"
+              value={otherSettings.billId}
+            />
+            <InfoRow
+              icon={ReceiptText}
+              label="Current Expense ID"
+              value={otherSettings.expenseId}
+            />
+            <InfoRow
+              icon={ReceiptText}
+              label="Credit ID"
+              value={otherSettings.creditId}
+            />
           </div>
-          <p className="text-2xl font-medium">Company Settings</p>
-          <div className="flex flex-col gap-3 rounded-md bg-white p-5 px-10">
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-medium">Bank Details</p>
-              <TbEdit
-                size={24}
-                color="black"
-                onClick={() => setIsBankDetailsModalOpen(true)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div className="flex justify-between pr-30 text-sm">
-              <div className="flex w-full justify-between">
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium">Bank Name</label>
-                  <p>{bankDetailsData?.name}</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium">Account Number</label>
-                  <p>{bankDetailsData?.accountNumber}</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium">IFSC Code</label>
-                  <p>{bankDetailsData?.ifscCode}</p>
-                </div>
-              </div>
-            </div>
+        </SectionCard>
+
+        <SectionCard>
+          <SectionHeader
+            icon={Landmark}
+            title="Bank Details"
+            subtitle="Company banking information"
+            onEdit={() => setIsBankDetailsModalOpen(true)}
+          />
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <InfoRow
+              icon={Landmark}
+              label="Bank Name"
+              value={bankDetailsData?.name}
+            />
+            <InfoRow
+              icon={Hash}
+              label="Account Number"
+              value={bankDetailsData?.accountNumber}
+            />
+            <InfoRow
+              icon={KeyRound}
+              label="IFSC Code"
+              value={bankDetailsData?.ifscCode}
+            />
           </div>
-          <div>
-            <Dialog
-              open={isEditPasswordModalOpen}
-              onOpenChange={setIsEditPasswordModalOpen}
-            >
-              <DialogTrigger className="cursor-pointer border-primary border p-2 font-medium rounded-md text-sm text-primary" >
-                Change Admin Password
-              </DialogTrigger>
-              <DialogContent>
+        </SectionCard>
+
+        <div>
+          <Dialog
+            open={isEditPasswordModalOpen}
+            onOpenChange={setIsEditPasswordModalOpen}
+          >
+            <DialogTrigger className="flex cursor-pointer items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+              <KeyRound size={14} /> Change Admin Password
+            </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Change Password</DialogTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div>
+                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogDescription>
+                        This will update the password for admin.
+                      </DialogDescription>
+                    </div>
+                  </div>
                 </DialogHeader>
-                <DialogDescription className="text-base text-black">
-                  This will update the password for admin.
-                </DialogDescription>
                 <form
-                  className="flex flex-col gap-5"
+                  className="flex flex-col gap-4"
                   onSubmit={handlePasswordSubmit(onChangePasswordSubmit)}
                 >
-                  <div className="">
-                    <div className="flex flex-col gap-2">
-                      <label>Enter admin password</label>
-                      <input
-                        type="password"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...registerPassword("adminPassword", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {passwordErrors.adminPassword && (
-                      <p className="mt-1 text-sm text-red-500">
-                        Admin password is required
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex flex-col gap-2">
-                      <label>Enter new password</label>
-                      <input
-                        type="password"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...registerPassword("newPassword", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    {passwordErrors.newPassword && (
-                      <p className="mt-1 text-sm text-red-500">
-                        Password is required
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex flex-col gap-2">
-                      <label>Confirm new password</label>
-                      <input
-                        type="password"
-                        className="border-primary rounded-md border p-1 py-2 pl-2"
-                        {...registerPassword("confirmNewPassword", {
-                          required: "Please confirm your password",
-                          validate: (value) =>
-                            value === watch("newPassword") ||
-                            "Passwords do not match",
-                        })}
-                      />
-                    </div>
-                    {passwordErrors.confirmNewPassword && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {passwordErrors.confirmNewPassword.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-5">
+                  <PasswordField
+                    label="Enter admin password"
+                    error={
+                      passwordErrors.adminPassword
+                        ? "Admin password is required"
+                        : undefined
+                    }
+                    registration={registerPassword("adminPassword", {
+                      required: true,
+                    })}
+                  />
+                  <PasswordField
+                    label="Enter new password"
+                    error={
+                      passwordErrors.newPassword
+                        ? "Password is required"
+                        : undefined
+                    }
+                    registration={registerPassword("newPassword", {
+                      required: true,
+                    })}
+                  />
+                  <PasswordField
+                    label="Confirm new password"
+                    error={passwordErrors.confirmNewPassword?.message}
+                    registration={registerPassword("confirmNewPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === watch("newPassword") ||
+                        "Passwords do not match",
+                    })}
+                  />
+                  <div className="mt-2 flex justify-end gap-3">
                     <Button
-                      variant={"outline"}
-                      className="border-primary px-7"
+                      variant="outline"
+                      className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
                       onClick={() => [
                         resetPassword(),
                         setIsEditPasswordModalOpen(false),
@@ -632,9 +778,12 @@ export default function Settings({ data }: { data?: Setting }) {
                     >
                       Cancel
                     </Button>
-                    <Button className="bg-primary px-7" disabled={isloading}>
+                    <Button
+                      className="rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                      disabled={isloading}
+                    >
                       {isloading ? (
-                        <VscLoading size={24} className="animate-spin" />
+                        <VscLoading size={18} className="animate-spin" />
                       ) : (
                         "Update"
                       )}
@@ -644,8 +793,7 @@ export default function Settings({ data }: { data?: Setting }) {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
-      </section>
+      </div>
       <Modal
         open={isProfileModalOpen}
         width={1240}
@@ -838,133 +986,209 @@ export default function Settings({ data }: { data?: Setting }) {
         </form>
       </Modal>
       <Modal
-        open={isGeneralSettingsModalOpen}
-        width={1240}
+        open={isVehicleModalOpen}
+        width={560}
         centered={true}
         footer={null}
-        onCancel={() => setIsGeneralSettingsModalOpen(false)}
+        onCancel={() => setIsVehicleModalOpen(false)}
         className="max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex flex-col gap-3">
-          <p className="w-full text-xl font-semibold">Expense types</p>
-          <div className="flex items-start gap-10">
-            <div className="grid grid-cols-3 gap-10">
-              {generalData.expenseTypes.map((expense, index) => (
-                <div className="flex items-center gap-2" key={index}>
-                  <Checkbox
-                    checked={expense.state}
-                    onCheckedChange={(e: boolean) => {
-                      setGeneralData((prev) => ({
-                        ...prev,
-                        expenseTypes: prev.expenseTypes.map((item, i) =>
-                          i === index ? { ...item, state: e } : item,
-                        ),
-                      }));
-                    }}
-                  />
-                  <p>{expense.name}</p>
-                </div>
-              ))}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Truck size={20} />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                onCheckedChange={(e: boolean) => {
-                  setGeneralData((prev) => ({
-                    ...prev,
-                    expenseInputState: e,
-                  }));
-                }}
-                checked={generalData.expenseInputState}
-              />
-              <input
-                placeholder="Type here..."
-                className="outline-none"
-                disabled={!generalData.expenseInputState}
-                value={generalData.expenseInput}
-                onChange={(e) =>
-                  setGeneralData((prev) => ({
-                    ...prev,
-                    expenseInput: e.target.value,
-                  }))
-                }
-              />
-              <Button
-                className=""
-                disabled={!generalData.expenseInputState}
-                onClick={addExpenseType}
-              >
-                Add
-              </Button>
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                Vehicle Types
+              </p>
+              <p className="text-sm text-slate-500">
+                Select active vehicle types or add a new one
+              </p>
             </div>
           </div>
-        </div>
-        <div className="mt-5 flex flex-col gap-3">
-          <p className="w-full text-xl font-semibold">Vehicle types</p>
-          <div className="flex items-start gap-10">
-            <div className="grid grid-cols-3 gap-10">
-              {generalData.vehicleTypes.map((vehicle, index) => (
-                <div className="flex items-center gap-2" key={index}>
-                  <Checkbox
-                    checked={vehicle.state}
-                    onCheckedChange={(e: boolean) => {
-                      setGeneralData((prev) => ({
-                        ...prev,
-                        vehicleTypes: prev.vehicleTypes.map((item, i) =>
-                          i === index ? { ...item, state: e } : item,
-                        ),
-                      }));
-                    }}
-                  />
-                  <p>{vehicle.name}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                onCheckedChange={(e: boolean) => {
-                  setGeneralData((prev) => ({
-                    ...prev,
-                    vehicleInputState: e,
-                  }));
-                }}
-                checked={generalData.vehicleInputState}
-              />
-              <input
-                placeholder="Type here..."
-                className="outline-none"
-                disabled={!generalData.vehicleInputState}
-                value={generalData.vehicleInput}
-                onChange={(e) =>
-                  setGeneralData((prev) => ({
-                    ...prev,
-                    vehicleInput: e.target.value,
-                  }))
-                }
-              />
-              <Button
-                className=""
-                disabled={!generalData.vehicleInputState}
-                onClick={addVehicleType}
+
+          <div className="flex max-h-[40vh] flex-wrap gap-2 overflow-y-auto">
+            {generalData.vehicleTypes.map((vehicle, index) => (
+              <label
+                key={index}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  vehicle.state
+                    ? "border-primary/30 bg-primary/5 text-slate-900"
+                    : "border-slate-200 text-slate-500"
+                }`}
               >
-                Add
-              </Button>
-            </div>
+                <Checkbox
+                  checked={vehicle.state}
+                  onCheckedChange={(e: boolean) => {
+                    setGeneralData((prev) => ({
+                      ...prev,
+                      vehicleTypes: prev.vehicleTypes.map((item, i) =>
+                        i === index ? { ...item, state: e } : item,
+                      ),
+                    }));
+                  }}
+                />
+                {vehicle.name}
+              </label>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2">
+            <Checkbox checked={generalData.vehicleInputState} />
+            <input
+              placeholder="Type a new vehicle type..."
+              className="flex-1 bg-transparent text-sm outline-none"
+              value={generalData.vehicleInput}
+              onChange={(e) =>
+                setGeneralData((prev) => ({
+                  ...prev,
+                  vehicleInput: e.target.value,
+                  vehicleInputState: e.target.value.trim().length > 0,
+                }))
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && generalData.vehicleInput.trim()) {
+                  e.preventDefault();
+                  addVehicleType();
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              className="gap-1 rounded-md bg-primary px-3 text-white hover:bg-primary/90"
+              disabled={!generalData.vehicleInput.trim()}
+              onClick={addVehicleType}
+            >
+              <Plus size={14} /> Add
+            </Button>
+          </div>
+
+          <div className="flex w-full justify-end gap-3">
+            <Button
+              variant="outline"
+              className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+              disabled={isLoading}
+              onClick={() => setIsVehicleModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+              onClick={onGeneralSettingsSubmit}
+            >
+              {isLoading ? (
+                <VscLoading size={18} className="animate-spin" />
+              ) : generalData.id === "" ? (
+                "Create"
+              ) : (
+                "Update"
+              )}
+            </Button>
           </div>
         </div>
-        <div className="flex w-full justify-end">
-          <Button
-            className="rounded-xl px-7"
-            disabled={isLoading}
-            onClick={onGeneralSettingsSubmit}
-          >
-            {isLoading ? (
-              <VscLoading size={24} className="animate-spin" />
-            ) : generalData.id === "" ? (
-              "Create"
-            ) : (
-              "Update"
-            )}
-          </Button>
+      </Modal>
+      <Modal
+        open={isExpenseModalOpen}
+        width={560}
+        centered={true}
+        footer={null}
+        onCancel={() => setIsExpenseModalOpen(false)}
+        className="max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Wallet size={20} />
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                Expense Categories
+              </p>
+              <p className="text-sm text-slate-500">
+                Select active expense categories or add a new one
+              </p>
+            </div>
+          </div>
+
+          <div className="flex max-h-[40vh] flex-wrap gap-2 overflow-y-auto">
+            {generalData.expenseTypes.map((expense, index) => (
+              <label
+                key={index}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  expense.state
+                    ? "border-primary/30 bg-primary/5 text-slate-900"
+                    : "border-slate-200 text-slate-500"
+                }`}
+              >
+                <Checkbox
+                  checked={expense.state}
+                  onCheckedChange={(e: boolean) => {
+                    setGeneralData((prev) => ({
+                      ...prev,
+                      expenseTypes: prev.expenseTypes.map((item, i) =>
+                        i === index ? { ...item, state: e } : item,
+                      ),
+                    }));
+                  }}
+                />
+                {expense.name}
+              </label>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2">
+            <Checkbox checked={generalData.expenseInputState} />
+            <input
+              placeholder="Type a new expense category..."
+              className="flex-1 bg-transparent text-sm outline-none"
+              value={generalData.expenseInput}
+              onChange={(e) =>
+                setGeneralData((prev) => ({
+                  ...prev,
+                  expenseInput: e.target.value,
+                  expenseInputState: e.target.value.trim().length > 0,
+                }))
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && generalData.expenseInput.trim()) {
+                  e.preventDefault();
+                  addExpenseType();
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              className="gap-1 rounded-md bg-primary px-3 text-white hover:bg-primary/90"
+              disabled={!generalData.expenseInput.trim()}
+              onClick={addExpenseType}
+            >
+              <Plus size={14} /> Add
+            </Button>
+          </div>
+
+          <div className="flex w-full justify-end gap-3">
+            <Button
+              variant="outline"
+              className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+              disabled={isLoading}
+              onClick={() => setIsExpenseModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+              onClick={onGeneralSettingsSubmit}
+            >
+              {isLoading ? (
+                <VscLoading size={18} className="animate-spin" />
+              ) : generalData.id === "" ? (
+                "Create"
+              ) : (
+                "Update"
+              )}
+            </Button>
+          </div>
         </div>
       </Modal>
       <Modal

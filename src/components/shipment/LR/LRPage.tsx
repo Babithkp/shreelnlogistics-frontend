@@ -1,6 +1,6 @@
 import LRList from "./LRList";
 import LRCreate from "./LRCreate";
-import { useState } from "react";
+import { useState, type MutableRefObject } from "react";
 import { LrInputs } from "@/types";
 
 type Sections = "LRList" | "createNew";
@@ -8,11 +8,15 @@ type SectionState = Record<Sections, boolean>;
 
 export default function LRPage({
   lrData,
+  searchValue,
+  searchSubmitRef,
 }: {
   lrData: {
     data: LrInputs[];
     count: number;
   };
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [selectedForm, setSelectedForm] = useState({
     LRList: true,
@@ -57,6 +61,8 @@ export default function LRPage({
           setSelectedLRDataToEdit={setSelectedLRDataToEdit}
           setFormStatus={setFormStatus}
           data={lrData}
+          searchValue={searchValue}
+          searchSubmitRef={searchSubmitRef}
         />
       )}
       {selectedForm.createNew && (

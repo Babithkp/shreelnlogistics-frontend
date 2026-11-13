@@ -1,5 +1,5 @@
 import logo from "../../assets/logisticsLogo.svg";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import {
@@ -53,6 +53,7 @@ import {
 import { RxCross2 } from "react-icons/rx";
 import { VscLoading } from "react-icons/vsc";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
+import { Pencil, Mail, Paperclip } from "lucide-react";
 import BillTemplate from "./BillTemplate";
 import { toast } from "react-toastify";
 import {
@@ -79,7 +80,6 @@ import {
   WriteOffInputs,
 } from "@/types";
 import { createNotificationApi } from "@/api/admin";
-import { LuSearch } from "react-icons/lu";
 import { BiTrash } from "react-icons/bi";
 import { createBillWriteOffApi, deleteBillWriteOffApi } from "@/api/writeoff";
 
@@ -112,6 +112,8 @@ export default function ViewBills({
   setSupplementary,
   clients,
   onRefresh,
+  searchValue,
+  searchSubmitRef,
 }: {
   sectionChangeHandler: (section: any) => void;
   setSelectedBillToEdit: (data: billInputs) => void;
@@ -120,6 +122,8 @@ export default function ViewBills({
   setSupplementary: (data: boolean) => void;
   clients: ClientInputs[];
   onRefresh: () => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [showPreview, setShowPreview] = useState(false);
   const [billData, setBillData] = useState<billInputs[]>(data.slice(0, 50));
@@ -150,7 +154,7 @@ export default function ViewBills({
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [BillList, setBillList] = useState<billInputs[]>([]);
   const [BillListForBulk, setBillListForBulk] = useState<BulkBillList[]>([]);
-  const [search, setSearch] = useState("");
+  const search = searchValue;
   const [totalItems, setTotalItems] = useState(data.length);
   const [recordEditValue, setRecordEditValue] = useState("0");
   const [currentPage, setCurrentPage] = useState(1);
@@ -328,8 +332,7 @@ export default function ViewBills({
     }
   }
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (search.trim().length === 0) {
       setFilteredBills(billData);
       return;
@@ -340,6 +343,10 @@ export default function ViewBills({
       filterBillDataForBranch(branch.branchId, search);
     }
   };
+
+  useEffect(() => {
+    searchSubmitRef.current = handleSearch;
+  });
 
   useEffect(() => {
     if (search.trim().length === 0) {
@@ -724,41 +731,25 @@ export default function ViewBills({
   return (
     <>
       <section className="relative flex gap-5">
-        <form
-          className="absolute -top-18 right-[13vw] flex items-center gap-2"
-          onSubmit={handleSearch}
-        >
-          <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Button className="cursor-pointer rounded-xl p-6">
-            <LuSearch size={30} className="mx-3 scale-125" />
-          </Button>
-        </form>
         <motion.div
           animate={{ width: showPreview ? "50%" : "100%" }}
           transition={{ duration: 0.3 }}
-          className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5`}
+          className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm`}
         >
           <div className={`flex items-center justify-between`}>
-            <p className="text-xl font-medium">Bills</p>
-            <div className="flex gap-5">
+            <p className="text-xl font-semibold text-slate-900">Bills</p>
+            <div className="flex items-center gap-3">
               <Button
-                variant={"outline"}
-                className="border-primary text-primary cursor-pointer rounded-xl p-5"
+                variant="outline"
+                className="rounded-xl border-primary/30 px-5 text-primary hover:bg-primary/5"
                 onClick={() => setIsBulkModalOpen(true)}
               >
                 Bulk Record
               </Button>
               {!showPreview && (
                 <Button
-                  variant={"outline"}
-                  className="border-primary text-primary cursor-pointer rounded-2xl p-5"
+                  variant="outline"
+                  className="gap-2 rounded-xl border-primary/30 px-5 text-primary hover:bg-primary/5"
                   onClick={() => [
                     sectionChangeHandler({
                       billList: false,
@@ -767,11 +758,11 @@ export default function ViewBills({
                     setSupplementary(true),
                   ]}
                 >
-                  <MdOutlineAdd size={34} /> Add Supplementary
+                  <MdOutlineAdd size={20} /> Add Supplementary
                 </Button>
               )}
               <Button
-                className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+                className="gap-2 rounded-xl bg-primary px-5 text-white hover:bg-primary/90"
                 onClick={() => [
                   setSupplementary(false),
                   sectionChangeHandler({
@@ -780,26 +771,25 @@ export default function ViewBills({
                   }),
                 ]}
               >
-                <MdOutlineAdd size={34} />
+                <MdOutlineAdd size={20} />
                 Create new
               </Button>
               {!search && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="flex items-center gap-3 text-sm text-slate-500">
                   <p>
-                    {startIndex}-{endIndex}
+                    {startIndex}-{endIndex}{" "}
+                    <span className="text-slate-400">of</span> {totalItems}
                   </p>
-                  <p>of</p>
-                  <p>{totalItems}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={handlePrev}
                       disabled={currentPage === 1}
-                      className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                      className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === 1 ? "opacity-40" : ""}`}
                     >
                       <MdOutlineChevronLeft size={20} />
                     </button>
                     <button
-                      className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                      className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === totalPages ? "opacity-40" : ""}`}
                       onClick={handleNext}
                       disabled={currentPage === totalPages}
                     >
@@ -810,69 +800,77 @@ export default function ViewBills({
               )}
             </div>
           </div>
-          <div className="overflow-y-auto pr-2">
-            <table
-              className={`w-full ${showPreview ? "text-xs" : ""} scroll-auto`}
-            >
-              <thead>
-                <tr>
-                  <th className="items-center border text-start font-[400] text-[#797979]">
+          <div className="overflow-y-auto pr-1">
+            <table className={`w-full ${showPreview ? "text-xs" : "text-sm"}`}>
+              <thead className="sticky top-0 z-10 bg-white">
+                <tr className="border-b border-slate-100">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Bill ID
                   </th>
-                  <th className="border text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Client Name
                   </th>
-                  <th className="border text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Date
                   </th>
-                  <th className="border text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Freight Amount
                   </th>
-                  <th className="border text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Payment Recieved
                   </th>
-                  <th className="border text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Payment Recieved Date
                   </th>
                   {!showPreview && (
                     <>
-                      <th className="border text-start font-[400] text-[#797979]">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                         Pending Payment
                       </th>
-                      <th className="border font-[400] text-[#797979]">
+                      <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                         Deduction
                       </th>
                     </>
                   )}
-                  <th className="border font-[400] text-[#797979]">TDS</th>
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    TDS
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredBills.map((data) => (
                   <tr
-                    className={`hover:bg-accent cursor-pointer ${selectedBill?.billNumber === data.billNumber ? "bg-accent" : ""}`}
+                    className={`cursor-pointer border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 ${
+                      selectedBill?.billNumber === data.billNumber
+                        ? "bg-primary/5"
+                        : ""
+                    }`}
                     key={data.id}
                     onClick={() => [
                       selectBillForPreview(data),
                       setEmailIds(data.Client.email),
                     ]}
                   >
-                    <td className="border py-2">{data.billNumber}</td>
-                    <td className="border py-2">{data.Client?.name}</td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 font-medium text-slate-900">
+                      {data.billNumber}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-700">
+                      {data.Client?.name}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-700">
                       {new Date(data.date).toLocaleDateString()}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(data.subTotal)}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(
                         parseFloat(data.zeroToThirty) +
                           parseFloat(data.thirtyToSixty) +
                           parseFloat(data.sixtyPlus),
                       )}
                     </td>
-                    <td className="border py-2 text-center">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {data.PaymentRecords.length > 0
                         ? new Date(
                             data.PaymentRecords[
@@ -883,15 +881,15 @@ export default function ViewBills({
                     </td>
                     {!showPreview && (
                       <>
-                        <td className="border py-2">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {formatter.format(data.pendingAmount)}
                         </td>
-                        <td className="border py-2 text-center">
+                        <td className="px-3 py-2.5 text-slate-700">
                           {data.WriteOff?.amount || 0}
                         </td>
                       </>
                     )}
-                    <td className="border py-2 text-center">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(
                         data.subTotal * (data?.tds ? data?.tds / 100 : 0.0),
                       )}
@@ -903,7 +901,7 @@ export default function ViewBills({
           </div>
         </motion.div>
         <motion.div
-          className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
+          className="hidden h-[84vh] flex-col gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
           animate={{
             width: showPreview ? "50%" : "0%",
             display: showPreview ? "flex" : "none",
@@ -912,13 +910,18 @@ export default function ViewBills({
           transition={{ duration: 0.3 }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-medium">
-              Bill# {selectedBill?.billNumber}
-            </h3>
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                Bill #{selectedBill?.billNumber}
+              </p>
+              <p className="text-xs text-slate-500">
+                {selectedBill?.Client?.name}
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               {selectedBill?.WriteOff != null && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer rounded-xl border border-red-500 p-2 text-sm font-medium text-red-500 hover:bg-slate-100 hover:text-black">
+                  <AlertDialogTrigger className="cursor-pointer rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50">
                     Delete Write off
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -945,39 +948,38 @@ export default function ViewBills({
               )}
               {selectedBill?.WriteOff == null && (
                 <Button
-                  variant={"outline"}
-                  className="border-primary text-primary cursor-pointer rounded-3xl"
+                  variant="outline"
+                  className="rounded-lg border-primary/30 px-4 text-primary hover:bg-primary/5"
                   onClick={() => [setIsWriteOffModalOpen(true)]}
                 >
                   Write off
                 </Button>
               )}
               <Button
-                variant={"outline"}
-                className="border-primary text-primary cursor-pointer rounded-3xl"
+                variant="outline"
+                className="gap-2 rounded-lg border-primary/30 px-4 text-primary hover:bg-primary/5"
                 onClick={() => [
                   setIsRecordModalOpen(true),
                   reset(),
                   setFormstate("create"),
                 ]}
               >
-                <PiRecord className="size-5" />
+                <PiRecord className="size-4" />
                 Record Payment
               </Button>
 
-              <button className="bg-primary/50 cursor-pointer rounded-full p-1">
-                <RxCross2
-                  size={20}
-                  color="white"
-                  onClick={() => setShowPreview(false)}
-                />
+              <button
+                className="flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                onClick={() => setShowPreview(false)}
+              >
+                <RxCross2 size={18} />
               </button>
             </div>
           </div>
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-2">
               <Button
-                className="rounded-2xl"
+                className="gap-2 rounded-lg bg-primary px-4 text-white hover:bg-primary/90"
                 onClick={() => [
                   sectionChangeHandler({
                     billList: false,
@@ -986,163 +988,223 @@ export default function ViewBills({
                   setSelectedBillToEdit(selectedBill!),
                 ]}
               >
+                <Pencil size={14} />
                 Edit details
               </Button>
 
               <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
+                <DialogTrigger className="flex cursor-pointer items-center gap-2 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+                  <Mail size={14} />
                   Send mail
                 </DialogTrigger>
-                <DialogContent className="h-[60vh] min-w-7xl overflow-y-auto">
+                <DialogContent className="h-[85vh] min-w-7xl overflow-y-auto rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-2xl">Send Mail</DialogTitle>
-                  </DialogHeader>
-                  <DialogDescription></DialogDescription>
-                  <div className="flex flex-col gap-5">
-                    <div className="flex border-b pb-1 text-sm">
-                      <p>To</p>
-                      <input
-                        type="text"
-                        className="w-[90%] pl-2"
-                        value={emailIds}
-                        onChange={(e) => setEmailIds(e.target.value)}
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Mail size={20} />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-xl font-semibold text-slate-900">
+                          Send Mail
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-slate-500">
+                          Email the Bill PDF to one or more recipients
+                        </DialogDescription>
+                      </div>
                     </div>
-                    <div className="flex gap-5 border-b pb-1 text-sm">
-                      <p>Subject</p>
-                      <p>
-                        Billing summary for Shipment - #
-                        {selectedBill?.billNumber}
+                  </DialogHeader>
+                  <div className="flex flex-col gap-5">
+                    <div className="rounded-xl border border-slate-100 p-4">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-medium text-slate-500">
+                            To
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                            value={emailIds}
+                            onChange={(e) => setEmailIds(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-medium text-slate-500">
+                            Subject
+                          </label>
+                          <p className="text-sm text-slate-900">
+                            Billing summary for Shipment - #
+                            {selectedBill?.billNumber}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 p-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-medium text-slate-500">
+                          Message
+                        </label>
+                        <p className="text-sm text-slate-700">Hi there,</p>
+                        <textarea
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                          rows={3}
+                          value={mailGreeting}
+                          onChange={(e) => setMailGreeting(e.target.value)}
+                        ></textarea>
+                      </div>
+
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <p className="mb-2 text-xs font-medium text-slate-500">
+                          Billing Summary Details
+                        </p>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Bill Number
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedBill?.billNumber}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Billing Date
+                            </p>
+                            <p className="text-slate-900">
+                              {new Date(
+                                selectedBill?.date || "",
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Client Name
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedBill?.Client?.name}
+                            </p>
+                          </div>
+                          <div className="col-span-2 sm:col-span-3">
+                            <p className="text-xs font-medium text-slate-500">
+                              LR Numbers
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedBill?.lrData
+                                ?.map((lr) => lr.lrNumber)
+                                .join(", ")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Pickup Location(s)
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedBill?.lrData
+                                ?.map((lr) => lr.from)
+                                .join(", ")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Delivery Location(s)
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedBill?.lrData
+                                ?.map((lr) => lr.to)
+                                .join(", ")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Total Amount
+                            </p>
+                            <p className="text-slate-900">
+                              INR {selectedBill?.total.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Payment Due Date
+                            </p>
+                            <p className="text-slate-900">
+                              {new Date(
+                                selectedBill?.dueDate || "",
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-700">
+                      <p>Warm Regards,</p>
+                      <p className="font-medium text-slate-900">
+                        Shivam Jha
+                      </p>
+                      <p>CEO</p>
+                      <p>Shree LN Logistics</p>
+                      <p>+91 90364416521</p>
+                      <p>Website: www.shreelnlogistics.com</p>
+                      <div className="py-4">
+                        <img src={logo} alt="logo" className="h-10 w-auto" />
+                      </div>
+                      <p className="w-100 text-slate-500">
+                        Flat No.203, 3rd Floor, Sai Godavari Apartment,
+                        Kuduregere Road, Madanayakanahalli, Bangalore Rural
                       </p>
                     </div>
-                    <div className="flex flex-col gap-3">
-                      <p>Hi There,</p>
-                      <textarea
-                        className="h-[10vh]"
-                        value={mailGreeting}
-                        onChange={(e) => setMailGreeting(e.target.value)}
-                      ></textarea>
-                      <div>
-                        <div className="flex">
-                          <label className="pb-3">
-                            Billing summary details:
-                          </label>
-                        </div>
-                        <div className="flex">
-                          <label>Bill Number</label>
-                          <p>: {selectedBill?.billNumber}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Billing Date</label>
-                          <p>
-                            :{" "}
-                            {new Date(
-                              selectedBill?.date || "",
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex">
-                          <label>LR Numbers</label>
-                          <p className="w-[70%]">
-                            :{" "}
-                            {selectedBill?.lrData
-                              ?.map((lr) => lr.lrNumber)
-                              .join(", ")}
-                          </p>
-                        </div>
-                        <div className="flex">
-                          <label>CLient Name:</label>
-                          <p> {selectedBill?.Client?.name}</p>
-                        </div>
-                        <div className="flex gap-3">
-                          <label>Pickup Location(s):</label>
-                          <p className="w-[70%]">
-                            {selectedBill?.lrData
-                              ?.map((lr) => lr.from)
-                              .join(", ")}
-                          </p>
-                        </div>
-                        <div className="flex gap-3">
-                          <label>Delivery Location(s) :</label>
-                          <p className="w-[70%]">
-                            {selectedBill?.lrData
-                              ?.map((lr) => lr.to)
-                              .join(", ")}
-                          </p>
-                        </div>
-                        <div className="flex">
-                          <label>Total Amount</label>
-                          <p>: INR {selectedBill?.total.toFixed(2)}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Payment Due Date</label>
-                          <p>
-                            :{" "}
-                            {new Date(
-                              selectedBill?.dueDate || "",
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <p>Warm Regards,</p>
-                        <p>Shivam Jha</p>
-                        <p>CEO</p>
-                        <p>Shree LN Logistics</p>
-                        <p>+91 90364416521</p>
-                        <p>Website: www.shreelnlogistics.com</p>
-                        <div className="py-5">
-                          <img src={logo} alt="logo" />
-                        </div>
-                        <p className="w-100">
-                          Flat No.203, 3rd Floor, Sai Godavari Apartment,
-                          Kuduregere Road, Madanayakanahalli, Bangalore Rural
+
+                    <div>
+                      <p className="mb-1.5 text-xs font-medium text-slate-500">
+                        Attachments
+                      </p>
+                      <div className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2">
+                        <Paperclip size={16} className="text-slate-400" />
+                        <p className="flex items-center gap-2 text-sm text-slate-700">
+                          BILL {selectedBill?.billNumber}
+                          <span className="text-xs text-slate-400">
+                            ({attachment?.size.toString().substring(0, 3)}kb)
+                          </span>
                         </p>
+                        <RxCross2 size={14} className="text-slate-400" />
                       </div>
-                      <div>
-                        <p className="text-sm">Attachments</p>
-                        <div className="my-1 flex w-[30%] items-center justify-between rounded-md bg-[#E9EDF7] px-5 py-1">
-                          <p className="flex items-center gap-5">
-                            BILL {selectedBill?.billNumber}
-                            <span className="text-sm text-[#A3AED0]">
-                              ({attachment?.size.toString().substring(0, 3)}kb)
-                            </span>
-                          </p>
-                          <RxCross2 size={15} />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-5">
-                        <Button
-                          variant={"outline"}
-                          className="border-primary text-primary"
-                          onClick={() => setIsOpen(false)}
-                          disabled={isLoading}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() => [onSendEmailHandler()]}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? (
-                            <VscLoading size={20} className="animate-spin" />
-                          ) : (
-                            "Send Mail"
-                          )}
-                        </Button>
-                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                      <Button
+                        variant="outline"
+                        className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                        onClick={() => setIsOpen(false)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="gap-2 rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                        onClick={() => [onSendEmailHandler()]}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <VscLoading size={18} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Mail size={14} />
+                            Send Mail
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
             <div className="flex items-center gap-2">
-              <p className="font-medium">TDS</p>
+              <p className="text-sm font-medium text-slate-700">TDS</p>
               <Select
                 value={selectedBill?.tds?.toString()}
                 onValueChange={updateTdsvalue}
               >
-                <SelectTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
+                <SelectTrigger className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium">
                   <SelectValue placeholder="Select a TDS" />%
                 </SelectTrigger>
                 <SelectContent>
@@ -1151,13 +1213,16 @@ export default function ViewBills({
                   <SelectItem value="2">2</SelectItem>
                 </SelectContent>
               </Select>
-              <button onClick={downloadPdfFile} className="cursor-pointer">
-                <MdOutlineFileDownload size={20} />
+              <button
+                onClick={downloadPdfFile}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"
+              >
+                <MdOutlineFileDownload size={18} />
               </button>
               {!isAdmin && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer">
-                    <RiDeleteBin6Line size={20} color="red" />
+                  <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                    <RiDeleteBin6Line size={18} />
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1183,8 +1248,8 @@ export default function ViewBills({
               )}
               {isAdmin && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer">
-                    <RiDeleteBin6Line size={20} color="red" />
+                  <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                    <RiDeleteBin6Line size={18} />
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1208,13 +1273,15 @@ export default function ViewBills({
               )}
             </div>
           </div>
-          <PDFViewer className="h-full w-full">
-            <BillTemplate
-              billInputs={selectedBill}
-              companyProfile={companyProfile}
-              bankDetails={bankDetails}
-            />
-          </PDFViewer>
+          <div className="flex-1 overflow-hidden rounded-xl border border-slate-100">
+            <PDFViewer className="h-full w-full">
+              <BillTemplate
+                billInputs={selectedBill}
+                companyProfile={companyProfile}
+                bankDetails={bankDetails}
+              />
+            </PDFViewer>
+          </div>
         </motion.div>
       </section>
       <Modal
@@ -1230,15 +1297,18 @@ export default function ViewBills({
         ]}
         className="max-h-[80vh] overflow-y-auto"
       >
-        <div>
-          <p className="mb-5 text-xl font-semibold">Bill Bulk Record</p>
-        </div>
+        <div className="mb-5">
+            <p className="text-xl font-semibold text-slate-900">Bill Bulk Record</p>
+            <p className="text-sm text-slate-500">
+              Record one payment against multiple bills of a client
+            </p>
+          </div>
         <form
           onSubmit={handleBulkSubmit(onBulkSubmit)}
           className="flex flex-wrap justify-between gap-5"
         >
-          <div className="flex w-[50%] flex-col gap-2">
-            <label>Client Name</label>
+          <div className="flex w-[23%] flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Client Name</label>
             <Controller
               name="vendorName"
               control={controlBulk}
@@ -1265,18 +1335,19 @@ export default function ViewBills({
                   }))}
                   showSearch
                   placeholder="Select clients"
-                  className="outline-primary w-full rounded-md outline"
+                  className="w-full"
                   size="large"
+                  style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                 />
               )}
             />
           </div>
-          <div className="w-[48%]">
+          <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Date</label>
+              <label className="text-sm font-medium text-slate-700">Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...registerBulk("date", { required: true })}
               />
               {errorsBulk.date && (
@@ -1284,12 +1355,12 @@ export default function ViewBills({
               )}
             </div>
           </div>
-          <div className="w-[49%]">
+          <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Transaction ID/ Cheque Number</label>
+              <label className="text-sm font-medium text-slate-700">Transaction ID/ Cheque Number</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...registerBulk("transactionNumber", { required: true })}
               />
               {errorsBulk.transactionNumber && (
@@ -1297,9 +1368,9 @@ export default function ViewBills({
               )}
             </div>
           </div>
-          <div className="w-[49%]">
+          <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Payment Mode</label>
+              <label className="text-sm font-medium text-slate-700">Payment Mode</label>
 
               <Controller
                 name="paymentMode"
@@ -1319,8 +1390,9 @@ export default function ViewBills({
                       { value: "Nill", label: "Nill" },
                     ]}
                     placeholder="Select Payment mode"
-                    className="outline-primary w-full rounded-md outline"
+                    className="w-full"
                     size="large"
+                    style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                   />
                 )}
               />
@@ -1333,9 +1405,9 @@ export default function ViewBills({
 
           <div className="w-full">
             <div className="flex flex-col gap-2">
-              <label>Remarks</label>
+              <label className="text-sm font-medium text-slate-700">Remarks</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...registerBulk("remarks", { required: true })}
               />
             </div>
@@ -1344,20 +1416,21 @@ export default function ViewBills({
             )}
           </div>
 
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="border text-sm font-medium">SL NO.</th>
-                <th className="border text-sm font-medium">Bill Number</th>
-                <th className="border text-sm font-medium">Amount</th>
-                <th className="border text-sm font-medium">Pending Amount</th>
-                <th className="border text-sm font-medium">Actions</th>
-              </tr>
-            </thead>
+          <div className="w-full">
+            <table className="w-full border-separate border-spacing-0">
+              <thead>
+                <tr>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600 rounded-tl-lg">Sl no</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">Bill Number</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">Amount</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">Pending Amount</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600 rounded-tr-lg">Action</th>
+                </tr>
+              </thead>
             <tbody>
               <tr className="text-sm">
-                <td className="border py-2"></td>
-                <td className="border py-2">
+                <td className="border-slate-200 border p-2 align-top"></td>
+                <td className="border-slate-200 border p-2 align-top">
                   <AntSelect
                     onChange={(val) => {
                       const bill = BillList.find((FM) => FM.billNumber === val);
@@ -1379,24 +1452,27 @@ export default function ViewBills({
                       label: bill.billNumber,
                     }))}
                     showSearch
-                    placeholder="Select Payment mode"
-                    className="outline-primary w-full rounded-md outline"
-                    size="large"
+                    placeholder="Select Bill Number"
+                    className="w-full"
+                    size="middle"
+                    style={{ border: "none", borderRadius: "0px" }}
                   />
                 </td>
-                <td className="border py-2"></td>
-                <td className="border py-2"></td>
-                <td className="border py-2"></td>
+                <td className="border-slate-200 border p-2 align-top"></td>
+                <td className="border-slate-200 border p-2 align-top"></td>
+                <td className="border-slate-200 border p-2 align-top"></td>
               </tr>
               {BillListForBulk.map((data, i) => (
-                <tr className="text-sm" key={i}>
-                  <td className="border py-2 text-center">{i + 1}</td>
-                  <td className="border py-2 text-center">{data.billNumber}</td>
-                  <td className="border py-2">
+                <tr className="text-sm"
+                  key={i}
+                >
+                  <td className="border-slate-200 border p-2 align-top">{i + 1}</td>
+                  <td className="border-slate-200 border p-2 align-top">{data.billNumber}</td>
+                  <td className="border-slate-200 border p-2 align-top">
                     <input
                       value={data.amount}
                       type="number"
-                      className="border-primary w-full rounded-md border p-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       onChange={(e) =>
                         setBillListForBulk((prev) => {
                           const updatedData = prev.map((item) => {
@@ -1423,10 +1499,10 @@ export default function ViewBills({
                       }
                     />
                   </td>
-                  <td className="border py-2 text-center">
+                  <td className="border-slate-200 border p-2 align-top">
                     {data.pendingAmount}
                   </td>
-                  <td className="cursor-pointer justify-items-center border py-2">
+                  <td className="border-slate-200 border p-2 align-top cursor-pointer text-center">
                     <BiTrash
                       size={20}
                       color="red"
@@ -1443,12 +1519,13 @@ export default function ViewBills({
               ))}
             </tbody>
           </table>
+          </div>
 
-          <div className="flex w-full justify-end gap-5">
+          <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
             <Button
               type="button"
-              variant={"outline"}
-              className="border-primary text-primary"
+              variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
               onClick={() => [
                 setIsBulkModalOpen(false),
                 setBillList([]),
@@ -1459,9 +1536,12 @@ export default function ViewBills({
             >
               Cancel
             </Button>
-            <Button className="rounded-xl px-7" disabled={isLoading}>
+            <Button
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <VscLoading size={24} className="animate-spin" />
+                <VscLoading size={18} className="animate-spin" />
               ) : (
                 "Record Bulk"
               )}
@@ -1738,36 +1818,48 @@ export default function ViewBills({
                         Recent Payments
                       </AccordionTrigger>
                       <AccordionContent className="bg-primary/20 max-h-[30vh] overflow-y-auto rounded-b-md px-2">
-                        <table className="w-full rounded-md bg-white px-2">
+                        <table className="w-full overflow-hidden rounded-lg bg-white">
                           <thead>
-                            <tr>
-                              <th className="p-1 font-medium">Sl no</th>
-                              <th className="font-medium">Amount Received</th>
-                              <th className="font-medium">Date</th>
-                              <th className="font-medium">Payment mode</th>
-                              <th className="font-medium">Remarks</th>
-                              <th className="font-medium">
+                            <tr className="border-b border-slate-100 text-xs text-slate-500">
+                              <th className="px-2 py-2 text-left font-medium">
+                                Sl no
+                              </th>
+                              <th className="px-2 py-2 text-left font-medium">
+                                Amount Received
+                              </th>
+                              <th className="px-2 py-2 text-left font-medium">
+                                Date
+                              </th>
+                              <th className="px-2 py-2 text-left font-medium">
+                                Payment mode
+                              </th>
+                              <th className="px-2 py-2 text-left font-medium">
+                                Remarks
+                              </th>
+                              <th className="px-2 py-2 text-left font-medium">
                                 Trans. ID/Cheque Number
                               </th>
-                              <th className="font-medium">Actions</th>
+                              <th className="px-2 py-2 text-left font-medium">
+                                Actions
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedBill?.PaymentRecords?.map(
                               (record, index) => (
                                 <tr
-                                  className="hover:bg-accent text-center"
+                                  className="border-b border-slate-50 text-sm transition-colors last:border-0 hover:bg-slate-50"
                                   key={record.id}
                                 >
-                                  <td className="p-2">{index + 1}</td>
-                                  <td>{record.amount}</td>
-                                  <td>
+                                  <td className="px-2 py-2">{index + 1}</td>
+                                  <td className="px-2 py-2">{record.amount}</td>
+                                  <td className="px-2 py-2">
                                     {new Date(record.date).toLocaleDateString()}
                                   </td>
-                                  <td>{record.paymentMode}</td>
-                                  <td className="max-w-70">{record.remarks}</td>
-                                  <td>{record.transactionNumber}</td>
-                                  <td className="flex justify-center gap-2">
+                                  <td className="px-2 py-2">{record.paymentMode}</td>
+                                  <td className="max-w-70 px-2 py-2">{record.remarks}</td>
+                                  <td className="px-2 py-2">{record.transactionNumber}</td>
+                                  <td className="flex justify-start gap-2 px-2 py-2">
                                     <button
                                       className="cursor-pointer"
                                       type="button"

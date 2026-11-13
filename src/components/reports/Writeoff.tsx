@@ -1,11 +1,20 @@
 import { BranchInputs, ClientInputs, VendorInputs, WriteOffInputs } from "@/types";
 import { Select as AntSelect } from "antd";
-import { Button } from "../ui/button";
 import { useState } from "react";
 import { filterWriteOffApi } from "@/api/writeoff";
 import { toast } from "react-toastify";
 import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
+import { formatter } from "@/lib/utils";
+import {
+  ReportFiltersCard,
+  ReportStatsRow,
+  ReportExportRow,
+  ReportPreviewCard,
+  ReportDateField,
+  reportTableHeadClass,
+  reportTableRowClass,
+} from "./ReportUI";
 
 export default function Writeoff({
   clients,
@@ -138,32 +147,35 @@ export default function Writeoff({
   };
 
   return (
-    <>
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <AntSelect
-            showSearch
-            options={[
-              { value: "All", label: "All" },
-              ...clients?.map((client) => ({
-                value: client.name,
-                label: client.name,
-              })),
-            ]}
-            onChange={(value) => {
-              setFilterInputs({
-                ...filterInputs,
-                clientName: value,
-              });
-            }}
-            value={filterInputs.clientName || null}
-            allowClear
-            disabled={filterInputs.vendorName ? true : false}
-            size="large"
-            placeholder="Select a Client"
-            className="w-[48%] bg-transparent"
-          />
-          {isAdmin && (
+    <div className="flex flex-col gap-5">
+      <ReportFiltersCard
+        onGenerate={onFilterHandler}
+        onReset={() => setWriteoffData([])}
+        loading={filterLoading}
+      >
+        <AntSelect
+          showSearch
+          options={[
+            { value: "All", label: "All" },
+            ...clients?.map((client) => ({
+              value: client.name,
+              label: client.name,
+            })),
+          ]}
+          onChange={(value) => {
+            setFilterInputs({
+              ...filterInputs,
+              clientName: value,
+            });
+          }}
+          value={filterInputs.clientName || null}
+          allowClear
+          disabled={filterInputs.vendorName ? true : false}
+          size="large"
+          placeholder="Select a Client"
+          className="w-full bg-transparent"
+        />
+        {isAdmin && (
           <AntSelect
             options={[
               { value: null, label: "All" },
@@ -178,112 +190,92 @@ export default function Writeoff({
             value={selectedBranchId || null}
             size="large"
             placeholder="Select a Branch"
-            className="w-[30%] bg-transparent"
+            className="w-full bg-transparent"
           />
         )}
-          <AntSelect
-            showSearch
-            options={[
-              { value: "All", label: "All" },
-              ...vendors?.map((vendor) => ({
-                value: vendor.name,
-                label: vendor.name,
-              })),
-            ]}
-            onChange={(value) => {
-              setFilterInputs({
-                ...filterInputs,
-                vendorName: value,
-              });
-            }}
-            value={filterInputs.vendorName || null}
-            disabled={filterInputs.clientName ? true : false}
-            allowClear
-            size="large"
-            placeholder="Select a Vendors"
-            className="w-[48%] bg-transparent"
-          />
-        </div>
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2">
-            <p>From:</p>
-            <div className="rounded-md bg-blue-50 p-1 pr-3">
-              <input
-                type="date"
-                className="ml-2 w-full bg-transparent outline-none"
-                onChange={(e) => {
-                  setFilterInputs({
-                    ...filterInputs,
-                    from: e.target.value,
-                  });
-                }}
-                value={filterInputs.from}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <p>To:</p>
-            <div className="rounded-md bg-blue-50 p-1 pr-3">
-              <input
-                type="date"
-                className="ml-2 w-full bg-transparent outline-none"
-                onChange={(e) => {
-                  setFilterInputs({
-                    ...filterInputs,
-                    to: e.target.value,
-                  });
-                }}
-                value={filterInputs.to}
-              />
-            </div>
-          </div>
-          <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
-            {filterLoading ? "Loading..." : "Filter"}
-          </Button>
-          <Button
-            variant={"outline"}
-            className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
-            disabled={filterLoading}
-            onClick={() => [setWriteoffData([])]}
-          >
-            Reset
-          </Button>
-          <Button
-            className="w-[20%] rounded-md"
-            onClick={exportBillExcelHandler}
-          >
-            Download
-          </Button>
-        </div>
-      </section>
-      <section className="flex h-[65vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
-        <table>
+        <AntSelect
+          showSearch
+          options={[
+            { value: "All", label: "All" },
+            ...vendors?.map((vendor) => ({
+              value: vendor.name,
+              label: vendor.name,
+            })),
+          ]}
+          onChange={(value) => {
+            setFilterInputs({
+              ...filterInputs,
+              vendorName: value,
+            });
+          }}
+          value={filterInputs.vendorName || null}
+          disabled={filterInputs.clientName ? true : false}
+          allowClear
+          size="large"
+          placeholder="Select a Vendors"
+          className="w-full bg-transparent"
+        />
+        <ReportDateField
+          label="Date From"
+          value={filterInputs.from}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, from: value })
+          }
+        />
+        <ReportDateField
+          label="Date To"
+          value={filterInputs.to}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, to: value })
+          }
+        />
+      </ReportFiltersCard>
+
+      <ReportStatsRow
+        stats={[
+          { label: "Total Records", value: writeoffData.length },
+          {
+            label: "Total Value",
+            value: formatter.format(
+              writeoffData.reduce(
+                (acc, writeoff) => acc + parseFloat(writeoff.amount),
+                0,
+              ),
+            ),
+          },
+        ]}
+      />
+
+      <ReportExportRow onExport={exportBillExcelHandler} />
+
+      <ReportPreviewCard isEmpty={writeoffData.length === 0}>
+        <table className="w-full">
           <thead>
             <tr>
-              <th className="text-start font-[500] text-slate-500">Slno</th>
-              <th className="font-[500] text-slate-500">ID Number</th>
-              <th className="font-[500] text-slate-500">Customer Name</th>
-              <th className="font-[500] text-slate-500">Date</th>
-              <th className="font-[500] text-slate-500">Amount</th>
-              <th className="w-100 font-[500] text-slate-500">Reason</th>
+              <th className={`${reportTableHeadClass} pl-0`}>Slno</th>
+              <th className={reportTableHeadClass}>ID Number</th>
+              <th className={reportTableHeadClass}>Customer Name</th>
+              <th className={reportTableHeadClass}>Date</th>
+              <th className={reportTableHeadClass}>Amount</th>
+              <th className={reportTableHeadClass}>Reason</th>
             </tr>
           </thead>
           <tbody>
             {writeoffData.map((data, i) => (
-              <tr key={data.id}>
-                <td className="py-2">{i + 1}</td>
-                <td className="py-2 text-center">{data.IDNumber}</td>
-                <td className="py-2 text-center">{data.vendorName}</td>
-                <td className="py-2 text-center">
+              <tr key={data.id} className={reportTableRowClass}>
+                <td className="py-2.5">{i + 1}</td>
+                <td className="py-2.5">{data.IDNumber}</td>
+                <td className="py-2.5">{data.vendorName}</td>
+                <td className="py-2.5">
                   {new Date(data.date).toLocaleDateString()}
                 </td>
-                <td className="py-2 text-center">{data.amount}</td>
-                <td className="py-2 text-center">{data.reason}</td>
+                <td className="py-2.5">{data.amount}</td>
+                <td className="py-2.5">{data.reason}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </section>
-    </>
+      </ReportPreviewCard>
+    </div>
   );
 }

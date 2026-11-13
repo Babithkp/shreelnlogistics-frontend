@@ -282,34 +282,40 @@ export default function Branch() {
           </div>
         </div>
       </div>
-      <div className="flex max-h-[75vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <div className="flex max-h-[84vh] flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Branches</p>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger
-              className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
-              onClick={() => [setFormStatus("New"), reset()]}
-            >
-              <IoMdAdd color="white" size={20} />
-              Create new
+            <DialogTrigger asChild>
+              <Button
+                className="cursor-pointer rounded-xl py-5"
+                onClick={() => [setFormStatus("New"), reset()]}
+              >
+                <IoMdAdd color="white" size={30} />
+                Create new
+              </Button>
             </DialogTrigger>
             <DialogContent className="min-w-6xl">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-xl font-semibold text-slate-900">
                   {formStatus == "New" ? "New Branch" : "Edit Branch"}
                 </DialogTitle>
               </DialogHeader>
-              <DialogDescription></DialogDescription>
+              <DialogDescription className="-mt-2 text-sm text-slate-500">
+                {formStatus === "New"
+                  ? "Fill in the details to add a new branch"
+                  : "Update the details of this branch"}
+              </DialogDescription>
               <form
                 className="flex flex-wrap justify-between gap-5"
                 onSubmit={handleSubmit(onCreateBranchSubmit)}
               >
                 <div className="w-[23%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Branch Name</label>
+                    <label className="text-sm font-medium text-slate-700">Branch Name</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("branchName", {
                         required: true,
                         minLength: 3,
@@ -329,10 +335,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[23%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Branch Manager</label>
+                    <label className="text-sm font-medium text-slate-700">Branch Manager</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("branchManager", {
                         required: true,
                         minLength: 3,
@@ -347,10 +353,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[23%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Contact Number</label>
+                    <label className="text-sm font-medium text-slate-700">Contact Number</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("contactNumber", {
                         required: true,
                         maxLength: 10,
@@ -366,10 +372,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[23%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Email ID</label>
+                    <label className="text-sm font-medium text-slate-700">Email ID</label>
                     <input
                       type="email"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("email", {
                         required: true,
                       })}
@@ -383,9 +389,9 @@ export default function Branch() {
                 </div>
                 <div className="w-full">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Address</label>
+                    <label className="text-sm font-medium text-slate-700">Address</label>
                     <textarea
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("address", { required: true })}
                     />
                   </div>
@@ -397,10 +403,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>City</label>
+                    <label className="text-sm font-medium text-slate-700">City</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("city", { required: true })}
                     />
                   </div>
@@ -412,10 +418,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>State</label>
+                    <label className="text-sm font-medium text-slate-700">State</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("state", { required: true })}
                     />
                   </div>
@@ -427,10 +433,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Pincode</label>
+                    <label className="text-sm font-medium text-slate-700">Pincode</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("pincode", { required: true, minLength: 4 })}
                     />
                   </div>
@@ -442,10 +448,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Username</label>
+                    <label className="text-sm font-medium text-slate-700">Username</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("username", { required: true })}
                     />
                   </div>
@@ -457,10 +463,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Password</label>
+                    <label className="text-sm font-medium text-slate-700">Password</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("password", { required: true })}
                     />
                   </div>
@@ -472,10 +478,10 @@ export default function Branch() {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex w-full flex-col gap-2">
-                    <label>Employee count</label>
+                    <label className="text-sm font-medium text-slate-700">Employee count</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("employeeCount", { required: true })}
                     />
                   </div>
@@ -485,14 +491,23 @@ export default function Branch() {
                     </p>
                   )}
                 </div>
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
                   <Button
-                    className="bg-primary hover:bg-primary cursor-pointer"
+                    type="button"
+                    variant="outline"
+                    className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                    onClick={() => setIsCreateModalOpen(false)}
+                    disabled={isloading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
                     type="submit"
                     disabled={isloading}
                   >
                     {isloading ? (
-                      <VscLoading size={24} className="animate-spin" />
+                      <VscLoading size={18} className="animate-spin" />
                     ) : formStatus === "New" ? (
                       "Create Branch"
                     ) : (
@@ -505,24 +520,25 @@ export default function Branch() {
           </Dialog>
         </div>
         {filteredBranches?.length > 0 ? (
-          <table className="h-full w-full">
-            <thead>
-              <tr className="text-[#797979]">
-                <th className="text-start font-medium">Branch Name</th>
-                <th className="text-start font-medium">Branch Manager</th>
-                <th className="text-start font-medium">Employee count</th>
-                <th className="text-start font-medium">Total Billing value</th>
-                <th className="text-start font-medium">Total Pending</th>
-                <th className="text-start font-medium">Total Received</th>
-                <th className="text-start font-medium">Username</th>
-                <th className="text-start font-medium">Password</th>
+          <div className="overflow-y-auto pr-1">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Branch Name</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Branch Manager</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Employee count</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Total Billing value</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Total Pending</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Total Received</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Username</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Password</th>
               </tr>
             </thead>
-            <tbody className="">
+            <tbody>
               {filteredBranches?.map((branch) => (
-                <tr className="hover:bg-accent cursor-pointer" key={branch.id}>
+                <tr className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 cursor-pointer" key={branch.id}>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 font-medium text-slate-900"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -531,7 +547,7 @@ export default function Branch() {
                     {branch.branchName}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -540,7 +556,7 @@ export default function Branch() {
                     {branch.branchManager}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -549,7 +565,7 @@ export default function Branch() {
                     {branch.employeeCount}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -563,7 +579,7 @@ export default function Branch() {
                     )}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -577,7 +593,7 @@ export default function Branch() {
                     )}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -595,7 +611,7 @@ export default function Branch() {
                     )}
                   </td>
                   <td
-                    className="py-3"
+                    className="px-3 py-2.5 text-slate-700"
                     onClick={() => [
                       setIsBranchDetailsModalOpen(true),
                       setBranchDetails(branch),
@@ -616,11 +632,13 @@ export default function Branch() {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Change Password</DialogTitle>
+                          <DialogTitle className="text-xl font-semibold text-slate-900">
+                            Change Password
+                          </DialogTitle>
                         </DialogHeader>
-                        <DialogDescription className="text-base text-black">
+                        <DialogDescription className="text-sm text-slate-500">
                           This will update the password for the{" "}
-                          <span className="font-medium">
+                          <span className="font-medium text-slate-700">
                             {selectedBranch} Branch
                           </span>
                           . User will have to login again.
@@ -633,10 +651,10 @@ export default function Branch() {
                         >
                           <div className="">
                             <div className="flex flex-col gap-2">
-                              <label>Enter admin password</label>
+                              <label className="text-sm font-medium text-slate-700">Enter admin password</label>
                               <input
                                 type="password"
-                                className="border-primary rounded-md border p-1 py-2 pl-2"
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                                 {...registerPassword("adminPassword", {
                                   required: true,
                                 })}
@@ -650,10 +668,10 @@ export default function Branch() {
                           </div>
                           <div>
                             <div className="flex flex-col gap-2">
-                              <label>Enter new password</label>
+                              <label className="text-sm font-medium text-slate-700">Enter new password</label>
                               <input
                                 type="password"
-                                className="border-primary rounded-md border p-1 py-2 pl-2"
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                                 {...registerPassword("newPassword", {
                                   required: true,
                                 })}
@@ -667,10 +685,10 @@ export default function Branch() {
                           </div>
                           <div>
                             <div className="flex flex-col gap-2">
-                              <label>Confirm new password</label>
+                              <label className="text-sm font-medium text-slate-700">Confirm new password</label>
                               <input
                                 type="password"
-                                className="border-primary rounded-md border p-1 py-2 pl-2"
+                                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                                 {...registerPassword("confirmNewPassword", {
                                   required: "Please confirm your password",
                                   validate: (value) =>
@@ -685,10 +703,10 @@ export default function Branch() {
                               </p>
                             )}
                           </div>
-                          <div className="flex justify-end gap-5">
+                          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
                             <Button
-                              variant={"outline"}
-                              className="border-primary px-7"
+                              variant="outline"
+                              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
                               onClick={() => [
                                 resetPassword(),
                                 setIsEditPasswordModalOpen(false),
@@ -699,12 +717,12 @@ export default function Branch() {
                               Cancel
                             </Button>
                             <Button
-                              className="bg-primary px-7"
+                              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
                               disabled={isloading}
                             >
                               {isloading ? (
                                 <VscLoading
-                                  size={24}
+                                  size={18}
                                   className="animate-spin"
                                 />
                               ) : (
@@ -720,6 +738,7 @@ export default function Branch() {
               ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Skeleton

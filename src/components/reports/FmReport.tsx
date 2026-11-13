@@ -8,8 +8,16 @@ import { BranchInputs, FMInputs, LrInputs, VendorInputs } from "@/types";
 import ExcelJS from "exceljs";
 import { saveExcelFile } from "@/lib/exportFile";
 import { toast } from "react-toastify";
-import { Button } from "../ui/button";
-import { BiFilterAlt } from "react-icons/bi";
+import { formatter } from "@/lib/utils";
+import {
+  ReportFiltersCard,
+  ReportStatsRow,
+  ReportExportRow,
+  ReportPreviewCard,
+  ReportDateField,
+  reportTableHeadClass,
+  reportTableRowClass,
+} from "./ReportUI";
 
 export default function FmReport({
   branch,
@@ -282,181 +290,158 @@ export default function FmReport({
   };
 
   return (
-    <>
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-5">
+      <ReportFiltersCard
+        onGenerate={onFilterHandler}
+        onReset={() => [
+          setFMStatement([]),
+          setPendingLRs([]),
+          setFilteredFMStatement([]),
+        ]}
+        loading={filterLoading}
+      >
+        <AntSelect
+          showSearch
+          options={[
+            { value: "All", label: "All" },
+            ...vendor.map((vendor) => ({
+              value: vendor.name,
+              label: vendor.name,
+            })),
+          ]}
+          onChange={(value) => {
+            setFilterInputs({
+              ...filterInputs,
+              name: value,
+            });
+          }}
+          value={filterInputs.name || null}
+          size="large"
+          placeholder="Select a vendor"
+          className="w-full bg-transparent"
+        />
+        {isAdmin && (
           <AntSelect
-            showSearch
             options={[
-              { value: "All", label: "All" },
-              ...vendor.map((vendor) => ({
-                value: vendor.name,
-                label: vendor.name,
+              { value: null, label: "All" },
+              ...branchList?.map((branch: BranchInputs) => ({
+                value: branch.id,
+                label: branch.branchName,
               })),
             ]}
             onChange={(value) => {
-              setFilterInputs({
-                ...filterInputs,
-                name: value,
-              });
+              setSelectedIdBranch(value);
             }}
-            value={filterInputs.name || null}
+            value={selectedBranchId || null}
             size="large"
-            placeholder="Select a vendor"
-            className="w-[48%] bg-transparent"
+            placeholder="Select a Branch"
+            className="w-full bg-transparent"
           />
-          {isAdmin && (
-            <AntSelect
-              options={[
-                { value: null, label: "All" },
-                ...branchList?.map((branch: BranchInputs) => ({
-                  value: branch.id,
-                  label: branch.branchName,
-                })),
-              ]}
-              onChange={(value) => {
-                setSelectedIdBranch(value);
-              }}
-              value={selectedBranchId || null}
-              size="large"
-              placeholder="Select a Branch"
-              className="w-[30%] bg-transparent"
-            />
-          )}
-          <AntSelect
-            showSearch
-            options={[
-              { label: "All", value: "All" },
-              { label: "Adance Paid", value: "Adance Paid" },
-              { label: "Advance Pending", value: "Advance Pending" },
-              { label: "Balance Pending", value: "Balance Pending" },
-              { label: "Balance Cleared", value: "Cleared" },
-            ]}
-            onChange={(value) => {
-              onCategoryFilterHandler(value);
-            }}
-            size="large"
-            placeholder="Select a category"
-            className="w-[49%] bg-transparent"
-          />
-        </div>
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2">
-            <p>From:</p>
-            <div className="rounded-md bg-blue-50 p-1 pr-3">
-              <input
-                type="date"
-                className="ml-2 w-full bg-transparent outline-none"
-                onChange={(e) => {
-                  setFilterInputs({
-                    ...filterInputs,
-                    from: e.target.value,
-                  });
-                }}
-                value={filterInputs.from}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <p>To:</p>
-            <div className="rounded-md bg-blue-50 p-1 pr-3">
-              <input
-                type="date"
-                className="ml-2 w-full bg-transparent outline-none"
-                onChange={(e) => {
-                  setFilterInputs({
-                    ...filterInputs,
-                    to: e.target.value,
-                  });
-                }}
-                value={filterInputs.to}
-              />
-            </div>
-          </div>
-          <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
-            {filterLoading ? "Loading..." : "Filter"}
-          </Button>
-          <Button
-            variant={"outline"}
-            className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
-            disabled={filterLoading}
-            onClick={() => [
-              setFMStatement([]),
-              setPendingLRs([]),
-              setFilteredFMStatement([]),
-            ]}
-          >
-            Reset
-          </Button>
-          <Button className="w-[20%] rounded-md" onClick={exportFMExcelHandler}>
-            Download
-          </Button>
-        </div>
-      </section>
+        )}
+        <AntSelect
+          showSearch
+          options={[
+            { label: "All", value: "All" },
+            { label: "Adance Paid", value: "Adance Paid" },
+            { label: "Advance Pending", value: "Advance Pending" },
+            { label: "Balance Pending", value: "Balance Pending" },
+            { label: "Balance Cleared", value: "Cleared" },
+          ]}
+          onChange={(value) => {
+            onCategoryFilterHandler(value);
+          }}
+          size="large"
+          placeholder="Select a category"
+          className="w-full bg-transparent"
+        />
+        <ReportDateField
+          label="Date From"
+          value={filterInputs.from}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, from: value })
+          }
+        />
+        <ReportDateField
+          label="Date To"
+          value={filterInputs.to}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, to: value })
+          }
+        />
+      </ReportFiltersCard>
 
-      <section className="flex h-[66vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
-        {pendingLRs.length > 0 && (
-          <p className="font-medium">
-            {pendingLRs.length} LRs pending to create POD
-          </p>
-        )}
-        {FilteredFMStatement.length !== 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th className="text-start font-[500] text-slate-500">FM#</th>
-                <th className="font-[500] text-slate-500">Vendor Name</th>
-                <th className="font-[500] text-slate-500">Date</th>
-                <th className="font-[500] text-slate-500">Hire Value</th>
-                <th className="font-[500] text-slate-500">Advance Paid</th>
-                <th className="font-[500] text-slate-500">Advance Paid Date</th>
-                <th className="font-[500] text-slate-500">Balance</th>
-                <th className="font-[500] text-slate-500">Balance Paid Date</th>
-                <th className="font-[500] text-slate-500">Pending Advance</th>
-                <th className="font-[500] text-slate-500">Pending Balance</th>
-                <th className="text-end font-[500] text-slate-500">TDS</th>
+      {pendingLRs.length > 0 && (
+        <p className="text-sm font-medium text-slate-600">
+          {pendingLRs.length} LRs pending to create POD
+        </p>
+      )}
+
+      <ReportStatsRow
+        stats={[
+          { label: "Total Records", value: FilteredFMStatement.length },
+          {
+            label: "Total Hire Value",
+            value: formatter.format(
+              FilteredFMStatement.reduce(
+                (acc, FM) => acc + parseFloat(FM.hire || "0"),
+                0,
+              ),
+            ),
+          },
+          {
+            label: "Total Pending Balance",
+            value: formatter.format(
+              FilteredFMStatement.reduce(
+                (acc, FM) => acc + parseFloat(FM.outStandingBalance || "0"),
+                0,
+              ),
+            ),
+          },
+        ]}
+      />
+
+      <ReportExportRow onExport={exportFMExcelHandler} />
+
+      <ReportPreviewCard isEmpty={FilteredFMStatement.length === 0}>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className={`${reportTableHeadClass} pl-0`}>FM#</th>
+              <th className={reportTableHeadClass}>Vendor Name</th>
+              <th className={reportTableHeadClass}>Date</th>
+              <th className={reportTableHeadClass}>Hire Value</th>
+              <th className={reportTableHeadClass}>Advance Paid</th>
+              <th className={reportTableHeadClass}>Advance Paid Date</th>
+              <th className={reportTableHeadClass}>Balance</th>
+              <th className={reportTableHeadClass}>Balance Paid Date</th>
+              <th className={reportTableHeadClass}>Pending Advance</th>
+              <th className={reportTableHeadClass}>Pending Balance</th>
+              <th className={`${reportTableHeadClass} text-right`}>TDS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {FilteredFMStatement.map((data) => (
+              <tr key={data.fmNumber} className={reportTableRowClass}>
+                <td className="py-2.5">{data.fmNumber}</td>
+                <td className="py-2.5">{data.vendorName}</td>
+                <td className="py-2.5">
+                  {new Date(data.date).toLocaleDateString()}
+                </td>
+                <td className="py-2.5">INR {data.hire}</td>
+                <td className="py-2.5">
+                  INR {parseFloat(data.advance) - data.outStandingAdvance}
+                </td>
+                <td className="py-2.5">{getAdvancePaidDate(data)}</td>
+                <td className="py-2.5">INR {data.netBalance}</td>
+                <td className="py-2.5">{getBalancePaidDate(data)}</td>
+                <td className="py-2.5">INR {data.outStandingAdvance}</td>
+                <td className="py-2.5">INR {data.outStandingBalance}</td>
+                <td className="py-2.5 text-right">INR {data.tds}</td>
               </tr>
-            </thead>
-            <tbody>
-              {FilteredFMStatement.map((data) => (
-                <tr key={data.fmNumber}>
-                  <td className="py-2">{data.fmNumber}</td>
-                  <td className="py-2 text-center">{data.vendorName}</td>
-                  <td className="py-2 text-center">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 text-center">INR {data.hire}</td>
-                  <td className="py-2 text-center">
-                    INR {parseFloat(data.advance) - data.outStandingAdvance}
-                  </td>
-                  <td className="py-2 text-center">
-                    {getAdvancePaidDate(data)}
-                  </td>
-                  <td className="py-2 text-center">INR {data.netBalance}</td>
-                  <td className="py-2 text-center">
-                    {getBalancePaidDate(data)}
-                  </td>
-                  <td className="py-2 text-center">
-                    INR {data.outStandingAdvance}
-                  </td>
-                  <td className="py-2 text-center">
-                    INR {data.outStandingBalance}
-                  </td>
-                  <td className="py-2 text-end">INR {data.tds}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {FilteredFMStatement.length == 0 && (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-5">
-            <BiFilterAlt size={60} />
-            <p className="text-lg font-medium">
-              Please apply filters to view the data
-            </p>
-          </div>
-        )}
-      </section>
-    </>
+            ))}
+          </tbody>
+        </table>
+      </ReportPreviewCard>
+    </div>
   );
 }

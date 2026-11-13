@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { BiFilterAlt } from "react-icons/bi";
 import { BranchInputs, ExpensesInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 import {
@@ -11,6 +9,15 @@ import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
 import { toast } from "react-toastify";
 import { Select as AntSelect } from "antd";
+import {
+  ReportFiltersCard,
+  ReportStatsRow,
+  ReportExportRow,
+  ReportPreviewCard,
+  ReportDateField,
+  reportTableHeadClass,
+  reportTableRowClass,
+} from "./ReportUI";
 
 export default function ExpenseReport({
   branchName,
@@ -139,8 +146,12 @@ export default function ExpenseReport({
   };
 
   return (
-    <>
-      <section className="flex w-full items-center justify-between gap-3">
+    <div className="flex flex-col gap-5">
+      <ReportFiltersCard
+        onGenerate={onFilterHandler}
+        onReset={() => setExpenseData([])}
+        loading={filterLoading}
+      >
         {isAdmin && (
           <AntSelect
             options={[
@@ -156,102 +167,76 @@ export default function ExpenseReport({
             value={selectedBranchId || null}
             size="large"
             placeholder="Select a Branch"
-            className="w-[30%] bg-transparent"
+            className="w-full bg-transparent"
           />
         )}
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
-        </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
-          </div>
-        </div>
-        <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => [setExpenseData([])]}
-        >
-          Reset
-        </Button>
-        <Button className="w-[20%] rounded-md" onClick={exportBillExcelHandler}>
-          Download
-        </Button>
-      </section>
-      <section className="flex h-[70vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
-        {expenseData.length !== 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th className="text-start font-[500] text-slate-500">
-                  Expenses ID
-                </th>
-                <th className="font-[500] text-slate-500">Title</th>
-                <th className="font-[500] text-slate-500">Date</th>
-                <th className="font-[500] text-slate-500">Category</th>
-                <th className="font-[500] text-slate-500">Branch</th>
-                <th className="font-[500] text-slate-500">Amount</th>
+        <ReportDateField
+          label="Date From"
+          value={filterInputs.from}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, from: value })
+          }
+        />
+        <ReportDateField
+          label="Date To"
+          value={filterInputs.to}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, to: value })
+          }
+        />
+      </ReportFiltersCard>
+
+      <ReportStatsRow
+        stats={[
+          { label: "Total Records", value: expenseData.length },
+          {
+            label: "Total Value",
+            value: formatter.format(
+              expenseData.reduce(
+                (acc, expense) => acc + parseFloat(expense.amount),
+                0,
+              ),
+            ),
+          },
+        ]}
+      />
+
+      <ReportExportRow onExport={exportBillExcelHandler} />
+
+      <ReportPreviewCard isEmpty={expenseData.length === 0}>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className={`${reportTableHeadClass} pl-0`}>Expenses ID</th>
+              <th className={reportTableHeadClass}>Title</th>
+              <th className={reportTableHeadClass}>Date</th>
+              <th className={reportTableHeadClass}>Category</th>
+              <th className={reportTableHeadClass}>Branch</th>
+              <th className={`${reportTableHeadClass} text-right`}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {expenseData.map((data) => (
+              <tr key={data.id} className={reportTableRowClass}>
+                <td className="py-2.5">{data.expenseId}</td>
+                <td className="py-2.5">{data.title}</td>
+                <td className="py-2.5">
+                  {new Date(data.date).toLocaleDateString()}
+                </td>
+                <td className="py-2.5">{data.category}</td>
+                <td className="py-2.5">
+                  {data.Branches
+                    ? data.Branches.branchName
+                    : data.Admin.branchName}
+                </td>
+                <td className="py-2.5 text-right">
+                  {formatter.format(parseFloat(data.amount))}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {expenseData.map((data) => (
-                <tr key={data.id}>
-                  <td className="py-2">{data.expenseId}</td>
-                  <td className="py-2 text-center">{data.title}</td>
-                  <td className="py-2 text-center">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 text-center">{data.category}</td>
-                  <td className="py-2 text-center">
-                    {data.Branches
-                      ? data.Branches.branchName
-                      : data.Admin.branchName}
-                  </td>
-                  <td className="py-2 text-center">
-                    {formatter.format(parseFloat(data.amount))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {expenseData.length == 0 && (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-5">
-            <BiFilterAlt size={60} />
-            <p className="text-lg font-medium">
-              Please apply filters to view the data
-            </p>
-          </div>
-        )}
-      </section>
-    </>
+            ))}
+          </tbody>
+        </table>
+      </ReportPreviewCard>
+    </div>
   );
 }

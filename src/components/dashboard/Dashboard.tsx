@@ -1,8 +1,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -11,17 +9,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { DatePicker, Skeleton } from "antd";
-const { RangePicker } = DatePicker;
-import {
-  filterBillBymonthApi,
-  filterBillBymonthForBranchApi,
-} from "@/api/billing";
-import {
-  filterFMBymonthApi,
-  filterFMBymonthForBranchApi,
-} from "@/api/shipment";
-import { filterBranchBymonthApi } from "@/api/branch";
+import { Skeleton } from "antd";
 import { getDashboardDataApi, getDashboardDataForBranchApi } from "@/api/admin";
 import { billInputs, BranchInputs, ClientInputs, FMInputs } from "@/types";
 import { formatter } from "@/lib/utils";
@@ -65,13 +53,83 @@ export interface DashboardData {
   branchData: BranchInputs[];
 }
 
-export default function Dashboard({ data }: { data?: DashboardData }) {
+const isWithinRange = (
+  date: string | undefined | null,
+  start: Date,
+  end: Date,
+) => {
+  if (!date) return false;
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return false;
+  return d >= start && d <= end;
+};
+
+// Some nested bill/FM records (as grouped under a branch) don't always carry
+// a populated `date` the way the top-level lists do, so fall back to
+// `createdAt` rather than silently dropping the record from every filtered range.
+const recordDate = (record: { date?: string; createdAt?: string }) =>
+  record.date || record.createdAt;
+
+const filterDashboardDataByRange = (
+  source: DashboardData | undefined,
+  range: [string, string] | null,
+): DashboardData | undefined => {
+  if (!source || !range) return source;
+
+  const start = new Date(range[0]);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(range[1]);
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    ...source,
+    billData: source.billData.filter((bill) =>
+      isWithinRange(recordDate(bill), start, end),
+    ),
+    FMData: source.FMData.filter((fm) =>
+      isWithinRange(recordDate(fm), start, end),
+    ),
+    clientData: source.clientData.map((client) => ({
+      ...client,
+      bill: (client.bill || []).filter((bill) =>
+        isWithinRange(recordDate(bill), start, end),
+      ),
+    })),
+    branchData: source.branchData.map((branch) => ({
+      ...branch,
+      bill: (branch.bill || []).filter((bill) =>
+        isWithinRange(recordDate(bill), start, end),
+      ),
+      FM: (branch.FM || []).filter((fm) =>
+        isWithinRange(recordDate(fm), start, end),
+      ),
+    })),
+    overAllBranchData: source.overAllBranchData.map((branch) => ({
+      ...branch,
+      bill: (branch.bill || []).filter((bill) =>
+        isWithinRange(recordDate(bill), start, end),
+      ),
+      FM: (branch.FM || []).filter((fm) =>
+        isWithinRange(recordDate(fm), start, end),
+      ),
+    })),
+  };
+};
+
+export default function Dashboard({
+  data,
+  dateRange = null,
+}: {
+  data?: DashboardData;
+  dateRange?: [string, string] | null;
+}) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [branchId, setBranchId] = useState("");
-  const [dashboardData, setDashboardData] = useState<DashboardData | undefined>(
+  const [sourceData, setSourceData] = useState<DashboardData | undefined>(
     data,
   );
-  const [filtered, setFiltered] = useState(false);
+
+  const dashboardData = filterDashboardDataByRange(sourceData, dateRange);
 
   const totalInvoice = dashboardData?.billData
     .reduce((acc, bill) => acc + bill.subTotal, 0)
@@ -191,48 +249,10 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
         totalPayment: parseFloat(item.totalPayment.toFixed(2)),
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
-    const last6Months = filtered ? result : result.slice(-6);
+    const last6Months = dateRange ? result : result.slice(-6);
     return last6Months;
   };
 
-
-  const outstandingGraphData = (): GraphPoint[] => {
-    if (!dashboardData) return [];
-    const { billData } = dashboardData;
-    const monthlyData: Record<
-      MonthKey,
-      { date: string; totalOutStanding: number; }
-    > = {};
-
-    const getMonthKey = (date: string) => {
-      const [year, month] = date?.slice(0, 10).split("-");
-      return `${year}-${month}`;
-    };
-
-    billData.forEach((bill) => {
-      const date = bill.date.slice(0, 10);
-      const key = getMonthKey(date);
-
-      if (!monthlyData[key]) {
-        monthlyData[key] = {
-          date: `${key}`,
-          totalOutStanding: 0,
-        };
-      }
-      monthlyData[key].totalOutStanding += bill.pendingAmount;
-    });
-
-
-
-    const result: GraphPoint[] = Object.values(monthlyData)
-      .map((item) => ({
-        date: item.date,
-        totalOutStanding: parseFloat(item.totalOutStanding.toFixed(2)),
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    return result;
-  };
 
 
 
@@ -305,89 +325,11 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
     return chartData;
   };
 
-  const billFilterHandler = async (dateStrings: [string, string] | null) => {
-    const [startMonth, endMonth] = dateStrings || [];
-    if (!startMonth || !endMonth) return;
-    const startDate = new Date(`${startMonth}-01`);
-    const endDate = new Date(
-      new Date(`${endMonth}-01`).getFullYear(),
-      new Date(`${endMonth}-01`).getMonth() + 1,
-      0,
-    );
-    let billResponse;
-    let fmResponse;
-    if (isAdmin) {
-      billResponse = await filterBillBymonthApi({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-      fmResponse = await filterFMBymonthApi({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-    } else if (!isAdmin && branchId) {
-      billResponse = await filterBillBymonthForBranchApi(
-        {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        },
-        branchId,
-      );
-      fmResponse = await filterFMBymonthForBranchApi(
-        {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        },
-        branchId,
-      );
-    }
-
-    if (billResponse?.status === 200 && fmResponse?.status === 200) {
-      setFiltered(true);
-      setDashboardData((prevState) => {
-        if (!prevState) return undefined;
-        return {
-          ...prevState,
-          billData: billResponse.data.data,
-          FMData: fmResponse.data.data,
-        };
-      });
-    }
-  };
-
-  const branchFilterHandler = async (dateStrings: [string, string] | null) => {
-    const [startMonth, endMonth] = dateStrings || [];
-    if (!startMonth || !endMonth) return;
-    const startDate = new Date(`${startMonth}-01`);
-    const endDate = new Date(
-      new Date(`${endMonth}-01`).getFullYear(),
-      new Date(`${endMonth}-01`).getMonth() + 1,
-      0,
-    );
-    const branchResponse = await filterBranchBymonthApi({
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    });
-    if (branchResponse?.status === 200) {
-      const branch = branchResponse.data.data.filter(
-        (item: any) => item !== null,
-      );
-
-      setDashboardData((prevState) => {
-        if (!prevState) return undefined;
-        return {
-          ...prevState,
-          branchData: branch,
-        };
-      });
-    }
-  };
-
   async function fetchDashboardData() {
     const time1 = new Date().getTime();
     const response = await getDashboardDataApi();
     if (response?.status === 200) {
-      setDashboardData(response.data.data);
+      setSourceData(response.data.data);
     }
     const time2 = new Date().getTime();
     console.log(
@@ -398,7 +340,7 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
   async function fetchDashboardDataForBranch(branchId: string) {
     const response = await getDashboardDataForBranchApi(branchId);
     if (response?.status === 200) {
-      setDashboardData(response.data.data);
+      setSourceData(response.data.data);
     }
   }
   const barData = dashboardData?.branchData
@@ -426,153 +368,120 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex  justify-between">
-        <div className="flex w-[32%] rounded-xl items-center gap-5 justify-center bg-white p-3">
-          <div className="font-medium">
-            <p className="text-xl">
-              {totalInvoice ? formatter.format(parseInt(totalInvoice || "0"))
-                : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}
-            </p>
-            <p
-              className={`${getMonthlyRevenueChange() > 0 ? "text-[#05CD99]" : "text-red-500"} text-xs`}
-            >
-              {dashboardData ?
-                getMonthlyRevenueChange() :
-                <Skeleton.Button active rootClassName="w-full h-full" shape="square" />
-              }%{" "}
-              <span className="text-muted  font-[400]">
-                since last month
-              </span>
-            </p>
-            <p className="font-medium text-xs">Total Invoicing value</p>
-          </div>
-          <div className="w-full h-[10vh]  ">
-            <ResponsiveContainer width="100%" height="100%" >
-              <LineChart data={formatGraphData()}>
-                <XAxis hide dataKey="date" axisLine={false}
-                  tickFormatter={(value) => {
-                    const [year, month] = value.split("-");
-                    const date = new Date(Number(year), Number(month) - 1);
-                    return date.toLocaleString("en-US", {
-                      month: "short",
-                    }) + "-" + year.slice(2);
-                  }}
-                />
-                <YAxis hide />
-                <Tooltip position={{ y: -90 }} />
-                <Line
-                  type="monotone"
-                  dataKey="totalBill"
-                  name="Bill Total"
-                  stroke="#008CFF8A"
-                  strokeWidth={3}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+    <div className="flex flex-col gap-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-6 lg:grid-cols-12">
+        <div className="col-span-2 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:col-span-3 lg:col-span-3">
+          <p className="text-2xl font-semibold text-slate-900">
+            {totalInvoice
+              ? formatter.format(parseInt(totalInvoice || "0"))
+              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+          </p>
+          <p
+            className={`mt-1 text-xs font-medium ${getMonthlyRevenueChange() > 0 ? "text-emerald-500" : "text-red-500"
+              }`}
+          >
+            {dashboardData ? (
+              `${getMonthlyRevenueChange() > 0 ? "+" : ""}${getMonthlyRevenueChange()}%`
+            ) : (
+              <Skeleton.Button active rootClassName="w-14 h-4" shape="square" />
+            )}{" "}
+            <span className="font-normal text-slate-400">vs Last month</span>
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            Total Invoicing value
+          </p>
         </div>
-        <div className="flex w-[32%] rounded-xl items-center gap-5 justify-center bg-white p-3">
-          <div className="font-medium">
-            <p className="text-xl">
-              {totalOutStanding ? formatter.format(totalOutStanding)
-                : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}
-            </p>
-            <p className="font-medium text-xs">Total Outstanding value</p>
-          </div>
-          <div className="w-full h-[10vh]  ">
-            <ResponsiveContainer width="100%" height="100%" >
-              <LineChart data={outstandingGraphData()}>
-                <XAxis hide dataKey="date" axisLine={false}
-                  tickFormatter={(value) => {
-                    const [year, month] = value.split("-");
-                    const date = new Date(Number(year), Number(month) - 1);
-                    return date.toLocaleString("en-US", {
-                      month: "short",
-                    }) + "-" + year.slice(2);
-                  }}
-                />
-                <YAxis hide />
-                <Tooltip position={{ y: -90 }} />
-                <Line
-                  type="monotone"
-                  dataKey="totalOutStanding"
-                  name="Total Outstanding"
-                  stroke="#FF9090AD"
-                  strokeWidth={3}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+
+        <div className="col-span-2 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:col-span-3 lg:col-span-3">
+          <p className="text-2xl font-semibold text-slate-900">
+            {totalOutStanding
+              ? formatter.format(totalOutStanding)
+              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            Total Outstanding value
+          </p>
         </div>
+
         {isAdmin && (
-          <div className="flex w-[10%] rounded-xl bg-white p-5 justify-center items-center">
-            <div className="font-medium">
-              <p className="text-2xl text-center">{dashboardData ? dashboardData.branchData.length : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}</p>
-              <p className="text-black text-sm">Branches</p>
-            </div>
+          <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
+            <p className="text-xl font-semibold text-slate-900">
+              {dashboardData ? (
+                dashboardData.branchData.length
+              ) : (
+                <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
+              )}
+            </p>
+            <p className="mt-1 text-xs font-medium text-slate-500">Branches</p>
           </div>
         )}
-        <div className="flex w-[10%] rounded-xl bg-white p-5 justify-center items-center">
-          <div className="font-medium">
-            <p className="text-2xl text-center">{dashboardData ? dashboardData.clientData.length : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}</p>
-            <p className="text-black text-sm">Total Clients</p>
-          </div>
+
+        <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
+          <p className="text-xl font-semibold text-slate-900">
+            {dashboardData ? (
+              dashboardData.clientData.length
+            ) : (
+              <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
+            )}
+          </p>
+          <p className="mt-1 text-xs font-medium text-slate-500">Total Clients</p>
         </div>
-        <div className="flex w-[10%] rounded-xl bg-white p-5 justify-center items-center">
-            
-            <div className="font-medium">
-              <p className="text-2xl text-center">{dashboardData ? dashboardData.vendorCount : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}</p>
-              <p className="text-black text-sm">Vendors</p>
-          </div>
+
+        <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
+          <p className="text-xl font-semibold text-slate-900">
+            {dashboardData ? (
+              dashboardData.vendorCount
+            ) : (
+              <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
+            )}
+          </p>
+          <p className="mt-1 text-xs font-medium text-slate-500">Vendors</p>
         </div>
       </div>
-      <section className="flex justify-between gap-5 max-h-[38vh] w-full">
-        <div className={`flex rounded-xl bg-white p-5 gap-10`}>
-          <div className="flex w-[15%] flex-col justify-between gap-2 py-5 ">
-            <div className="flex flex-col gap-3">
 
-              <div className="">
-                <p>Total Bill Amount</p>
-                <p className="text-xl font-medium">
-                  {totalInvoice ? formatter.format(parseInt(totalInvoice || "0"))
-                    : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />}
+      {/* Revenue + Branch performance */}
+      <section className={`grid gap-5 ${isAdmin ? "lg:grid-cols-[1fr_380px]" : ""}`}>
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex gap-10">
+              <div>
+                <p className="text-sm text-slate-500">Total Bill Amount</p>
+                <p className="text-xl font-semibold text-slate-900">
+                  {totalInvoice
+                    ? formatter.format(parseInt(totalInvoice || "0"))
+                    : <Skeleton.Button active rootClassName="w-24 h-6" shape="square" />}
                 </p>
               </div>
               <div>
-                <p className="">Total Recieved Amount</p>
-                <p className="text-xl font-medium">{dashboardData ? getRecordPayments()
-                  : <Skeleton.Button active rootClassName="w-full h-full" shape="square" />
-                }</p>
+                <p className="text-sm text-slate-500">Total Recieved Amount</p>
+                <p className="text-xl font-semibold text-slate-900">
+                  {dashboardData ? (
+                    getRecordPayments()
+                  ) : (
+                    <Skeleton.Button active rootClassName="w-24 h-6" shape="square" />
+                  )}
+                </p>
               </div>
             </div>
-            <div className="text-sm">
-              <div className="flex items-center gap-2">
-                <div className="size-3 rounded-full bg-[#008EFF]"></div>
-                <p className="font-medium text-[#008EFF]">Invoice Amount</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="size-3 rounded-full bg-[#FF9090]"></div>
-                <p className="font-medium text-[#FF9090]">Freight Amount</p>
-              </div>
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-sm font-semibold text-slate-700">
+                Invoice vs Freight Amount
+              </p>
+              <p className="text-xs text-slate-400">
+                {dateRange ? "Filtered range" : "Monthly comparison"}
+              </p>
             </div>
           </div>
-          <div className="w-full flex flex-col justify-end items-end  h-fit">
-            <RangePicker
-              className="w-fit"
-              picker="month"
-              onChange={(_, dateStrings) => {
-                if (!dateStrings || dateStrings.length !== 2) {
-                  billFilterHandler(null);
-                } else {
-                  billFilterHandler(dateStrings as [string, string]);
-                }
-              }}
-            />
 
+          <div className="mt-4">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={formatGraphData()}>
-                <XAxis dataKey="date" axisLine={false}
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
                   tickFormatter={(value) => {
                     const [year, month] = value.split("-");
                     const date = new Date(Number(year), Number(month) - 1);
@@ -585,158 +494,177 @@ export default function Dashboard({ data }: { data?: DashboardData }) {
                 <Tooltip />
                 <Bar
                   dataKey="totalBill"
-                  name="Bill Total"
-                  fill="#008EFF"
-                  barSize={30}
+                  name="Invoice Amount"
+                  fill="#2563eb"
+                  barSize={24}
                   radius={[6, 6, 0, 0]}
                 />
                 <Bar
                   dataKey="totalFM"
-                  name="FM Total"
-                  fill="#FF9090"
-                  barSize={30}
+                  name="Freight Amount"
+                  fill="#93c5fd"
+                  barSize={24}
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
-        {isAdmin && (
-          <div className="flex w-[30%] flex-col  overflow-y-auto rounded-xl bg-white p-5 gap-7"> 
-              <div className="flex ">
-                <p className="font-medium w-full text-sm">Branch Performance</p>
-                <RangePicker
-                  picker="month"
-                  onChange={(_, dateStrings) => {
-                    if (!dateStrings || dateStrings.length !== 2) {
-                      branchFilterHandler(null);
-                    } else {
-                      branchFilterHandler(dateStrings as [string, string]);
-                    }
-                  }}
-                />
-              </div>
-              <div className="flex flex-wrap items-center justify-start gap-2 ">
-                <ResponsiveContainer width={"90%"} height={200}>
-                  <BarChart
-                    data={barData}
-                    layout="vertical"
-                    margin={{ top: 10, right: 100, left: 20, bottom: 10 }}
-
-                  >
-                    <XAxis
-                      type="number"
-                      domain={[0, "dataMax"]}
-                      axisLine={false}
-                      tickLine={false}
-                      hide
-                    />
-
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      width={80}
-                    />
-
-                    <Tooltip formatter={(v) => v.toLocaleString()} />
-
-                    <Bar
-                      dataKey="value"
-                      radius={[0, 6, 6, 0]}
-                      minPointSize={0}
-                      label={{
-                        position: "right",
-                        formatter: (value: number) => value.toLocaleString(),
-                      }}
-                    >
-                      {barData.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-
-                </ResponsiveContainer>
+          <div className="mt-2 flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="size-3 rounded-full bg-[#2563eb]"></div>
+              <p className="font-medium text-[#2563eb]">Invoice Amount</p>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="size-3 rounded-full bg-[#93c5fd]"></div>
+              <p className="font-medium text-[#60a5fa]">Freight Amount</p>
+            </div>
+          </div>
+        </div>
+
+        {isAdmin && (
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">
+                Branch Performance
+              </p>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={barData}
+                layout="vertical"
+                margin={{ top: 10, right: 60, left: 10, bottom: 10 }}
+              >
+                <XAxis
+                  type="number"
+                  domain={[0, "dataMax"]}
+                  axisLine={false}
+                  tickLine={false}
+                  hide
+                />
+
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  width={80}
+                  tick={{ fontSize: 12 }}
+                />
+
+                <Tooltip formatter={(v) => v.toLocaleString()} />
+
+                <Bar
+                  dataKey="value"
+                  radius={[0, 6, 6, 0]}
+                  minPointSize={0}
+                  label={{
+                    position: "right",
+                    formatter: (value: number) => value.toLocaleString(),
+                  }}
+                >
+                  {barData.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </section>
-      <section className="flex justify-center gap-5 max-h-[30vh]">
-        <div
-          className={`flex  w-full flex-col gap-3  rounded-xl bg-white p-5`}
-        >
-          <p className="text-xl font-medium">Top Customers</p>
-          <div className="overflow-y-auto pr-2">
-            {
-              dashboardData ?
-                <table className="w-full scroll-auto">
+
+      {/* Tables */}
+      <section className={`grid gap-5 ${isAdmin ? "lg:grid-cols-2" : ""}`}>
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <p className="mb-3 text-base font-semibold text-slate-900">
+            Top Customers
+          </p>
+          <div className="max-h-[320px] overflow-y-auto pr-1">
+            {dashboardData ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 text-xs text-slate-400">
+                    <th className="pb-2 text-left font-medium">Name</th>
+                    <th className="pb-2 text-right font-medium">
+                      Total Bill amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboardData?.clientData &&
+                    getClientTotalBill(dashboardData?.clientData).map(
+                      (client, i) => (
+                        <tr
+                          key={i}
+                          className="border-b border-slate-50 last:border-0 hover:bg-slate-50"
+                        >
+                          <td className="py-2.5 text-sm text-slate-700">
+                            {client.name}
+                          </td>
+                          <td className="py-2.5 text-right text-sm font-medium text-slate-900">
+                            {formatter.format(client.totalBill)}
+                          </td>
+                        </tr>
+                      ),
+                    )}
+                </tbody>
+              </table>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Skeleton active rootClassName="h-full w-full" paragraph={{ rows: 10 }} />
+              </div>
+            )}
+          </div>
+        </div>
+        {isAdmin && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <p className="mb-3 text-base font-semibold text-slate-900">
+              Top Branches
+            </p>
+            {dashboardData ? (
+              <div className="max-h-[320px] overflow-y-auto pr-1">
+                <table className="w-full">
                   <thead>
-                    <tr className="text-sm text-slate-500">
-                      <th className="text-start font-[500]">Name</th>
-                      <th className="text-end font-[500]">Total Bill amount</th>
+                    <tr className="border-b border-slate-100 text-xs text-slate-400">
+                      <th className="pb-2 text-left font-medium">Name</th>
+                      <th className="pb-2 text-right font-medium">
+                        Total Invoice Amt.
+                      </th>
+                      <th className="pb-2 text-right font-medium">
+                        Total Freight Amt.
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData?.clientData &&
-                      getClientTotalBill(dashboardData?.clientData).map(
-                        (client, i) => (
-                          <tr key={i}>
-                            <td className="py-2">{client.name}</td>
-                            <td className="py-2 text-end">
-                              {formatter.format(client.totalBill)}
+                    {dashboardData?.overAllBranchData &&
+                      getTop10Branches(dashboardData?.overAllBranchData).map(
+                        (client) => (
+                          <tr
+                            key={client.name}
+                            className="border-b border-slate-50 last:border-0 hover:bg-slate-50"
+                          >
+                            <td className="py-2.5 text-sm text-slate-700">
+                              {client.name}
+                            </td>
+                            <td className="py-2.5 text-right text-sm font-medium text-slate-900">
+                              {formatter.format(client.totalInvoice)}
+                            </td>
+                            <td className="py-2.5 text-right text-sm font-medium text-slate-900">
+                              {formatter.format(client.totalFreight)}
                             </td>
                           </tr>
                         ),
                       )}
                   </tbody>
                 </table>
-                : <div className="flex w-full h-full items-center justify-center">
-                  <Skeleton active rootClassName="w-full h-full" paragraph={{ rows: 10 }} />
-                </div>
-            }
-          </div>
-        </div>
-        {isAdmin && (
-          <div className="flex  w-full flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5">
-            <p className="text-xl font-medium">Top Branches</p>
-            {
-
-              dashboardData ?
-                <div className="w-full overflow-y-scroll pr-2">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-sm text-slate-500">
-                        <th className="text-start font-[500]">Name</th>
-                        <th className="text-end font-[500]">Total Invoice Amt.</th>
-                        <th className="text-end font-[500]">Total Freight Amt.</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboardData?.overAllBranchData &&
-                        getTop10Branches(dashboardData?.overAllBranchData).map(
-                          (client) => (
-                            <tr key={client.name}>
-                              <td className="py-2">{client.name}</td>
-                              <td className="py-2 text-end">
-                                {formatter.format(client.totalInvoice)}
-                              </td>
-                              <td className="py-2 text-end">
-                                {formatter.format(client.totalFreight)}
-                              </td>
-                            </tr>
-                          ),
-                        )}
-                    </tbody>
-                  </table>
-                </div> :
-                <div className="flex w-full h-full items-center justify-center overflow-y-scroll">
-                  <Skeleton active rootClassName="w-full h-full" paragraph={{ rows: 10 }} />
-                </div>
-            }
+              </div>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center overflow-y-auto">
+                <Skeleton active rootClassName="h-full w-full" paragraph={{ rows: 10 }} />
+              </div>
+            )}
           </div>
         )}
       </section>

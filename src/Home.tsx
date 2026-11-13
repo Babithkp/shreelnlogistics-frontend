@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 
 import { getAllVehiclesApi, getAllVendorsApi } from "@/api/partner";
 import { toast } from "react-toastify";
@@ -85,6 +86,23 @@ export default function Home() {
   const [settings, setSettings] = useState<Setting>();
   const [billData, setBillData] = useState<billInputs[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData>();
+  const [dashboardDateRange, setDashboardDateRange] = useState<
+    [string, string] | null
+  >(() => {
+    const now = new Date();
+    const fiscalStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    const start = new Date(fiscalStartYear, 3, 1, 0, 0, 0, 0);
+    const end = new Date(fiscalStartYear + 1, 2, 31, 23, 59, 59, 999);
+    return [start.toISOString(), end.toISOString()];
+  });
+  const [lrSearchValue, setLrSearchValue] = useState("");
+  const lrSearchSubmitRef = useRef<() => void>(() => {});
+  const [fmSearchValue, setFmSearchValue] = useState("");
+  const fmSearchSubmitRef = useRef<() => void>(() => {});
+  const [billSearchValue, setBillSearchValue] = useState("");
+  const billSearchSubmitRef = useRef<() => void>(() => {});
+  const [podSearchValue, setPodSearchValue] = useState("");
+  const podSearchSubmitRef = useRef<() => void>(() => {});
   const [LRData, setLRData] = useState<{
     data: LrInputs[];
     count: number;
@@ -99,10 +117,20 @@ export default function Home() {
     data: [],
     count: 0,
   });
-  const [branch, setBranch] = useState({
-    id: "",
-    branchName: "",
-    isAdmin: false,
+  // Read the saved login synchronously so the loader shows the right
+  // name on its very first frame instead of switching a moment later.
+  const [branch, setBranch] = useState(() => {
+    try {
+      const isAdmin = localStorage.getItem("isAdmin") === "true";
+      const saved = JSON.parse(localStorage.getItem("branchDetails") || "{}");
+      return {
+        id: isAdmin ? "" : saved.id || "",
+        branchName: saved.branchName || "",
+        isAdmin,
+      };
+    } catch {
+      return { id: "", branchName: "", isAdmin: false };
+    }
   });
   const [expenseData, setExpenseData] = useState<{
     data: ExpensesInputs[];
@@ -121,9 +149,11 @@ export default function Home() {
   const [showUI, setShowUI] = useState(false);
 
   useEffect(() => {
+    // Keep the welcome screen up long enough to be seen, even when the
+    // dashboard data comes back quickly.
     const timer = setTimeout(() => {
       setShowUI(true);
-    }, 500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -329,22 +359,59 @@ export default function Home() {
   }, []);
 
   if (!dashboardData || !showUI) {
-    return <Loader />;
+    return (
+      <Loader name={branch.isAdmin ? "Admin" : branch.branchName} />
+    );
   }
 
   return (
-    <main className="flex h-screen bg-[#F0F8FF]">
+    <motion.main
+      className="flex h-screen bg-[#F0F8FF]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <Navbar setSections={setSections} sections={sections} branch={branch} />
       <div className="flex h-full w-full flex-col overflow-y-auto p-5">
         <Header
           title={sections}
           setSections={setSections}
           onFresh={onRefresh}
+          dateRange={dashboardDateRange}
+          onDateRangeChange={setDashboardDateRange}
+          lrSearchValue={lrSearchValue}
+          onLrSearchChange={setLrSearchValue}
+          onLrSearchSubmit={() => lrSearchSubmitRef.current()}
+          fmSearchValue={fmSearchValue}
+          onFmSearchChange={setFmSearchValue}
+          onFmSearchSubmit={() => fmSearchSubmitRef.current()}
+          billSearchValue={billSearchValue}
+          onBillSearchChange={setBillSearchValue}
+          onBillSearchSubmit={() => billSearchSubmitRef.current()}
+          podSearchValue={podSearchValue}
+          onPodSearchChange={setPodSearchValue}
+          onPodSearchSubmit={() => podSearchSubmitRef.current()}
         />
-        {sections.dashboard && <Dashboard data={dashboardData} />}
+        {sections.dashboard && (
+          <Dashboard data={dashboardData} dateRange={dashboardDateRange} />
+        )}
         {sections.branch && <Branch />}
-        {sections.LR && <LRPage lrData={LRData} />}
-        {sections.FM && <FMPage FMData={FMData} vendors={vendors} onRefresh={onRefresh} />}
+        {sections.LR && (
+          <LRPage
+            lrData={LRData}
+            searchValue={lrSearchValue}
+            searchSubmitRef={lrSearchSubmitRef}
+          />
+        )}
+        {sections.FM && (
+          <FMPage
+            FMData={FMData}
+            vendors={vendors}
+            onRefresh={onRefresh}
+            searchValue={fmSearchValue}
+            searchSubmitRef={fmSearchSubmitRef}
+          />
+        )}
         {sections.client && <ClientManagement data={clients} />}
         {sections.vendor && (
           <VendorManagement vendorsData={vendors} vehiclesData={vehicles} onRefresh={onRefresh} />
@@ -356,10 +423,19 @@ export default function Home() {
             billData={billData}
             clients={clients}
             onRefresh={onRefresh}
+            searchValue={billSearchValue}
+            searchSubmitRef={billSearchSubmitRef}
           />
         )}
 
-        {sections.pod && <Pod data={pods} onRefresh={onRefresh} />}
+        {sections.pod && (
+          <Pod
+            data={pods}
+            onRefresh={onRefresh}
+            searchValue={podSearchValue}
+            searchSubmitRef={podSearchSubmitRef}
+          />
+        )}
         {sections.settings && <Settings data={settings} />}
         {sections.expenses && <Expenses expenseData={expenseData} />}
         {sections.outstanding && <OutStandingPage clients={clients} vendors={vendors} />}
@@ -367,6 +443,6 @@ export default function Home() {
         {sections.cashStatement && <CashStatement />} 
         {sections.reports && <ReportPage clients={clients} vendors={vendors} />}
       </div>
-    </main>
+    </motion.main>
   );
 }

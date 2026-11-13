@@ -25,41 +25,40 @@ export default function RecentTransaction() {
   }, []);
 
   return (
-    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+    <section className="flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="flex w-full items-center justify-between">
         <p className="text-lg font-medium">Weekly Transactions</p>
       </div>
-      <div className=" overflow-y-auto pr-2">
-        {transactions.length > 0 ? <table className="w-full">
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Transaction Date</p>
+      <div className="overflow-y-auto pr-1">
+        {transactions.length > 0 ? <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="border-b border-slate-100">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Transaction Date
               </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Description</p>
-                </div>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Description
               </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Transaction Type</p>
-                </div>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Transaction Type
               </th>
-              <th className="text-start font-[400] text-[#797979]">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                 Transaction Amount
               </th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td className="py-2">
+              <tr
+                key={transaction.id}
+                className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
+              >
+                <td className="px-3 py-2.5 font-medium text-slate-900">
                   {new Date(transaction.date).toLocaleDateString()}
                 </td>
-                <td className="py-2">{transaction.IDNumber} </td>
-                <td className="py-2">{transaction.billId ? "Cr." : "Dr"} </td>
-                <td className="py-2">
+                <td className="px-3 py-2.5 text-slate-700">{transaction.IDNumber} </td>
+                <td className="px-3 py-2.5 text-slate-700">{transaction.billId ? "Cr." : "Dr"} </td>
+                <td className="px-3 py-2.5 text-slate-700">
                   {formatter.format(parseInt(transaction.amount))}
                 </td>
               </tr>

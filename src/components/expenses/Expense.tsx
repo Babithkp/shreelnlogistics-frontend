@@ -375,7 +375,7 @@ export default function Expense({
 
   return (
     <>
-      <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <section className="flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">All Expenses</p>
           <form className="flex items-center gap-5" onSubmit={handleSearch}>
@@ -392,9 +392,9 @@ export default function Expense({
               <LuSearch size={30} className="mx-3 scale-125" />
             </Button>
             <Button
-              className="border-primary cursor-pointer rounded-2xl p-5"
               type="button"
-              variant={"outline"}
+              variant="outline"
+              className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
               onClick={() => [
                 setSection({
                   expenses: false,
@@ -406,7 +406,7 @@ export default function Expense({
             </Button>
             <Button
               type="button"
-              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              className="cursor-pointer rounded-xl py-5"
               onClick={() => [
                 setIsOpen(true),
                 reset(),
@@ -415,7 +415,7 @@ export default function Expense({
                 getExpenseId(),
               ]}
             >
-              <MdOutlineAdd size={34} />
+              <MdOutlineAdd color="white" size={30} />
               Record Expense
             </Button>
             {!search && (
@@ -446,49 +446,49 @@ export default function Expense({
             )}
           </form>
         </div>
-        <div className="overflow-y-auto pr-2">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="gap-2 text-start font-[400] text-[#797979]">
+        <div className="overflow-y-auto pr-1">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Exp ID
                 </th>
-                <th className="text-start font-[400] text-[#797979]">Title</th>
-                <th className="text-start font-[400] text-[#797979]">Date</th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Title</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Date</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Category
                 </th>
-                <th className="font-[400] text-[#797979]">Branch</th>
-                <th className="font-[400] text-[#797979]">Amount</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Branch</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Amount</th>
               </tr>
             </thead>
             <tbody>
               {filteredExpenses?.map((expense) => (
                 <tr
                   key={expense.expenseId}
-                  className="hover:bg-accent cursor-pointer"
+                  className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 cursor-pointer"
                   onClick={() => [
                     setSelectedExpense(expense),
                     setIsDetailsModalOpen(true),
                   ]}
                 >
-                  <td className="py-2">{expense.expenseId}</td>
-                  <td className="w-[30rem] py-2 text-sm">{expense.title}</td>
-                  <td className="py-2">
+                  <td className="px-3 py-2.5 font-medium text-slate-900">{expense.expenseId}</td>
+                  <td className="w-[30rem] px-3 py-2.5 text-slate-700">{expense.title}</td>
+                  <td className="px-3 py-2.5 text-slate-700">
                     {new Date(expense.date).toLocaleDateString()}
                   </td>
-                  <td className="w-40 py-2">{expense.category}</td>
+                  <td className="w-40 px-3 py-2.5 text-slate-700">{expense.category}</td>
                   {expense.Branches && (
-                    <td className="py-2 text-center">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {expense.Branches?.branchName}
                     </td>
                   )}
                   {expense.Admin && (
-                    <td className="py-2 text-center">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {expense.Admin?.branchName}
                     </td>
                   )}
-                  <td className="py-2 text-center">
+                  <td className="px-3 py-2.5 text-slate-700">
                     {formatter.format(parseFloat(expense.amount))}
                   </td>
                 </tr>
@@ -508,17 +508,22 @@ export default function Expense({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-wrap justify-between gap-5"
         >
-          <p className="w-full text-xl font-medium">
-            {formStatus === "New" ? "New Expenses" : "Edit Expenses"}
-          </p>
+          <div className="w-full">
+            <p className="text-xl font-semibold text-slate-900">
+              {formStatus === "New" ? "New Expense" : "Edit Expense"}
+            </p>
+            <p className="text-sm text-slate-500">
+              {formStatus === "New"
+                ? "Fill in the details to record a new expense"
+                : "Update the details of this expense"}
+            </p>
+          </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Expense ID</label>
+              <label className="text-sm font-medium text-slate-700">Expense ID</label>
               <input
                 type="text"
-                className={
-                  "border-primary cursor-not-allowed rounded-md border p-2"
-                }
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("expenseId", { required: true })}
                 readOnly
               />
@@ -529,10 +534,10 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Expense Title</label>
+              <label className="text-sm font-medium text-slate-700">Expense Title</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("title", { required: true })}
               />
               {errors.title && (
@@ -542,10 +547,10 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Date</label>
+              <label className="text-sm font-medium text-slate-700">Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("date", { required: true })}
               />
               {errors.date && <p className="text-red-500">date is required</p>}
@@ -553,7 +558,7 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Category</label>
+              <label className="text-sm font-medium text-slate-700">Category</label>
               <Controller
                 name="category"
                 control={control}
@@ -585,7 +590,7 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Client Name</label>
+              <label className="text-sm font-medium text-slate-700">Client Name</label>
               <Controller
                 name="customerName"
                 control={control}
@@ -615,7 +620,7 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Link To</label>
+              <label className="text-sm font-medium text-slate-700">Link To</label>
 
               <Controller
                 name="linkTo"
@@ -644,12 +649,14 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className={`${linkTo !== "CustomerBill" && "text-muted"}`}>
+              <label
+                className={`text-sm font-medium ${linkTo !== "CustomerBill" ? "text-slate-400" : "text-slate-700"}`}
+              >
                 Bill#
               </label>
               <input
                 type="text"
-                className={`rounded-md border p-2 ${linkTo !== "CustomerBill" ? "border-muted cursor-not-allowed" : "border-primary"}`}
+                className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${linkTo !== "CustomerBill" ? "cursor-not-allowed opacity-60" : ""}`}
                 {...register("billNumber", {
                   required: linkTo === "CustomerBill",
                 })}
@@ -662,15 +669,13 @@ export default function Expense({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className={`${linkTo !== "FM" && "text-muted"}`}>
+              <label
+                className={`text-sm font-medium ${linkTo !== "FM" ? "text-slate-400" : "text-slate-700"}`}
+              >
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${
-                  linkTo !== "FM"
-                    ? "border-muted cursor-not-allowed"
-                    : "border-primary"
-                }`}
+                className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${linkTo !== "FM" ? "cursor-not-allowed opacity-60" : ""}`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -681,11 +686,11 @@ export default function Expense({
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Amount</label>
-              <div className="border-primary flex gap-2 rounded-md border p-2">
-                <p>INR</p>
+              <label className="text-sm font-medium text-slate-700">Amount</label>
+              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 pl-3 transition-colors focus-within:border-primary focus-within:bg-white">
+                <p className="text-xs font-medium text-slate-500">INR</p>
                 <input
-                  className="w-full outline-none"
+                  className="w-full bg-transparent px-3 py-2 text-sm outline-none"
                   {...register("amount", { required: true })}
                 />
               </div>
@@ -696,9 +701,9 @@ export default function Expense({
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Amount In words (auto-generated)</label>
+              <label className="text-sm font-medium text-slate-700">Amount In words (auto-generated)</label>
               <input
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("amountInWords")}
                 disabled
               />
@@ -706,7 +711,7 @@ export default function Expense({
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Payment Type</label>
+              <label className="text-sm font-medium text-slate-700">Payment Type</label>
               <Controller
                 name="paymentType"
                 control={control}
@@ -739,9 +744,9 @@ export default function Expense({
           </div>
           <div className="w-[49%]">
             <div className="flex flex-col gap-2">
-              <label>Transaction Reference Number</label>
+              <label className="text-sm font-medium text-slate-700">Transaction Reference Number</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("transactionNumber", { required: true })}
               />
             </div>
@@ -753,9 +758,9 @@ export default function Expense({
           </div>
           <div className="w-[49%]">
             <div className="flex flex-col gap-2">
-              <label>Description</label>
+              <label className="text-sm font-medium text-slate-700">Description</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("description", { required: true })}
               />
             </div>
@@ -766,19 +771,22 @@ export default function Expense({
             )}
           </div>
 
-          <div className="flex w-full justify-end gap-5">
+          <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
             <Button
               type="button"
-              variant={"outline"}
-              className="border-primary text-primary"
+              variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button className="rounded-xl px-7" disabled={isLoading}>
+            <Button
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <VscLoading size={24} className="animate-spin" />
+                <VscLoading size={18} className="animate-spin" />
               ) : formStatus === "New" ? (
                 "Record Expenses"
               ) : (

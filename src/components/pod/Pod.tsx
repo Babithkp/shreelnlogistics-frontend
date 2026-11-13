@@ -6,7 +6,13 @@ import {
 import { Button } from "../ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Select } from "antd";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import { VscLoading } from "react-icons/vsc";
 import { RiDeleteBin6Line, RiEditBoxLine, RiUpload2Line } from "react-icons/ri";
 import {
@@ -47,7 +53,6 @@ import {
   filterOnlyCompletePrimitiveDiffs,
   getUnmatchingFields,
 } from "@/lib/utils";
-import { LuSearch } from "react-icons/lu";
 import { getLRApi } from "@/api/shipment";
 import axios from "axios";
 
@@ -70,12 +75,16 @@ type Option = { value: string; label: string };
 export default function Pod({
   data,
   onRefresh,
+  searchValue,
+  searchSubmitRef,
 }: {
   data: {
     data: PODInputs[];
     count: number;
   };
   onRefresh: () => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<"New" | "editing">("New");
@@ -96,7 +105,7 @@ export default function Pod({
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [notificationData, setNotificationData] =
     useState<Record<string, any>>();
-  const [search, setSearch] = useState("");
+  const search = searchValue;
   const [LRList, setLRList] = useState<LrInputs[]>([]);
   const [totalItems, setTotalItems] = useState(data.count);
   const [currentPage, setCurrentPage] = useState(1);
@@ -153,14 +162,17 @@ export default function Pod({
     }
   }
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (search.trim().length === 0) {
       setFilteredPods(pods);
       return;
     }
     filterPODByText(search);
   };
+
+  useEffect(() => {
+    searchSubmitRef.current = handleSearch;
+  });
 
   useEffect(() => {
     if (search.trim().length === 0) {
@@ -466,28 +478,12 @@ export default function Pod({
 
   return (
     <div className="relative">
-      <form
-        className="absolute -top-18 right-[13vw] flex items-center gap-2"
-        onSubmit={handleSearch}
-      >
-        <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-          <input
-            placeholder="Search"
-            className="outline-none placeholder:font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button className="cursor-pointer rounded-xl p-6">
-          <LuSearch size={30} className="mx-3 scale-125" />
-        </Button>
-      </form>
-      <section className="relative flex h-fit max-h-[83vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <section className="relative flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className={`flex items-center justify-between`}>
           <p className="text-xl font-medium">POD</p>
           <div className="flex items-center gap-5">
             <Button
-              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              className="cursor-pointer rounded-xl py-5"
               onClick={() => [
                 setIsOpen(true),
                 reset({
@@ -498,7 +494,7 @@ export default function Pod({
                 setFile(null),
               ]}
             >
-              <MdOutlineAdd size={34} />
+              <MdOutlineAdd color="white" size={30} />
               Create new
             </Button>
             {!search && (
@@ -528,46 +524,40 @@ export default function Pod({
             )}
           </div>
         </div>
-        <div className="overflow-y-auto pr-2">
-
-
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                  <p>LR#</p>
+        <div className="overflow-y-auto pr-1">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  LR#
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
-                  <div className="flex items-center gap-2">
-                    <p>Client Name</p>
-                  </div>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  Client Name
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
-                  <div className="flex items-center gap-2">
-                    <p>Receiving Date</p>
-                  </div>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                  Receiving Date
                 </th>
-                <th className="text-start font-[400] text-[#797979]">LR Date</th>
-                <th className="font-[400] text-[#797979]">Time taken</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">LR Date</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Time taken</th>
               </tr>
             </thead>
             <tbody>
               {filteredPods?.map((pod) => (
                 <tr
                   key={pod.id}
-                  className="hover:bg-accent cursor-pointer"
+                  className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 cursor-pointer"
                   onClick={() => [
                     setSelectedPOD(pod),
                     setIsDetailsModalOpen(true),
                   ]}
                 >
-                  <td className="py-2">{pod.lrNumber}</td>
-                  <td className="py-2">{pod.clientName}</td>
-                  <td className="py-2">{pod.receivingDate}</td>
-                  <td className="py-2">
+                  <td className="px-3 py-2.5 font-medium text-slate-900">{pod.lrNumber}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{pod.clientName}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{pod.receivingDate}</td>
+                  <td className="px-3 py-2.5 text-slate-700">
                     {new Date(pod.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2 text-center">
+                  <td className="px-3 py-2.5 text-slate-700">
                     {Math.floor(
                       (new Date(pod.receivingDate).getTime() -
                         new Date(pod.date).getTime()) /
@@ -592,12 +582,19 @@ export default function Pod({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-wrap justify-between gap-5"
         >
-          <p className="w-full text-xl font-medium">
-            {formStatus === "New" ? "Create POD" : "Edit POD"}
-          </p>
+          <div className="w-full">
+            <p className="text-xl font-semibold text-slate-900">
+              {formStatus === "New" ? "Create POD" : "Edit POD"}
+            </p>
+            <p className="text-sm text-slate-500">
+              {formStatus === "New"
+                ? "Fill in the details and upload the proof of delivery"
+                : "Update the details of this POD"}
+            </p>
+          </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>LR#</label>
+              <label className="text-sm font-medium text-slate-700">LR#</label>
               <Controller
                 name="lrNumber"
                 control={control}
@@ -631,10 +628,10 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Date</label>
+              <label className="text-sm font-medium text-slate-700">Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("date", { required: true })}
               />
               {errors.date && <p className="text-red-500">Date is required</p>}
@@ -642,10 +639,10 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>From</label>
+              <label className="text-sm font-medium text-slate-700">From</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("from", { required: true })}
               />
               {errors.from && <p className="text-red-500">From is required</p>}
@@ -653,10 +650,10 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>TO</label>
+              <label className="text-sm font-medium text-slate-700">To</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("to", { required: true })}
               />
               {errors.to && <p className="text-red-500">To is required</p>}
@@ -664,7 +661,7 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Client Name</label>
+              <label className="text-sm font-medium text-slate-700">Client Name</label>
               <Controller
                 name="clientName"
                 control={control}
@@ -700,10 +697,10 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Client GSTIN</label>
+              <label className="text-sm font-medium text-slate-700">Client GSTIN</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("clientGSTIN", { required: true })}
               />
               {errors.clientGSTIN && (
@@ -713,10 +710,10 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Receiving Date</label>
+              <label className="text-sm font-medium text-slate-700">Receiving Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("receivingDate", { required: true })}
               />
               {errors.receivingDate && (
@@ -726,9 +723,9 @@ export default function Pod({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Receiving Branch</label>
+              <label className="text-sm font-medium text-slate-700">Receiving Branch</label>
               <input
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("receivingBranch", { required: true })}
                 disabled
                 value={branch.branchName}
@@ -741,7 +738,7 @@ export default function Pod({
 
           <div className="w-full">
             <div className="flex flex-col gap-2">
-              <label>Upload Document</label>
+              <label className="text-sm font-medium text-slate-700">Upload Document</label>
               <input
                 type="file"
                 className="hidden"
@@ -751,11 +748,11 @@ export default function Pod({
               />
               <button
                 type="button"
-                className="border-primary flex flex-col items-center justify-center gap-5 rounded-md border p-3"
+                className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 transition-colors hover:border-primary hover:bg-primary/5"
                 onClick={() => uploadRef.current?.click()}
               >
-                <RiUpload2Line size={40} className="text-primary" />
-                <p className="text-slate-500">
+                <RiUpload2Line size={32} className="text-primary" />
+                <p className="text-sm text-slate-500">
                   {file
                     ? file.name
                     : "Upload POD (only .pdf, jpeg, jpg and png allowed)"}
@@ -764,10 +761,22 @@ export default function Pod({
               {isError && <p className="text-red-500">Document is required</p>}
             </div>
           </div>
-          <div className="flex w-full justify-end gap-5">
-            <Button className="rounded-xl px-7" disabled={isLoading}>
+          <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
+            <Button
+              type="button"
+              variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+              onClick={() => setIsOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <VscLoading size={24} className="animate-spin" />
+                <VscLoading size={18} className="animate-spin" />
               ) : formStatus === "New" ? (
                 "Create POD"
               ) : (

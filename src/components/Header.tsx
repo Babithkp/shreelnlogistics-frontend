@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { BiBell } from "react-icons/bi";
+import { BiBell, BiBellOff } from "react-icons/bi";
 import { FiSettings } from "react-icons/fi";
+import { LuSearch } from "react-icons/lu";
 import { BranchDetails } from "./shipment/FM/FMPage";
+import { DatePicker, Select } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
+const { RangePicker } = DatePicker;
 
 import { Notification, SectionsState } from "@/types";
 import {
@@ -83,20 +88,133 @@ type NotificationConfig = {
   showNotedButton?: boolean;
 };
 
+function HeaderSearchPill({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: () => void;
+}) {
+  return (
+    <form
+      className="flex h-12 items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pr-1.5 pl-4 shadow-sm"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit?.();
+      }}
+    >
+      <LuSearch size={16} className="shrink-0 text-slate-400" />
+      <input
+        placeholder="Search"
+        className="w-40 bg-transparent text-sm outline-none placeholder:text-slate-400"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+      <Button
+        type="submit"
+        size="icon"
+        className="size-8 shrink-0 cursor-pointer rounded-full bg-primary text-white hover:bg-primary/90"
+      >
+        <LuSearch size={14} />
+      </Button>
+    </form>
+  );
+}
+
+const getFiscalYearRange = (yearOffset: number): [string, string] => {
+  const now = new Date();
+  const currentFiscalStartYear =
+    now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const startYear = currentFiscalStartYear + yearOffset;
+  const start = new Date(startYear, 3, 1, 0, 0, 0, 0);
+  const end = new Date(startYear + 1, 2, 31, 23, 59, 59, 999);
+  return [start.toISOString(), end.toISOString()];
+};
+
+const getPastMonthsRange = (months: number): [string, string] => {
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  const start = new Date();
+  start.setMonth(start.getMonth() - months);
+  start.setHours(0, 0, 0, 0);
+  return [start.toISOString(), end.toISOString()];
+};
+
+const dateRangePresets = [
+  { label: "All", value: "all" },
+  { label: "This Fiscal Year", value: "thisFY" },
+  { label: "Previous Fiscal Year", value: "prevFY" },
+  { label: "Past 3 Months", value: "past3Months" },
+  { label: "Past 6 Months", value: "past6Months" },
+  { label: "Past 1 Year", value: "past1Year" },
+];
+
+const getPresetRange = (preset: string): [string, string] | null => {
+  switch (preset) {
+    case "all":
+      return null;
+    case "thisFY":
+      return getFiscalYearRange(0);
+    case "prevFY":
+      return getFiscalYearRange(-1);
+    case "past3Months":
+      return getPastMonthsRange(3);
+    case "past6Months":
+      return getPastMonthsRange(6);
+    case "past1Year":
+      return getPastMonthsRange(12);
+    default:
+      return getFiscalYearRange(0);
+  }
+};
+
 export default function Header({
   title,
   setSections,
   onFresh,
+  dateRange,
+  onDateRangeChange,
+  lrSearchValue,
+  onLrSearchChange,
+  onLrSearchSubmit,
+  fmSearchValue,
+  onFmSearchChange,
+  onFmSearchSubmit,
+  billSearchValue,
+  onBillSearchChange,
+  onBillSearchSubmit,
+  podSearchValue,
+  onPodSearchChange,
+  onPodSearchSubmit,
 }: {
   title: SectionsState;
   setSections?: (value: SectionsState) => void;
   onFresh?: () => void;
+  dateRange?: [string, string] | null;
+  onDateRangeChange?: (range: [string, string] | null) => void;
+  lrSearchValue?: string;
+  onLrSearchChange?: (value: string) => void;
+  onLrSearchSubmit?: () => void;
+  fmSearchValue?: string;
+  onFmSearchChange?: (value: string) => void;
+  onFmSearchSubmit?: () => void;
+  billSearchValue?: string;
+  onBillSearchChange?: (value: string) => void;
+  onBillSearchSubmit?: () => void;
+  podSearchValue?: string;
+  onPodSearchChange?: (value: string) => void;
+  onPodSearchSubmit?: () => void;
 }) {
   const activeSection = Object.entries(title).find(
     ([_, isActive]) => isActive,
   )?.[0] as keyof SectionsState;
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedDatePreset, setSelectedDatePreset] = useState<
+    string | undefined
+  >("thisFY");
   const [branchDetails, setBranchDetails] = useState<BranchDetails>();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNewNotification, setIsNewNotification] = useState({
@@ -857,8 +975,73 @@ export default function Header({
           {sectionLabels[activeSection]}
         </p>
       </div>
-      <div className="flex items-center gap-5 rounded-full bg-white p-3 px-5">
-        <div className="flex items-center gap-2 rounded-full"></div>
+      <div className="flex items-center gap-3">
+        {title.LR && (
+          <HeaderSearchPill
+            value={lrSearchValue}
+            onChange={onLrSearchChange}
+            onSubmit={onLrSearchSubmit}
+          />
+        )}
+        {title.FM && (
+          <HeaderSearchPill
+            value={fmSearchValue}
+            onChange={onFmSearchChange}
+            onSubmit={onFmSearchSubmit}
+          />
+        )}
+        {title.Bill && (
+          <HeaderSearchPill
+            value={billSearchValue}
+            onChange={onBillSearchChange}
+            onSubmit={onBillSearchSubmit}
+          />
+        )}
+        {title.pod && (
+          <HeaderSearchPill
+            value={podSearchValue}
+            onChange={onPodSearchChange}
+            onSubmit={onPodSearchSubmit}
+          />
+        )}
+        {title.dashboard && (
+          <div className="flex h-12 items-center divide-x divide-slate-200 rounded-full border border-slate-200 bg-white px-4 shadow-sm">
+            <RangePicker
+              className="w-fit pr-3"
+              size="small"
+              variant="borderless"
+              value={
+                dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
+              }
+              onChange={(dates) => {
+                setSelectedDatePreset(undefined);
+                if (!dates) {
+                  onDateRangeChange?.(null);
+                } else {
+                  const [start, end] = dates as [Dayjs, Dayjs];
+                  onDateRangeChange?.([
+                    start.toISOString(),
+                    end.toISOString(),
+                  ]);
+                }
+              }}
+              allowClear
+            />
+            <Select
+              className="w-44 pl-3"
+              size="small"
+              variant="borderless"
+              placeholder="Quick select"
+              options={dateRangePresets}
+              value={selectedDatePreset}
+              onChange={(value) => {
+                setSelectedDatePreset(value);
+                onDateRangeChange?.(getPresetRange(value));
+              }}
+            />
+          </div>
+        )}
+        <div className="flex h-12 items-center gap-5 rounded-full border border-slate-200 bg-white px-5 shadow-sm">
         {isAdmin && (
           <button
             className="cursor-pointer"
@@ -1017,9 +1200,19 @@ export default function Header({
             })}
 
             {notifications.length === 0 && (
-              <p className="text-center text-sm text-slate-500">
-                No Notifications
-              </p>
+              <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-slate-100">
+                  <BiBellOff size={26} className="text-slate-400" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium text-slate-700">
+                    You're all caught up
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    New notifications will show up here
+                  </p>
+                </div>
+              </div>
             )}
           </PopoverContent>
         </Popover>
@@ -1034,6 +1227,7 @@ export default function Header({
             className={`transition-all duration-1000 ${isLoading ? "animate-spin" : ""}`}
           />
         </button>
+        </div>
       </div>
     </section>
   );

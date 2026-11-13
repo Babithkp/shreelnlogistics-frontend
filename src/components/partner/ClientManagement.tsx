@@ -277,7 +277,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
           </div>
         </div>
       </div>
-      <div className="flex max-h-[73vh] flex-col gap-2 overflow-y-auto rounded-md bg-white p-5">
+      <div className="flex max-h-[84vh] flex-col gap-2 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">Clients</p>
           <div className="flex items-center gap-5">
@@ -295,22 +295,29 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 <LuSearch size={30} className="mx-3 scale-125" />
               </Button>
             </form>
-            <button
-              className="bg-primary hover:bg-primary flex cursor-pointer items-center gap-2 rounded-2xl p-2 px-4 font-medium text-white"
+            <Button
               onClick={() => [setIsOpen(true), reset(), setFormStatus("New")]}
+              className="cursor-pointer rounded-xl py-5"
             >
-              <IoMdAdd size={24} /> Create Client
-            </button>
+              <IoMdAdd color="white" size={30} />
+              Create Client
+            </Button>
             <Modal
               open={isOpen}
-              onClose={() => setIsOpen(false)}
               onCancel={() => setIsOpen(false)}
               width={1240}
               centered={true}
               footer={null}
             >
-              <div className="text-lg font-medium">
-                {formStatus == "New" ? "New Client" : "Edit Client"}
+              <div className="mb-5">
+                <p className="text-xl font-semibold text-slate-900">
+                  {formStatus === "New" ? "New Client" : "Edit Client"}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {formStatus === "New"
+                    ? "Fill in the details to add a new client"
+                    : "Update the details of this client"}
+                </p>
               </div>
               <form
                 className="flex flex-wrap justify-between gap-5"
@@ -318,10 +325,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
               >
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Client Name</label>
+                    <label className="text-sm font-medium text-slate-700">Client Name</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("name", { required: true })}
                     />
                     {errors.name && (
@@ -338,10 +345,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Client GSTIN</label>
+                    <label className="text-sm font-medium text-slate-700">Client GSTIN</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("GSTIN", {
                         required: true,
                         minLength: 15,
@@ -357,20 +364,20 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Branch Name (Optional)</label>
+                    <label className="text-sm font-medium text-slate-700">Branch Name (Optional)</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("branchName")}
                     />
                   </div>
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Contact Person</label>
+                    <label className="text-sm font-medium text-slate-700">Contact Person</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("contactPerson", { required: true })}
                     />
                     {errors.contactPerson && (
@@ -382,10 +389,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Email ID</label>
+                    <label className="text-sm font-medium text-slate-700">Email ID</label>
                     <input
                       type="email"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("email", { required: true })}
                     />
                     {errors.email && (
@@ -397,10 +404,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Contact Number</label>
+                    <label className="text-sm font-medium text-slate-700">Contact Number</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("contactNumber", {
                         required: true,
                         minLength: 10,
@@ -416,9 +423,9 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-full">
                   <div className="flex flex-col gap-2">
-                    <label>Address</label>
+                    <label className="text-sm font-medium text-slate-700">Address</label>
                     <textarea
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("address", { required: true })}
                     />
                     {errors.address && (
@@ -430,10 +437,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>City</label>
+                    <label className="text-sm font-medium text-slate-700">City</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("city", { required: true })}
                     />
                     {errors.city && (
@@ -445,10 +452,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>State</label>
+                    <label className="text-sm font-medium text-slate-700">State</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("state", { required: true })}
                     />
                     {errors.state && (
@@ -460,10 +467,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label>Pincode</label>
+                    <label className="text-sm font-medium text-slate-700">Pincode</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("pincode", {
                         required: true,
                         minLength: 4,
@@ -478,10 +485,10 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[48%]">
                   <div className="flex flex-col gap-2">
-                    <label>Pan</label>
+                    <label className="text-sm font-medium text-slate-700">Pan</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("panNumber", {
                         required: true,
                       })}
@@ -495,13 +502,13 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                 </div>
                 <div className="w-[48%]">
                   <div className="flex flex-col gap-2">
-                    <label>Credit limit</label>
-                    <div className="border-primary flex items-center rounded-md border pl-2">
-                      <p className="text-xs font-medium">INR</p>
+                    <label className="text-sm font-medium text-slate-700">Credit limit</label>
+                    <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 pl-3 transition-colors focus-within:border-primary focus-within:bg-white">
+                      <p className="text-xs font-medium text-slate-500">INR</p>
                       <input
                         type="text"
                         placeholder="00000.00"
-                        className="w-full p-2 outline-none"
+                        className="w-full bg-transparent px-3 py-2 text-sm outline-none"
                         {...register("creditLimit", {
                           required: true,
                         })}
@@ -514,10 +521,22 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                     )}
                   </div>
                 </div>
-                <div className="flex w-full justify-end">
-                  <Button className="rounded-xl px-7" disabled={isloading}>
+                <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                    onClick={() => setIsOpen(false)}
+                    disabled={isloading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                    disabled={isloading}
+                  >
                     {isloading ? (
-                      <VscLoading size={24} className="animate-spin" />
+                      <VscLoading size={18} className="animate-spin" />
                     ) : formStatus === "New" ? (
                       "Create Client"
                     ) : (
@@ -554,41 +573,39 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
             )}
           </div>
         </div>
-        <div className="overflow-y-auto pr-2">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Client Name</p>
+        <div className="overflow-y-auto pr-1">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="border-b border-slate-100">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Client Name
               </th>
-              <th className="text-start font-[400] text-[#797979]">City</th>
-              <th className="text-start font-[400] text-[#797979]">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">City</th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                 Contact Person
               </th>
-              <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                <p>Pending payment</p>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Pending payment
               </th>
-              <th className="text-start font-[400] text-[#797979]">
-                <div className="flex items-center gap-2">
-                  <p>Client Since</p>
-                </div>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Client Since
               </th>
             </tr>
           </thead>
           <tbody>
             {filteredClients?.map((client, i) => (
               <tr
-                className="hover:bg-accent cursor-pointer"
+                className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 cursor-pointer"
                 key={i}
                 onClick={() => [
                   setSelectedClient(client),
                   setIsClientDetailsModalOpen(true),
                 ]}
               >
-                <td className="py-2">{client.name}</td>
-                <td className="py-2">{client.city}</td>
-                <td className="py-2">{client.contactPerson}</td>
-                <td className="py-2">
+                <td className="px-3 py-2.5 font-medium text-slate-900">{client.name}</td>
+                <td className="px-3 py-2.5 text-slate-700">{client.city}</td>
+                <td className="px-3 py-2.5 text-slate-700">{client.contactPerson}</td>
+                <td className="px-3 py-2.5 text-slate-700">
                   {formatter.format(
                     client.bill.reduce(
                       (acc, bill) => (acc += bill.pendingAmount),
@@ -596,7 +613,7 @@ export default function ClientManagement({ data }: { data: ClientInputs[] }) {
                     ),
                   )}
                 </td>
-                <td className="py-2">
+                <td className="px-3 py-2.5 text-slate-700">
                   {new Date(client.createdAt).toLocaleDateString()}
                 </td>
               </tr>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MutableRefObject } from "react";
 import GenerateBIll from "./GenerateBIll";
 import ViewBills from "./ViewBills";
 import { BankDetailsInputs } from "../settings/Settings";
@@ -10,12 +10,16 @@ export default function BillPage({
   billData,
   clients,
   onRefresh,
+  searchValue,
+  searchSubmitRef,
 }: {
   bankDetails?: BankDetailsInputs;
   clientData: ClientInputs[];
   billData: billInputs[];
   clients: ClientInputs[];
   onRefresh: () => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [selectedForm, setSelectedForm] = useState({
     billList: true,
@@ -36,6 +40,8 @@ export default function BillPage({
           setSupplementary={setSupplementary}
           clients={clients}
           onRefresh={onRefresh}
+          searchValue={searchValue}
+          searchSubmitRef={searchSubmitRef}
         />
       )}
       {selectedForm.createNew && (

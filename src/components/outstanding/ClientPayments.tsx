@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaChevronDown } from "react-icons/fa6";
 import { Button } from "../ui/button";
 import { ClientInputs } from "@/types";
 import { formatter } from "@/lib/utils";
@@ -129,7 +128,7 @@ export default function ClientPayments({
     fetchTransactions(currentPage, itemsPerPage);
   }, []);
   return (
-    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+    <section className="flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="flex w-full justify-between">
         <p className="text-lg font-medium">Client Pending Payments</p>
         <form className="flex items-center gap-5" onSubmit={handleSearch}>
@@ -182,55 +181,56 @@ export default function ClientPayments({
           )}
         </form>
       </div>
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-              <p>Name</p>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              <div className="flex items-center gap-2">
-                <p>Total Invoiced</p>
-                <FaChevronDown size={15} className="cursor-pointer" />
-              </div>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              <div className="flex items-center gap-2">
-                <p>Total Recieved</p>
-                <FaChevronDown size={15} className="cursor-pointer" />
-              </div>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              Pending Payments
-            </th>
-            <th className="text-center font-[400] text-[#797979]">
-              Last Payment Date
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredTransactions?.map((transaction) => (
-            <tr key={transaction.clientName}>
-              <td className="py-2">{transaction.clientName}</td>
-              <td className="py-2">
-                {formatter.format(transaction.totalInvoice)}
-              </td>
-              <td className="py-2">
-                {formatter.format(transaction.totalReceived)}
-              </td>
-              <td className="py-2">
-                {formatter.format(transaction.pendingPayment)}
-              </td>
-              <td className="py-2 text-center">
-                {new Date(transaction.latestDate).toLocaleDateString() ===
-                "Invalid Date"
-                  ? "Waiting For Payment"
-                  : new Date(transaction.latestDate).toLocaleDateString()}
-              </td>
+      <div className="overflow-y-auto pr-1">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="border-b border-slate-100">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Name
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Total Invoiced
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Total Recieved
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Pending Payments
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Last Payment Date
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredTransactions?.map((transaction) => (
+              <tr
+                key={transaction.clientName}
+                className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
+              >
+                <td className="px-3 py-2.5 font-medium text-slate-900">
+                  {transaction.clientName}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.totalInvoice)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.totalReceived)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.pendingPayment)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {new Date(transaction.latestDate).toLocaleDateString() ===
+                  "Invalid Date"
+                    ? "Waiting For Payment"
+                    : new Date(transaction.latestDate).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

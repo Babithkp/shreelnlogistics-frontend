@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import FMCreate from "./FMCreate";
 import FMList from "./FMList";
 import { getLRApi } from "@/api/shipment";
@@ -25,6 +25,8 @@ export default function FMPage({
   FMData,
   vendors,
   onRefresh,
+  searchValue,
+  searchSubmitRef,
 }: {
   FMData: {
     data: FMInputs[];
@@ -32,6 +34,8 @@ export default function FMPage({
   };
   vendors: VendorInputs[];
   onRefresh: () => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [selectedForm, setSelectedForm] = useState({
     FMList: true,
@@ -111,6 +115,8 @@ export default function FMPage({
           data={FMData}
           vendors={vendors}
           onRefresh={onRefresh}
+          searchValue={searchValue}
+          searchSubmitRef={searchSubmitRef}
           />
         )}
       {selectedForm.createNew && (

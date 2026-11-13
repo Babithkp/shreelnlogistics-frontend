@@ -141,7 +141,7 @@ export default function VendorOutstanding({
   }, []);
 
   return (
-    <section className="flex h-fit max-h-[73vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+    <section className="flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <form className="flex w-full justify-between" onSubmit={handleSearch}>
         <p className="text-lg font-medium">Vendor Outstanding</p>
         <div className="flex items-center gap-5">
@@ -194,52 +194,55 @@ export default function VendorOutstanding({
           )}
         </div>
       </form>
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-              <p>Name</p>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              <div className="flex items-center gap-2">
-                <p>Total Hire cost</p>
-              </div>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              <div className="flex items-center gap-2">
-                <p>Total Paid</p>
-              </div>
-            </th>
-            <th className="text-start font-[400] text-[#797979]">
-              Outstanding
-            </th>
-            <th className="text-center font-[400] text-[#797979]">
-              Last Payment Date
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredTransactions.map((transaction) => (
-            <tr key={transaction.name}>
-              <td className="py-2">{transaction.name}</td>
-              <td className="py-2">
-                {formatter.format(transaction.totalInvoice)}
-              </td>
-              <td className="py-2">
-                {formatter.format(transaction.totalReceived)}
-              </td>
-              <td className="py-2">
-                {formatter.format(transaction.pendingAmount)}
-              </td>
-              <td className="py-2 text-center">
-                {new Date(
-                  transaction.latestPaymentDate || "",
-                ).toLocaleDateString()}
-              </td>
+      <div className="overflow-y-auto pr-1">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="border-b border-slate-100">
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Name
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Total Hire cost
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Total Paid
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Outstanding
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                Last Payment Date
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredTransactions.map((transaction) => (
+              <tr
+                key={transaction.name}
+                className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
+              >
+                <td className="px-3 py-2.5 font-medium text-slate-900">
+                  {transaction.name}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.totalInvoice)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.totalReceived)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {formatter.format(transaction.pendingAmount)}
+                </td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  {new Date(
+                    transaction.latestPaymentDate || "",
+                  ).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

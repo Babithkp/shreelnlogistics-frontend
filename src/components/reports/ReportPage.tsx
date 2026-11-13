@@ -7,6 +7,14 @@ import ExpenseReport from "./ExpenseReport";
 import CreditReport from "./CreditReport";
 import Writeoff from "./Writeoff";
 import { getAllBranchDetailsApi } from "@/api/branch";
+import {
+  Truck,
+  Package,
+  Receipt,
+  Radar,
+  CreditCard,
+  FileX2,
+} from "lucide-react";
 
 type Sections = "LRs" | "FMs" | "Bills" | "Expenses" | "Credits" | "Writeoffs";
 
@@ -77,45 +85,35 @@ export default function ReportPage({
     getBranchList();
   }, []);
 
+  const tabs: { key: Sections; label: string; icon: typeof Truck }[] = [
+    { key: "LRs", label: "LRs", icon: Truck },
+    { key: "FMs", label: "FMs", icon: Package },
+    { key: "Bills", label: "Bills", icon: Receipt },
+    { key: "Expenses", label: "Expenses", icon: Radar },
+    { key: "Credits", label: "Credits", icon: CreditCard },
+    { key: "Writeoffs", label: "Write offs", icon: FileX2 },
+  ];
+
   return (
-    <div className="flex flex-col gap-5 rounded-lg bg-white p-5">
-      <nav className="flex gap-2 font-medium">
-        <p
-          className={`cursor-pointer px-10 ${section.LRs ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("LRs")}
-        >
-          LRs
-        </p>
-        <p
-          className={`cursor-pointer px-10 ${section.FMs ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("FMs")}
-        >
-          FMs
-        </p>
-        <p
-          className={`cursor-pointer px-10 ${section.Bills ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("Bills")}
-        >
-          Bills
-        </p>
-        <p
-          className={`cursor-pointer px-10 ${section.Expenses ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("Expenses")}
-        >
-          Expenses
-        </p>
-        <p
-          className={`cursor-pointer px-10 ${section.Credits ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("Credits")}
-        >
-          Credits
-        </p>
-        <p
-          className={`cursor-pointer px-10 ${section.Writeoffs ? "border-b border-black text-black" : "text-slate-500"} `}
-          onClick={() => sectionChangeHandler("Writeoffs")}
-        >
-          Write offs
-        </p>
+    <div className="flex flex-col gap-5">
+      <nav className="flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
+        {tabs.map(({ key, label, icon: Icon }) => {
+          const active = section[key];
+          return (
+            <button
+              key={key}
+              className={`flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-slate-500 hover:bg-slate-50"
+              }`}
+              onClick={() => sectionChangeHandler(key)}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          );
+        })}
       </nav>
       {section.FMs && (
         <FmReport

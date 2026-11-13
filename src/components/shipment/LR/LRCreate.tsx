@@ -373,20 +373,27 @@ export default function LRCreate({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 rounded-md bg-white p-5">
-      <p className="text-xl font-medium">
-        {formStatus === "edit" ? "Edit LR" : "Create LR"}
-      </p>
+    <div className="flex flex-col gap-5 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div>
+        <p className="text-xl font-semibold text-slate-900">
+          {formStatus === "edit" ? "Edit LR" : "Create LR"}
+        </p>
+        <p className="text-sm text-slate-500">
+          {formStatus === "edit"
+            ? "Update the details of this Lorry Receipt"
+            : "Fill in the details to generate a new Lorry Receipt"}
+        </p>
+      </div>
       <form
         className="flex flex-wrap justify-between gap-5"
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">LR#</label>
+            <label className="text-sm font-medium text-slate-700">LR#</label>
 
             <input
-              className={`border-primary rounded-md border p-2 ${formStatus === "edit" && "cursor-not-allowed"}`}
+              className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${formStatus === "edit" ? "cursor-not-allowed opacity-60" : ""}`}
               {...register("lrNumber", { required: true })}
               disabled={formStatus === "edit"}
             />
@@ -403,10 +410,10 @@ export default function LRCreate({
         </div>
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Date</label>
+            <label className="text-sm font-medium text-slate-700">Date</label>
             <input
               type="date"
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("date", { required: true })}
             />
             {errors.date && (
@@ -416,9 +423,9 @@ export default function LRCreate({
         </div>
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">From</label>
+            <label className="text-sm font-medium text-slate-700">From</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("from", { required: true })}
             />
             {errors.from && (
@@ -428,9 +435,9 @@ export default function LRCreate({
         </div>
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">To</label>
+            <label className="text-sm font-medium text-slate-700">To</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("to", { required: true })}
             />
             {errors.to && (
@@ -440,7 +447,7 @@ export default function LRCreate({
         </div>
         <div className="w-[18%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Insurance</label>
+            <label className="text-sm font-medium text-slate-700">Insurance</label>
             <Controller
               name="insurance"
               control={control}
@@ -448,7 +455,7 @@ export default function LRCreate({
               rules={{ required: "Please select insurance" }}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="boder border-primary h-full w-full py-5 shadow-none data-[placeholder]:text-black">
+                  <SelectTrigger className="h-full w-full rounded-lg border border-slate-200 bg-slate-50 py-5 shadow-none data-[placeholder]:text-slate-900">
                     <SelectValue />
                     <div></div>
                   </SelectTrigger>
@@ -466,7 +473,7 @@ export default function LRCreate({
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignor’s Name</label>
+            <label className="text-sm font-medium text-slate-700">Consignor’s Name</label>
             <Controller
               name="consignorName"
               control={control}
@@ -506,9 +513,9 @@ export default function LRCreate({
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignor’s GSTIN</label>
+            <label className="text-sm font-medium text-slate-700">Consignor’s GSTIN</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consignorGSTIN", { required: true })}
             />
             {errors.consignorGSTIN && (
@@ -518,9 +525,9 @@ export default function LRCreate({
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignor’s Pincode</label>
+            <label className="text-sm font-medium text-slate-700">Consignor’s Pincode</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consignorPincode", { required: true })}
             />
             {errors.consignorPincode && (
@@ -530,9 +537,9 @@ export default function LRCreate({
         </div>
         <div className="w-full">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignor’s Address</label>
+            <label className="text-sm font-medium text-slate-700">Consignor’s Address</label>
             <textarea
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consignorAddress", { required: true })}
             />
             {errors.consignorAddress && (
@@ -544,7 +551,7 @@ export default function LRCreate({
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignee’s Name</label>
+            <label className="text-sm font-medium text-slate-700">Consignee’s Name</label>
             <Controller
               name="consigneeName"
               control={control}
@@ -584,18 +591,18 @@ export default function LRCreate({
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignee’s GSTIN</label>
+            <label className="text-sm font-medium text-slate-700">Consignee’s GSTIN</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consigneeGSTIN")}
             />
           </div>
         </div>
         <div className="w-[32%]">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignee’s Pincode</label>
+            <label className="text-sm font-medium text-slate-700">Consignee’s Pincode</label>
             <input
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consigneePincode", { required: true })}
             />
             {errors.consigneePincode && (
@@ -605,9 +612,9 @@ export default function LRCreate({
         </div>
         <div className="w-full">
           <div className="flex flex-col gap-2">
-            <label className="font-medium">Consignee’s Address</label>
+            <label className="text-sm font-medium text-slate-700">Consignee’s Address</label>
             <textarea
-              className="border-primary rounded-md border p-2"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
               {...register("consigneeAddress", { required: true })}
             />
             {errors.consigneeAddress && (
@@ -622,19 +629,19 @@ export default function LRCreate({
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr>
-                <th className="border-primary rounded-tl-lg border p-1 px-3 text-start font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 rounded-tl-lg border p-1 px-3 text-start font-medium">
                   No of Packages
                 </th>
-                <th className="border-primary border p-1 px-3 text-start font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 border p-1 px-3 text-start font-medium">
                   Method of Packing
                 </th>
-                <th className="border-primary border p-1 px-3 text-start font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 border p-1 px-3 text-start font-medium">
                   Description (said to contain)
                 </th>
-                <th className="border-primary border p-1 px-3 text-start font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 border p-1 px-3 text-start font-medium">
                   Weight
                 </th>
-                <th className="border-primary border p-1 px-3 text-start font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 border p-1 px-3 text-start font-medium">
                   <Select
                     value={size}
                     onValueChange={setSize}
@@ -649,17 +656,17 @@ export default function LRCreate({
                     </SelectContent>
                   </Select>
                 </th>
-                <th className="border-primary border p-1 px-3 font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 border p-1 px-3 font-medium">
                   Vehicle details
                 </th>
-                <th className="border-primary rounded-tr-2xl border p-1 px-3 font-medium">
+                <th className="border-slate-200 bg-slate-50 text-sm text-slate-600 rounded-tr-2xl border p-1 px-3 font-medium">
                   <p>Rate</p>
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr className="text-sm">
-                <td className="border-primary border p-2 align-top">
+                <td className="border-slate-200 border p-2 align-top">
                   <input
                     className="w-full outline-none"
                     placeholder="Type here..."
@@ -671,7 +678,7 @@ export default function LRCreate({
                     </p>
                   )}
                 </td>
-                <td className="border-primary border p-2 align-top">
+                <td className="border-slate-200 border p-2 align-top">
                   <input
                     className="w-full outline-none"
                     placeholder="Type here..."
@@ -683,7 +690,7 @@ export default function LRCreate({
                     </p>
                   )}
                 </td>
-                <td className="border-primary border px-2 pl-2 align-top">
+                <td className="border-slate-200 border px-2 pl-2 align-top">
                   <div className="flex flex-col items-center justify-between gap-10">
                     <textarea
                       className="w-full p-2 outline-none"
@@ -733,7 +740,7 @@ export default function LRCreate({
                     </div>
                   </div>
                 </td>
-                <td className="border-primary border p-2 align-top">
+                <td className="border-slate-200 border p-2 align-top">
                   <input
                     className="w-full outline-none"
                     placeholder="Type here..."
@@ -743,7 +750,7 @@ export default function LRCreate({
                     <p className="mt-2 text-red-500">Weight is required</p>
                   )}
                 </td>
-                <td className="border-primary w-[10%] border px-1 align-top">
+                <td className="border-slate-200 w-[10%] border px-1 align-top">
                   {size === "LxWxH" && (
                     <div className="flex w-full items-center justify-around pt-2">
                       <input
@@ -788,7 +795,7 @@ export default function LRCreate({
                     <p className="text-red-500">FTL is required</p>
                   )}
                 </td>
-                <td className="border-primary border p-2 align-top">
+                <td className="border-slate-200 border p-2 align-top">
                   <div className="flex flex-col items-center justify-between gap-20">
                     <div>
                       <div className="flex flex-col gap-2">
@@ -870,7 +877,7 @@ export default function LRCreate({
                     </div>
                     <div className="flex w-full flex-col items-center">
                       <div className="flex w-full items-center justify-between">
-                        <label className="font-medium">Payment type</label>
+                        <label className="text-sm font-medium text-slate-700">Payment type</label>
                         <Controller
                           name="paymentType"
                           control={control}
@@ -904,12 +911,12 @@ export default function LRCreate({
                     </div>
                   </div>
                 </td>
-                <td className="border-primary border p-2 align-top">
+                <td className="border-slate-200 border p-2 align-top">
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between">
                       <p className="text-xs font-medium">Freight Charges</p>
                       <input
-                        className="border-primary rounded-md border p-1"
+                        className="border-slate-200 rounded-md border p-1"
                         type="text"
                         pattern="[0-9]*.[0-9]*"
                         {...register("freightCharges")}
@@ -920,7 +927,7 @@ export default function LRCreate({
                       <input
                         type="text"
                         pattern="[0-9]*.[0-9]*"
-                        className="border-primary rounded-md border p-1"
+                        className="border-slate-200 rounded-md border p-1"
                         {...register("hamali")}
                       />
                     </div>
@@ -929,7 +936,7 @@ export default function LRCreate({
                       <input
                         type="text"
                         pattern="[0-9]*.[0-9]*"
-                        className="border-primary rounded-md border p-1"
+                        className="border-slate-200 rounded-md border p-1"
                         {...register("surcharge")}
                       />
                     </div>
@@ -938,7 +945,7 @@ export default function LRCreate({
                       <input
                         type="text"
                         pattern="[0-9]*.[0-9]*"
-                        className="border-primary rounded-md border p-1"
+                        className="border-slate-200 rounded-md border p-1"
                         {...register("stCh")}
                       />
                     </div>
@@ -947,7 +954,7 @@ export default function LRCreate({
                       <input
                         type="text"
                         pattern="[0-9]*.[0-9]*"
-                        className="border-primary rounded-md border p-1"
+                        className="border-slate-200 rounded-md border p-1"
                         {...register("riskCh")}
                       />
                     </div>
@@ -977,7 +984,7 @@ export default function LRCreate({
                                   field.onChange(e.target.value),
                                   handleChange(label, e.target.value),
                                 ]}
-                                className="border-primary rounded-md border p-1"
+                                className="border-slate-200 rounded-md border p-1"
                               />
                             )}
                           />
@@ -1012,10 +1019,10 @@ export default function LRCreate({
               </tr>
             </tbody>
           </table>
-          <div className="border-primary flex items-center justify-end gap-2 border p-2 px-3">
-            <p className="text-sm font-medium">Total INR </p>
+          <div className="flex items-center justify-end gap-2 rounded-b-lg border border-t-0 border-slate-200 bg-slate-50 p-2 px-3">
+            <p className="text-sm font-medium text-slate-700">Total INR </p>
             <input
-              className="w-[5%] cursor-default outline-none"
+              className="w-[5%] cursor-default bg-transparent text-right font-semibold text-slate-900 outline-none"
               type="text"
               {...register("totalAmt")}
               readOnly
@@ -1023,22 +1030,22 @@ export default function LRCreate({
           </div>
           <div className="flex w-full justify-between py-2">
             <div className="flex w-[30%] flex-col gap-2">
-              <label className="font-medium">EWB Number</label>
+              <label className="text-sm font-medium text-slate-700">EWB Number</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("ewbNumber")}
               />
             </div>
             <div className="flex w-[30%] flex-col gap-2">
-              <label className="font-medium">EWB Expiry date</label>
+              <label className="text-sm font-medium text-slate-700">EWB Expiry date</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 type="date"
                 {...register("ewbExpiryDate")}
               />
             </div>
             <div className="flex w-[30%] flex-col gap-2">
-              <label className="font-medium">Billing party</label>
+              <label className="text-sm font-medium text-slate-700">Billing party</label>
               <Controller
                 name="client"
                 control={control}
@@ -1065,19 +1072,22 @@ export default function LRCreate({
             </div>
           </div>
         </div>
-        <div className="flex w-full justify-end gap-5">
+        <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
           <Button
-            variant={"outline"}
-            className="border-primary text-primary"
+            variant="outline"
+            className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
             disabled={isloading}
             type="button"
             onClick={() => [resetToDefault(), reset()]}
           >
             Back
           </Button>
-          <Button disabled={isloading}>
+          <Button
+            className="rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+            disabled={isloading}
+          >
             {isloading ? (
-              <VscLoading size={24} className="animate-spin" />
+              <VscLoading size={18} className="animate-spin" />
             ) : formStatus === "edit" ? (
               "Update LR"
             ) : (

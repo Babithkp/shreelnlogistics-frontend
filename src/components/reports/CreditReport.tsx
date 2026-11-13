@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { BiFilterAlt } from "react-icons/bi";
 import { BranchInputs, CreditInputs } from "@/types";
 import { formatter } from "@/lib/utils";
 import { Select as AntSelect } from "antd";
@@ -11,6 +9,15 @@ import {
   filterCreditByDateApi,
   filterCreditByDateForBranchApi,
 } from "@/api/expense";
+import {
+  ReportFiltersCard,
+  ReportStatsRow,
+  ReportExportRow,
+  ReportPreviewCard,
+  ReportDateField,
+  reportTableHeadClass,
+  reportTableRowClass,
+} from "./ReportUI";
 export default function CreditReport({
   branchName,
   isAdmin,
@@ -137,8 +144,12 @@ export default function CreditReport({
     if (saved) toast.success("File Downloaded");
   };
   return (
-    <>
-      <section className="flex w-full items-center justify-between gap-3">
+    <div className="flex flex-col gap-5">
+      <ReportFiltersCard
+        onGenerate={onFilterHandler}
+        onReset={() => setCreditData([])}
+        loading={filterLoading}
+      >
         {isAdmin && (
           <AntSelect
             options={[
@@ -154,105 +165,76 @@ export default function CreditReport({
             value={selectedBranchId || null}
             size="large"
             placeholder="Select a Branch"
-            className="w-[30%] bg-transparent"
+            className="w-full bg-transparent"
           />
         )}
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
-        </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
-          </div>
-        </div>
-        <Button className="w-[20%] rounded-md" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="w-[20%] rounded-md bg-[#B0BEC5] py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => [setCreditData([])]}
-        >
-          Reset
-        </Button>
-        <Button
-          className="w-[20%] rounded-md"
-          onClick={exportCreditExcelHandler}
-        >
-          Download
-        </Button>
-      </section>
-      <section className="flex h-[70vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
-        {creditData.length !== 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th className="text-start font-[500] text-slate-500">
-                  Credit ID
-                </th>
-                <th className="font-[500] text-slate-500">Title</th>
-                <th className="font-[500] text-slate-500">Date</th>
-                <th className="font-[500] text-slate-500">Category</th>
-                <th className="font-[500] text-slate-500">Branch</th>
-                <th className="font-[500] text-slate-500">Amount</th>
+        <ReportDateField
+          label="Date From"
+          value={filterInputs.from}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, from: value })
+          }
+        />
+        <ReportDateField
+          label="Date To"
+          value={filterInputs.to}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, to: value })
+          }
+        />
+      </ReportFiltersCard>
+
+      <ReportStatsRow
+        stats={[
+          { label: "Total Records", value: creditData.length },
+          {
+            label: "Total Value",
+            value: formatter.format(
+              creditData.reduce(
+                (acc, credit) => acc + parseFloat(credit.amount),
+                0,
+              ),
+            ),
+          },
+        ]}
+      />
+
+      <ReportExportRow onExport={exportCreditExcelHandler} />
+
+      <ReportPreviewCard isEmpty={creditData.length === 0}>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className={`${reportTableHeadClass} pl-0`}>Credit ID</th>
+              <th className={reportTableHeadClass}>Title</th>
+              <th className={reportTableHeadClass}>Date</th>
+              <th className={reportTableHeadClass}>Category</th>
+              <th className={reportTableHeadClass}>Branch</th>
+              <th className={`${reportTableHeadClass} text-right`}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {creditData.map((data) => (
+              <tr key={data.id} className={reportTableRowClass}>
+                <td className="py-2.5">{data.creditId}</td>
+                <td className="py-2.5">{data.title}</td>
+                <td className="py-2.5">
+                  {new Date(data.date).toLocaleDateString()}
+                </td>
+                <td className="py-2.5">{data.category}</td>
+                <td className="py-2.5">
+                  {data.Branches
+                    ? data.Branches.branchName
+                    : data.Admin.branchName}
+                </td>
+                <td className="py-2.5 text-right">
+                  {formatter.format(parseFloat(data.amount))}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {creditData.map((data) => (
-                <tr key={data.id}>
-                  <td className="py-2">{data.creditId}</td>
-                  <td className="py-2 text-center">{data.title}</td>
-                  <td className="py-2 text-center">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 text-center">{data.category}</td>
-                  <td className="py-2 text-center">
-                    {data.Branches
-                      ? data.Branches.branchName
-                      : data.Admin.branchName}
-                  </td>
-                  <td className="py-2 text-center">
-                    {formatter.format(parseFloat(data.amount))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {creditData.length == 0 && (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-5">
-            <BiFilterAlt size={60} />
-            <p className="text-lg font-medium">
-              Please apply filters to view the data
-            </p>
-          </div>
-        )}
-      </section>
-    </>
+            ))}
+          </tbody>
+        </table>
+      </ReportPreviewCard>
+    </div>
   );
 }

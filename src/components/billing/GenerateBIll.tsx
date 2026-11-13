@@ -534,18 +534,31 @@ export default function GenerateBIll({
 
   return (
     <>
-      <div className="flex max-h-[95vh] flex-col gap-2 overflow-y-auto rounded-md bg-white p-5">
-        <p className="text-xl font-medium">{` ${formStatus === "create" ? "Create customer Bill" : "Edit customer Bill"} `}</p>
+      <div className="flex max-h-[95vh] flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div>
+          <p className="text-xl font-semibold text-slate-900">
+            {supplementary
+              ? "Create Supplementary Bill"
+              : formStatus === "create"
+                ? "Create customer Bill"
+                : "Edit customer Bill"}
+          </p>
+          <p className="text-sm text-slate-500">
+            {formStatus === "edit"
+              ? "Update the details of this bill"
+              : "Fill in the details to generate a new bill"}
+          </p>
+        </div>
         <form
           className="flex flex-wrap justify-between gap-5"
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Bill Number</label>
+              <label className="text-sm font-medium text-slate-700">Bill Number</label>
               <input
                 type="text"
-                className={`border-primary rounded-md border p-2 ${!supplementary && "cursor-not-allowed"}`}
+                className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${!supplementary ? "cursor-not-allowed opacity-60" : ""}`}
                 {...register("billNumber", { required: true })}
                 readOnly={!supplementary}
               />
@@ -561,10 +574,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Date</label>
+              <label className="text-sm font-medium text-slate-700">Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("date", { required: true })}
               />
               {errors.date && (
@@ -574,17 +587,17 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Due date</label>
+              <label className="text-sm font-medium text-slate-700">Due date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("dueDate")}
               />
             </div>
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Client Name</label>
+              <label className="text-sm font-medium text-slate-700">Client Name</label>
               <Controller
                 name="Client.name"
                 control={control}
@@ -625,10 +638,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Client's GSTIN</label>
+              <label className="text-sm font-medium text-slate-700">Client's GSTIN</label>
               <input
                 type="text"
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("Client.GSTIN")}
                 disabled
               />
@@ -636,10 +649,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">HSN / SAC Code</label>
+              <label className="text-sm font-medium text-slate-700">HSN / SAC Code</label>
               <input
                 type="text"
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("hsnSacCode")}
                 disabled
               />
@@ -647,10 +660,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Place of Supply</label>
+              <label className="text-sm font-medium text-slate-700">Place of Supply</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("placeOfSupply", { required: true })}
               />
               {errors.placeOfSupply && (
@@ -660,10 +673,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Client's Address</label>
+              <label className="text-sm font-medium text-slate-700">Client's Address</label>
               <input
                 type="text"
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("Client.address")}
                 disabled
               />
@@ -671,10 +684,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">State</label>
+              <label className="text-sm font-medium text-slate-700">State</label>
               <input
                 type="text"
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("state")}
                 disabled
               />
@@ -682,10 +695,10 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">State Code</label>
+              <label className="text-sm font-medium text-slate-700">State Code</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("statecode", { required: true })}
               />
               {errors.statecode && (
@@ -695,7 +708,7 @@ export default function GenerateBIll({
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className="font-medium">Billed in</label>
+              <label className="text-sm font-medium text-slate-700">Billed in</label>
               <Select
                 onValueChange={(value) =>
                   setTotalAmounts((prev) => ({
@@ -706,7 +719,7 @@ export default function GenerateBIll({
                 value={totalAmounts.billedin}
                 disabled={selectedBillToEdit?.WriteOff != null}
               >
-                <SelectTrigger className="boder border-primary h-full w-full py-5 shadow-none data-[placeholder]:text-black">
+                <SelectTrigger className="h-full w-full rounded-lg border border-slate-200 bg-slate-50 py-5 shadow-none data-[placeholder]:text-slate-900">
                   <SelectValue />
                   <div></div>
                 </SelectTrigger>
@@ -726,51 +739,51 @@ export default function GenerateBIll({
             <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr>
-                  <th className="border-primary rounded-tl-lg border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 rounded-tl-lg border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Sl no
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     LR#
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     LR Date
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Origin
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Destination
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Description
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Invoice Number
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Invoice date
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Vehile Type
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Vehile No.
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Weight
                   </th>
-                  <th className="border-primary border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Freight Amount
                   </th>
-                  <th className="border-primary rounded-tr-lg border p-1 px-3 text-start font-medium">
+                  <th className="border-slate-200 bg-slate-50 rounded-tr-lg border p-1 px-3 text-start text-sm font-medium text-slate-600">
                     Action
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="text-sm">
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top">
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top">
                     <AntSelect
                       className="w-full"
                       size="middle"
@@ -813,64 +826,64 @@ export default function GenerateBIll({
                       }}
                     />
                   </td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
-                  <td className="border-primary border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
                 </tr>
                 {selectLrData?.map((lrData, index) => (
                   <tr className="text-sm" key={lrData.lrNumber}>
                     <td
-                      className={`border-primary border p-2 align-top ${selectLrData.length - 1 === index ? "rounded-bl-lg" : ""}`}
+                      className={`border-slate-200 border p-2 align-top ${selectLrData.length - 1 === index ? "rounded-bl-lg" : ""}`}
                     >
                       {index + 1}
                     </td>
-                    <td className="border-primary border p-2 text-center align-top">
+                    <td className="border-slate-200 border p-2 text-center align-top">
                       {lrData.lrNumber}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.date}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.from}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.to}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.description}
                     </td>
-                    <td className="border-primary border p-2 text-center align-top">
+                    <td className="border-slate-200 border p-2 text-center align-top">
                       {lrData.invoiceNo}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.invoiceDate}
                     </td>
-                    <td className="border-primary border p-2 text-center align-top">
+                    <td className="border-slate-200 border p-2 text-center align-top">
                       {lrData.Vehicle?.vehicletypes &&
                         lrData.Vehicle?.vehicletypes}
                     </td>
-                    <td className="border-primary border p-2 align-top">
+                    <td className="border-slate-200 border p-2 align-top">
                       {lrData.Vehicle?.vehicleNumber &&
                         lrData.Vehicle?.vehicleNumber}
                     </td>
-                    <td className="border-primary border p-2 text-center align-top">
+                    <td className="border-slate-200 border p-2 text-center align-top">
                       {lrData.weight}
                     </td>
                     <td
-                      className={`border-primary align-top} border p-2 text-center`}
+                      className={`border-slate-200 align-top border p-2 text-center`}
                     >
                       {lrData.totalAmt}
                     </td>
                     <td
-                      className={`border-primary border p-2 text-center align-top ${selectLrData.length - 1 === index ? "rounded-br-lg" : ""}`}
+                      className={`border-slate-200 border p-2 text-center align-top ${selectLrData.length - 1 === index ? "rounded-br-lg" : ""}`}
                     >
                       <button
                         disabled={selectedBillToEdit?.WriteOff != null}
@@ -888,7 +901,7 @@ export default function GenerateBIll({
               </tbody>
             </table>
           </div>
-          <div className="border-primary flex w-full justify-between rounded-md border p-3 text-sm font-medium">
+          <div className="flex w-full justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700">
             <div className="flex flex-col gap-1">
               <p className="flex items-center gap-5">
                 <span>Add : IGST Rate</span>
@@ -1374,7 +1387,7 @@ export default function GenerateBIll({
                 )}
             </div>
           </div>
-          <div className="border-primary flex w-full justify-between rounded-md border p-3 font-medium">
+          <div className="flex w-full justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 font-medium text-slate-700">
             <div>
               <p>Bank Details</p>
               <p>Name SHREE LN LOGISTICS</p>
@@ -1388,7 +1401,7 @@ export default function GenerateBIll({
                 <div className="flex items-center gap-2 capitalize">
                   Total in words -
                   <textarea
-                    className="border-primary w-100 rounded-md border p-1 px-2"
+                    className="w-100 rounded-lg border border-slate-200 bg-slate-50 p-1 px-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                     value={totalAmounts.totalInWords}
                     onChange={(e) =>
                       setTotalAmounts({
@@ -1405,7 +1418,7 @@ export default function GenerateBIll({
               </div>
             </div>
           </div>
-          <div className="flex w-full justify-end gap-2">
+          <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
             <Button
               onClick={() => [
                 sectionChangeHandler({
@@ -1415,17 +1428,18 @@ export default function GenerateBIll({
                 resetInputs(),
               ]}
               disabled={loading}
-              className="cursor-pointer rounded-xl px-10"
+              variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
               type="button"
             >
               Back
             </Button>
             <Button
-              className="cursor-pointer rounded-xl px-10"
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
               disabled={loading}
             >
               {loading ? (
-                <VscLoading size={24} className="animate-spin" />
+                <VscLoading size={18} className="animate-spin" />
               ) : formStatus === "create" ? (
                 "Generate Bill"
               ) : (

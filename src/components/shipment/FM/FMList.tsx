@@ -5,7 +5,7 @@ import {
   MdOutlineChevronRight,
   MdOutlineFileDownload,
 } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import {
   addPaymentRecordToFMApi,
   createBulkPaymentApi,
@@ -21,6 +21,7 @@ import {
 import { motion } from "motion/react";
 import { RxCross2 } from "react-icons/rx";
 import { RiDeleteBin6Line, RiEditBoxLine } from "react-icons/ri";
+import { Pencil, Mail, Paperclip } from "lucide-react";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PiRecord } from "react-icons/pi";
 import {
@@ -87,7 +88,6 @@ import {
 } from "@/types";
 import { createNotificationApi } from "@/api/admin";
 
-import { LuSearch } from "react-icons/lu";
 import { Modal } from "antd";
 import { BiTrash } from "react-icons/bi";
 import { createFMWriteOffApi, deleteFmWriteOffApi } from "@/api/writeoff";
@@ -132,6 +132,8 @@ export default function FMList({
   branchDetails,
   vendors,
   onRefresh,
+  searchValue,
+  searchSubmitRef,
 }: {
   data: {
     data: FMInputs[];
@@ -143,6 +145,8 @@ export default function FMList({
   branchDetails?: BranchDetails;
   vendors: VendorInputs[];
   onRefresh: () => void;
+  searchValue: string;
+  searchSubmitRef: MutableRefObject<() => void>;
 }) {
   const [FMData, setFMData] = useState<FMInputs[]>(data.data);
   const [filteredFMs, setFilteredFMs] = useState<FMInputs[]>(data.data);
@@ -173,7 +177,7 @@ export default function FMList({
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [FMList, setFMList] = useState<FMInputs[]>([]);
   const [FMListForBulk, setFMListForBulk] = useState<BulkFMList[]>([]);
-  const [search, setSearch] = useState("");
+  const search = searchValue;
 
   const [editingAmount, setEditingAmount] = useState("0");
 
@@ -314,8 +318,7 @@ export default function FMList({
     }
   }
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (search.trim().length === 0) {
       setFilteredFMs(FMData);
       return;
@@ -326,6 +329,10 @@ export default function FMList({
       filterFMDetailsForBranch(branch.branchId, search);
     }
   };
+
+  useEffect(() => {
+    searchSubmitRef.current = handleSearch;
+  });
 
   useEffect(() => {
     if (search.trim().length === 0) {
@@ -779,68 +786,48 @@ export default function FMList({
 
   return (
     <>
-      <div className="relative">
-        <form
-          className="absolute -top-18 right-[13vw] flex items-center gap-2"
-          onSubmit={handleSearch}
-        >
-          <div className="flex items-center gap-2 rounded-full bg-white p-[15px] px-5">
-            <input
-              placeholder="Search"
-              className="outline-none placeholder:font-medium"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Button className="cursor-pointer rounded-xl p-6">
-            <LuSearch size={30} className="mx-3 scale-125" />
-          </Button>
-        </form>
-      </div>
-
       <section className="flex gap-5">
         <motion.div
           animate={{ width: showPreview ? "50%" : "100%" }}
           transition={{ duration: 0.3 }}
-          className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white p-3`}
+          className={`flex h-fit max-h-[84vh] w-full flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm`}
         >
           <div className={`flex items-center justify-between`}>
-            <p className="text-xl font-medium">FMs</p>
-            <div className="flex gap-5">
+            <p className="text-xl font-semibold text-slate-900">FMs</p>
+            <div className="flex items-center gap-3">
               <Button
-                variant={"outline"}
-                className="border-primary text-primary rounded-xl p-5"
+                variant="outline"
+                className="rounded-xl border-primary/30 px-5 text-primary hover:bg-primary/5"
                 onClick={() => setIsBulkModalOpen(true)}
               >
                 Bulk Record
               </Button>
               <Button
-                className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+                className="gap-2 rounded-xl bg-primary px-5 text-white hover:bg-primary/90"
                 onClick={() => [
                   sectionChangeHandler("createNew"),
                   setFormStatus("create"),
                 ]}
               >
-                <MdOutlineAdd size={34} />
+                <MdOutlineAdd size={20} />
                 Create new
               </Button>
               {!search && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="flex items-center gap-3 text-sm text-slate-500">
                   <p>
-                    {startIndex}-{endIndex}
+                    {startIndex}-{endIndex}{" "}
+                    <span className="text-slate-400">of</span> {totalItems}
                   </p>
-                  <p>of</p>
-                  <p>{totalItems}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={handlePrev}
                       disabled={currentPage === 1}
-                      className={`cursor-pointer ${currentPage === 1 ? "opacity-50" : ""}`}
+                      className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === 1 ? "opacity-40" : ""}`}
                     >
                       <MdOutlineChevronLeft size={20} />
                     </button>
                     <button
-                      className={`cursor-pointer ${currentPage === totalPages ? "opacity-50" : ""}`}
+                      className={`cursor-pointer rounded-md p-1 hover:bg-slate-100 ${currentPage === totalPages ? "opacity-40" : ""}`}
                       onClick={handleNext}
                       disabled={currentPage === totalPages}
                     >
@@ -851,55 +838,52 @@ export default function FMList({
               )}
             </div>
           </div>
-          <div className="overflow-y-auto pr-2">
+          <div className="overflow-y-auto pr-1">
             <table
-              className={`w-full border text-sm ${showPreview ? "text-[0.6rem]" : ""}`}
+              className={`w-full ${showPreview ? "text-xs" : "text-sm"}`}
             >
-              <thead>
-                <tr>
-                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                    <p>FM#</p>
+              <thead className="sticky top-0 z-10 bg-white">
+                <tr className="border-b border-slate-100">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    FM#
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Vendor Name
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
-                    <p>Date</p>
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    Date
                   </th>
-                  <th className="flex items-center gap-2 text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Hire Value
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Advance Paid
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Advance Paid Date
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Balance
                   </th>
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Balance Paid Date
                   </th>
                   {!showPreview && (
-                    <th className="border text-center font-[400] text-[#797979]">
+                    <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                       Pending Advance
                     </th>
                   )}
                   {!showPreview && (
-                    <th className="border text-center font-[400] text-[#797979]">
+                    <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                       Pending Balance
                     </th>
                   )}
                   {!showPreview && (
-                    <>
-                      <th className="border text-center font-[400] text-[#797979]">
-                        TDS
-                      </th>
-                    </>
+                    <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                      TDS
+                    </th>
                   )}
-
-                  <th className="border text-center font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Status
                   </th>
                 </tr>
@@ -907,19 +891,27 @@ export default function FMList({
               <tbody>
                 {filteredFMs.map((data) => (
                   <tr
-                    className={`hover:bg-accent cursor-pointer ${selectedFM?.fmNumber === data.fmNumber ? "bg-accent" : ""}`}
+                    className={`cursor-pointer border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 ${
+                      selectedFM?.fmNumber === data.fmNumber
+                        ? "bg-primary/5"
+                        : ""
+                    }`}
                     onClick={() => selectFMForPreview(data)}
                     key={data.fmNumber}
                   >
-                    <td className="border py-2">{data.fmNumber}</td>
-                    <td className="border py-2">{data.Vendors?.name}</td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 font-medium text-slate-900">
+                      {data.fmNumber}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-700">
+                      {data.Vendors?.name}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-700">
                       {new Date(data.date).toLocaleDateString()}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(parseInt(data.hire || "0"))}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {data.advance
                         ? formatter.format(
                           parseFloat(data.advance) - data.outStandingAdvance,
@@ -927,33 +919,31 @@ export default function FMList({
                         : 0}
                     </td>
                     {!showPreview && (
-                      <td className="border py-2 text-center">
+                      <td className="px-3 py-2.5 text-slate-700">
                         {getAdvancePaidDate(data)}
                       </td>
                     )}
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(parseInt(data.netBalance))}
                     </td>
-                    <td className="border py-2 text-center">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {getBalancePaidDate(data)}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(data.outStandingAdvance)}
                     </td>
-                    <td className="border py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(
                         parseFloat(data.outStandingBalance || "0"),
                       )}
                     </td>
                     {!showPreview && (
-                      <>
-                        <td className="border py-2 text-center">
-                          {formatter.format(parseFloat(data.tds || "0"))}
-                        </td>
-                      </>
+                      <td className="px-3 py-2.5 text-slate-700">
+                        {formatter.format(parseFloat(data.tds || "0"))}
+                      </td>
                     )}
                     <td
-                      className={`border py-2 text-center font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
+                      className={`px-3 py-2.5 font-medium capitalize ${statusColorMap[data.status] || "text-blue-500"}`}
                     >
                       {data.status}
                     </td>
@@ -964,7 +954,7 @@ export default function FMList({
           </div>
         </motion.div>
         <motion.div
-          className="hidden h-[84vh] flex-col gap-5 rounded-md bg-white p-5"
+          className="hidden h-[84vh] flex-col gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
           animate={{
             width: showPreview ? "50%" : "0%",
             display: showPreview ? "flex" : "none",
@@ -973,12 +963,19 @@ export default function FMList({
           transition={{ duration: 0.3 }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-medium">FM# {selectedFM?.fmNumber}</h3>
-            <div className="flex items-center gap-3">
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                FM #{selectedFM?.fmNumber}
+              </p>
+              <p className="text-xs text-slate-500">
+                {selectedFM?.vendorName}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
               {!selectedFM?.WriteOff?.id && (
                 <Button
-                  variant={"outline"}
-                  className="border-primary text-primary cursor-pointer rounded-3xl"
+                  variant="outline"
+                  className="rounded-lg border-primary/30 px-4 text-primary hover:bg-primary/5"
                   onClick={() => [
                     setIsWriteOffModalOpen(true),
                     resetWriteOff(),
@@ -989,7 +986,7 @@ export default function FMList({
               )}
               {selectedFM?.WriteOff?.id && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer rounded-xl border border-red-500 p-2 text-sm font-medium text-red-500 hover:bg-slate-100 hover:text-black">
+                  <AlertDialogTrigger className="cursor-pointer rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50">
                     Delete Write Off
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -1013,172 +1010,247 @@ export default function FMList({
                 </AlertDialog>
               )}
               <Button
-                variant={"outline"}
-                className="border-primary text-primary cursor-pointer rounded-3xl"
+                variant="outline"
+                className="gap-2 rounded-lg border-primary/30 px-4 text-primary hover:bg-primary/5"
                 onClick={() => [setIsRecordModalOpen(true), reset()]}
               >
-                <PiRecord className="size-5" />
+                <PiRecord className="size-4" />
                 Record Payment
               </Button>
-              <button className="bg-primary/50 cursor-pointer rounded-full p-1">
-                <RxCross2
-                  size={20}
-                  color="white"
-                  onClick={() => [setShowPreview(false), setSelectedFM(null)]}
-                />
+              <button
+                className="flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                onClick={() => [setShowPreview(false), setSelectedFM(null)]}
+              >
+                <RxCross2 size={18} />
               </button>
             </div>
           </div>
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-2">
               <Button
-                className="rounded-2xl"
+                className="gap-2 rounded-lg bg-primary px-4 text-white hover:bg-primary/90"
                 onClick={() => [
                   setSelectedFMDataToEdit(selectedFM!),
                   setFormStatus("edit"),
                 ]}
               >
+                <Pencil size={14} />
                 Edit details
               </Button>
 
               <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogTrigger className="border-primary cursor-pointer rounded-2xl border p-1 px-4 font-medium">
+                <DialogTrigger className="flex cursor-pointer items-center gap-2 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+                  <Mail size={14} />
                   Send mail
                 </DialogTrigger>
-                <DialogContent className="h-[80vh] min-w-7xl overflow-y-scroll">
+                <DialogContent className="h-[85vh] min-w-7xl overflow-y-auto rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-2xl">Send Mail</DialogTitle>
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Mail size={20} />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-xl font-semibold text-slate-900">
+                          Send Mail
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-slate-500">
+                          Email the Freight Memo PDF to one or more recipients
+                        </DialogDescription>
+                      </div>
+                    </div>
                   </DialogHeader>
-                  <DialogDescription></DialogDescription>
                   <div className="flex flex-col gap-5">
-                    <div className="flex border-b pb-1 text-sm">
-                      <p>To</p>
-                      <input
-                        type="text"
-                        className="w-[90%] pl-2"
-                        value={emailIds}
-                        onChange={(e) => setEmailIds(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex gap-5 border-b pb-1 text-sm">
-                      <p>Subject</p>
-                      <p>Freight Memo details for - #{selectedFM?.fmNumber}</p>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <p>Hi there,</p>
-                      <textarea
-                        value={mailGreeting}
-                        onChange={(e) => setMailGreeting(e.target.value)}
-                      ></textarea>
-                      <div>
-                        <div className="flex">
-                          <label>Freight Details: </label>
+                    <div className="rounded-xl border border-slate-100 p-4">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-medium text-slate-500">
+                            To
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                            value={emailIds}
+                            onChange={(e) => setEmailIds(e.target.value)}
+                          />
                         </div>
-                        <div className="flex">
-                          <label>FM Number</label>
-                          <p>: #{selectedFM?.fmNumber}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Pickup Location</label>
-                          <p>: {selectedFM?.from}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Delivery Location</label>
-                          <p>: {selectedFM?.to}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Vehicle Number:</label>
-                          <p> {selectedFM?.vehicleNo}</p>
-                        </div>
-                        <div className="flex">
-                          <label>Driver Name:</label>
-                          <p> {selectedFM?.DriverName}</p>
-                        </div>
-                        <div className="flex">
-                          <label>LR Number (s) :</label>
-                          {selectedFM?.LRDetails.map((lrnumers) => (
-                            <p key={lrnumers.lrNumber}>{lrnumers.lrNumber}, </p>
-                          ))}
-                        </div>
-                        <div className="flex">
-                          <label>Total Freight Amount</label>
-                          <p>: {selectedFM?.netBalance}</p>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-medium text-slate-500">
+                            Subject
+                          </label>
+                          <p className="text-sm text-slate-900">
+                            Freight Memo details for - #{selectedFM?.fmNumber}
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <p>Warm Regards,</p>
-                        <p>Shivam Jha</p>
-                        <p>CEO</p>
-                        <p>Shree LN Logistics</p>
-                        <p>+91 90364416521</p>
-                        <p>Website: www.shreelnlogistics.com</p>
-                        <div className="py-5">
-                          <img src={logo} alt="logo" />
-                        </div>
-                        <p className="w-100">
-                          Flat No.203, 3rd Floor, Sai Godavari Apartment,
-                          Kuduregere Road, Madanayakanahalli, Bangalore Rural
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 p-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-medium text-slate-500">
+                          Message
+                        </label>
+                        <p className="text-sm text-slate-700">Hi there,</p>
+                        <textarea
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
+                          rows={3}
+                          value={mailGreeting}
+                          onChange={(e) => setMailGreeting(e.target.value)}
+                        ></textarea>
+                      </div>
+
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <p className="mb-2 text-xs font-medium text-slate-500">
+                          Freight Details
                         </p>
-                      </div>
-                      <div>
-                        <p className="text-sm">Attachments</p>
-                        <div className="flex w-[30%] flex-col gap-2">
-                          {attachment.map((attachment, index) => (
-                            <div
-                              className="my-1 flex items-center justify-between gap-5 rounded-md bg-[#E9EDF7] px-5 py-1"
-                              key={index}
-                            >
-                              <p>
-                                {index === 0 ? "FM" : "LR"} #
-                                {index === 0
-                                  ? selectedFM?.fmNumber
-                                  : fetchedLrNumber[index - 1]}
-                                <span className="pl-2 text-sm text-[#A3AED0]">
-                                  ({attachment?.size.toString().substring(0, 3)}
-                                  kb)
-                                </span>
-                              </p>
-                              <RxCross2
-                                size={15}
-                                onClick={() => removeAttachment(index)}
-                              />
-                            </div>
-                          ))}
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              FM Number
+                            </p>
+                            <p className="text-slate-900">
+                              #{selectedFM?.fmNumber}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Pickup Location
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedFM?.from}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Delivery Location
+                            </p>
+                            <p className="text-slate-900">{selectedFM?.to}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Vehicle Number
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedFM?.vehicleNo}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Driver Name
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedFM?.DriverName}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              LR Number(s)
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedFM?.LRDetails.map(
+                                (lrnumers) => lrnumers.lrNumber,
+                              ).join(", ")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Total Freight Amount
+                            </p>
+                            <p className="text-slate-900">
+                              {selectedFM?.netBalance}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-5">
-                        <Button
-                          variant={"outline"}
-                          className="border-primary text-primary"
-                          onClick={() => setIsOpen(false)}
-                          disabled={isLoading}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() => [onSendEmailHandler()]}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? (
-                            <VscLoading size={20} className="animate-spin" />
-                          ) : (
-                            "Send Mail"
-                          )}
-                        </Button>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-700">
+                      <p>Warm Regards,</p>
+                      <p className="font-medium text-slate-900">
+                        Shivam Jha
+                      </p>
+                      <p>CEO</p>
+                      <p>Shree LN Logistics</p>
+                      <p>+91 90364416521</p>
+                      <p>Website: www.shreelnlogistics.com</p>
+                      <div className="py-4">
+                        <img src={logo} alt="logo" className="h-10 w-auto" />
                       </div>
+                      <p className="w-100 text-slate-500">
+                        Flat No.203, 3rd Floor, Sai Godavari Apartment,
+                        Kuduregere Road, Madanayakanahalli, Bangalore Rural
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-1.5 text-xs font-medium text-slate-500">
+                        Attachments
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {attachment.map((attachment, index) => (
+                          <div
+                            className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2"
+                            key={index}
+                          >
+                            <Paperclip size={16} className="text-slate-400" />
+                            <p className="flex items-center gap-2 text-sm text-slate-700">
+                              {index === 0 ? "FM" : "LR"} #
+                              {index === 0
+                                ? selectedFM?.fmNumber
+                                : fetchedLrNumber[index - 1]}
+                              <span className="text-xs text-slate-400">
+                                ({attachment?.size.toString().substring(0, 3)}
+                                kb)
+                              </span>
+                            </p>
+                            <RxCross2
+                              size={14}
+                              className="cursor-pointer text-slate-400"
+                              onClick={() => removeAttachment(index)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                      <Button
+                        variant="outline"
+                        className="rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                        onClick={() => setIsOpen(false)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="gap-2 rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                        onClick={() => [onSendEmailHandler()]}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <VscLoading size={18} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Mail size={14} />
+                            Send Mail
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={downloadPdfFile} className="cursor-pointer">
-                <MdOutlineFileDownload size={20} />
+            <div className="flex items-center gap-1">
+              <button
+                onClick={downloadPdfFile}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"
+              >
+                <MdOutlineFileDownload size={18} />
               </button>
               {!isAdmin && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer">
-                    <RiDeleteBin6Line size={20} color="red" />
+                  <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                    <RiDeleteBin6Line size={18} />
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1203,8 +1275,8 @@ export default function FMList({
               )}
               {isAdmin && (
                 <AlertDialog>
-                  <AlertDialogTrigger className="cursor-pointer">
-                    <RiDeleteBin6Line size={20} color="red" />
+                  <AlertDialogTrigger className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50">
+                    <RiDeleteBin6Line size={18} />
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1228,15 +1300,17 @@ export default function FMList({
               )}
             </div>
           </div>
-          <PDFViewer className="h-full w-full">
-            {branchDetails && (
-              <FMTemplate
-                FmData={selectedFM!}
-                branchDetails={branchDetails}
-                companyProfile={companyProfile}
-              />
-            )}
-          </PDFViewer>
+          <div className="flex-1 overflow-hidden rounded-xl border border-slate-100">
+            <PDFViewer className="h-full w-full">
+              {branchDetails && (
+                <FMTemplate
+                  FmData={selectedFM!}
+                  branchDetails={branchDetails}
+                  companyProfile={companyProfile}
+                />
+              )}
+            </PDFViewer>
+          </div>
         </motion.div>
         <Modal
           open={isBulkModalOpen}
@@ -1252,15 +1326,18 @@ export default function FMList({
           className="max-h-[80vh] overflow-auto"
 
         >
-          <div>
-            <p className="mb-5 text-xl font-semibold">FM Bulk Record</p>
+          <div className="mb-5">
+            <p className="text-xl font-semibold text-slate-900">FM Bulk Record</p>
+            <p className="text-sm text-slate-500">
+              Record one payment against multiple FMs of a vendor
+            </p>
           </div>
           <form
             onSubmit={handleBulkSubmit(onBulkSubmit)}
             className="flex flex-wrap justify-between gap-5"
           >
-            <div className="flex w-[50%] flex-col gap-2">
-              <label>Vendor Name</label>
+            <div className="flex w-[23%] flex-col gap-2">
+              <label className="text-sm font-medium text-slate-700">Vendor Name</label>
               <Controller
                 name="vendorName"
                 control={controlBulk}
@@ -1286,18 +1363,19 @@ export default function FMList({
                     }))}
                     showSearch
                     placeholder="Select vendors"
-                    className="outline-primary w-full rounded-md outline"
+                    className="w-full"
                     size="large"
+                    style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                   />
                 )}
               />
             </div>
-            <div className="w-[48%]">
+            <div className="w-[23%]">
               <div className="flex flex-col gap-2">
-                <label>Date</label>
+                <label className="text-sm font-medium text-slate-700">Date</label>
                 <input
                   type="date"
-                  className="border-primary rounded-md border p-2"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                   {...registerBulk("date", { required: true })}
                 />
                 {errorsBulk.date && (
@@ -1305,12 +1383,12 @@ export default function FMList({
                 )}
               </div>
             </div>
-            <div className="w-[49%]">
+            <div className="w-[23%]">
               <div className="flex flex-col gap-2">
-                <label>Transaction ID/ Cheque Number</label>
+                <label className="text-sm font-medium text-slate-700">Transaction ID/ Cheque Number</label>
                 <input
                   type="text"
-                  className="border-primary rounded-md border p-2"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                   {...registerBulk("transactionNumber", { required: true })}
                 />
                 {errorsBulk.transactionNumber && (
@@ -1318,9 +1396,9 @@ export default function FMList({
                 )}
               </div>
             </div>
-            <div className="w-[49%]">
+            <div className="w-[23%]">
               <div className="flex flex-col gap-2">
-                <label>Payment Mode</label>
+                <label className="text-sm font-medium text-slate-700">Payment Mode</label>
 
                 <Controller
                   name="paymentMode"
@@ -1340,8 +1418,9 @@ export default function FMList({
                         { value: "Nill", label: "Nill" },
                       ]}
                       placeholder="Select Payment mode"
-                      className="outline-primary w-full rounded-md outline"
+                      className="w-full"
                       size="large"
+                      style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                     />
                   )}
                 />
@@ -1354,9 +1433,9 @@ export default function FMList({
 
             <div className="w-full">
               <div className="flex flex-col gap-2">
-                <label>Remarks</label>
+                <label className="text-sm font-medium text-slate-700">Remarks</label>
                 <input
-                  className="border-primary rounded-md border p-2"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                   {...registerBulk("remarks", { required: true })}
                 />
               </div>
@@ -1365,20 +1444,21 @@ export default function FMList({
               )}
             </div>
 
-            <table className="w-full">
+            <div className="w-full">
+            <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr>
-                  <th className="border text-sm font-medium">SL NO.</th>
-                  <th className="border text-sm font-medium">FM Number</th>
-                  <th className="border text-sm font-medium">Amount</th>
-                  <th className="border text-sm font-medium">Pending Amount</th>
-                  <th className="border text-sm font-medium">Actions</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600 rounded-tl-lg">Sl no</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">FM Number</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">Amount</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600">Pending Amount</th>
+                <th className="border-slate-200 bg-slate-50 border p-1 px-3 text-start text-sm font-medium text-slate-600 rounded-tr-lg">Action</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="text-sm">
-                  <td className="border py-2"></td>
-                  <td className="border py-2">
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top">
                     <AntSelect
                       onChange={(val) => {
                         const fm = FMList.find((FM) => FM.fmNumber === val);
@@ -1401,24 +1481,25 @@ export default function FMList({
                         label: FM.fmNumber,
                       }))}
                       showSearch
-                      placeholder="Select Payment mode"
-                      className="outline-primary w-full rounded-md outline"
-                      size="large"
+                      placeholder="Select FM Number"
+                    className="w-full"
+                    size="middle"
+                    style={{ border: "none", borderRadius: "0px" }}
                     />
                   </td>
-                  <td className="border py-2"></td>
-                  <td className="border py-2"></td>
-                  <td className="border py-2"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
+                  <td className="border-slate-200 border p-2 align-top"></td>
                 </tr>
                 {FMListForBulk.map((data, i) => (
                   <tr className="text-sm" key={i}>
-                    <td className="border py-2 text-center">{i + 1}</td>
-                    <td className="border py-2 text-center">{data.fmNumber}</td>
-                    <td className="border py-2">
+                    <td className="border-slate-200 border p-2 align-top text-center">{i + 1}</td>
+                    <td className="border-slate-200 border p-2 align-top text-center">{data.fmNumber}</td>
+                    <td className="border-slate-200 border p-2 align-top">
                       <input
                         value={data.amount}
                         type="number"
-                        className="border-primary w-full rounded-md border p-2"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                         onChange={(e) =>
                           setFMListForBulk((prev) => {
                             const updatedData = prev.map((item) => {
@@ -1446,10 +1527,10 @@ export default function FMList({
                         }
                       />
                     </td>
-                    <td className="border py-2 text-center">
+                    <td className="border-slate-200 border p-2 align-top text-center">
                       {data.pendingAmount}
                     </td>
-                    <td className="cursor-pointer justify-items-center border py-2">
+                    <td className="border-slate-200 border p-2 align-top cursor-pointer text-center">
                       <BiTrash
                         size={20}
                         color="red"
@@ -1466,12 +1547,13 @@ export default function FMList({
                 ))}
               </tbody>
             </table>
+          </div>
 
-            <div className="flex w-full justify-end gap-5">
+            <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
               <Button
                 type="button"
-                variant={"outline"}
-                className="border-primary text-primary"
+                variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
                 onClick={() => [
                   setIsBulkModalOpen(false),
                   setFMList([]),
@@ -1482,9 +1564,12 @@ export default function FMList({
               >
                 Cancel
               </Button>
-              <Button className="rounded-xl px-7" disabled={isLoading}>
+              <Button
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+            >
                 {isLoading ? (
-                  <VscLoading size={24} className="animate-spin" />
+                  <VscLoading size={18} className="animate-spin" />
                 ) : (
                   "Record Bulk"
                 )}

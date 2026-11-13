@@ -369,8 +369,9 @@ export default function Credit({ setSection }: { setSection: any }) {
               <LuSearch size={30} className="mx-3 scale-125" />
             </Button>
             <Button
-              className="border-primary cursor-pointer rounded-2xl p-5"
-              variant={"outline"}
+              type="button"
+              variant="outline"
+              className="border-primary cursor-pointer rounded-xl py-5 text-[#2196F3]"
               onClick={() => [
                 setSection({
                   expenses: true,
@@ -381,7 +382,8 @@ export default function Credit({ setSection }: { setSection: any }) {
               View Expenses
             </Button>
             <Button
-              className="bg-primary hover:bg-primary cursor-pointer rounded-2xl p-5"
+              type="button"
+              className="cursor-pointer rounded-xl py-5"
               onClick={() => [
                 setIsOpen(true),
                 reset(),
@@ -390,7 +392,7 @@ export default function Credit({ setSection }: { setSection: any }) {
                 getExpenseId(),
               ]}
             >
-              <MdOutlineAdd size={34} />
+              <MdOutlineAdd color="white" size={30} />
               Record Credit
             </Button>
             {!search && (
@@ -490,17 +492,22 @@ export default function Credit({ setSection }: { setSection: any }) {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-wrap justify-between gap-5"
         >
-          <p className="w-full text-xl font-medium">
-            {formStatus === "New" ? "New Expenses" : "Edit Expenses"}
-          </p>
+          <div className="w-full">
+            <p className="text-xl font-semibold text-slate-900">
+              {formStatus === "New" ? "New Credit" : "Edit Credit"}
+            </p>
+            <p className="text-sm text-slate-500">
+              {formStatus === "New"
+                ? "Fill in the details to record a new credit"
+                : "Update the details of this credit"}
+            </p>
+          </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Credit ID</label>
+              <label className="text-sm font-medium text-slate-700">Credit ID</label>
               <input
                 type="text"
-                className={
-                  "border-primary cursor-not-allowed rounded-md border p-2"
-                }
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("creditId", { required: true })}
                 readOnly
               />
@@ -511,10 +518,10 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Credit Title</label>
+              <label className="text-sm font-medium text-slate-700">Credit Title</label>
               <input
                 type="text"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("title", { required: true })}
               />
               {errors.title && (
@@ -524,10 +531,10 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Date</label>
+              <label className="text-sm font-medium text-slate-700">Date</label>
               <input
                 type="date"
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("date", { required: true })}
               />
               {errors.date && <p className="text-red-500">date is required</p>}
@@ -535,7 +542,7 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Category</label>
+              <label className="text-sm font-medium text-slate-700">Category</label>
               <Controller
                 name="category"
                 control={control}
@@ -567,7 +574,7 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Client Name</label>
+              <label className="text-sm font-medium text-slate-700">Client Name</label>
               <Controller
                 name="customerName"
                 control={control}
@@ -597,7 +604,7 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label>Link To</label>
+              <label className="text-sm font-medium text-slate-700">Link To</label>
 
               <Controller
                 name="linkTo"
@@ -626,12 +633,14 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className={`${linkTo !== "CustomerBill" && "text-muted"}`}>
+              <label
+                className={`text-sm font-medium ${linkTo !== "CustomerBill" ? "text-slate-400" : "text-slate-700"}`}
+              >
                 Bill#
               </label>
               <input
                 type="text"
-                className={`rounded-md border p-2 ${linkTo !== "CustomerBill" ? "border-muted cursor-not-allowed" : "border-primary"}`}
+                className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${linkTo !== "CustomerBill" ? "cursor-not-allowed opacity-60" : ""}`}
                 {...register("billNumber", {
                   required: linkTo === "CustomerBill",
                 })}
@@ -644,15 +653,13 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[23%]">
             <div className="flex flex-col gap-2">
-              <label className={`${linkTo !== "FM" && "text-muted"}`}>
+              <label
+                className={`text-sm font-medium ${linkTo !== "FM" ? "text-slate-400" : "text-slate-700"}`}
+              >
                 FM#
               </label>
               <input
-                className={`rounded-md border p-2 ${
-                  linkTo !== "FM"
-                    ? "border-muted cursor-not-allowed"
-                    : "border-primary"
-                }`}
+                className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${linkTo !== "FM" ? "cursor-not-allowed opacity-60" : ""}`}
                 {...register("fmNumber", { required: linkTo === "FM" })}
                 disabled={linkTo !== "FM"}
               />
@@ -663,11 +670,11 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Amount</label>
-              <div className="border-primary flex gap-2 rounded-md border p-2">
-                <p>INR</p>
+              <label className="text-sm font-medium text-slate-700">Amount</label>
+              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 pl-3 transition-colors focus-within:border-primary focus-within:bg-white">
+                <p className="text-xs font-medium text-slate-500">INR</p>
                 <input
-                  className="w-full outline-none"
+                  className="w-full bg-transparent px-3 py-2 text-sm outline-none"
                   {...register("amount", { required: true })}
                 />
               </div>
@@ -678,9 +685,9 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Amount In words (auto-generated)</label>
+              <label className="text-sm font-medium text-slate-700">Amount In words (auto-generated)</label>
               <input
-                className="border-primary cursor-not-allowed rounded-md border p-2"
+                className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 opacity-60 outline-none"
                 {...register("amountInWords")}
                 disabled
               />
@@ -688,7 +695,7 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[30%]">
             <div className="flex flex-col gap-2">
-              <label>Payment Type</label>
+              <label className="text-sm font-medium text-slate-700">Payment Type</label>
               <Controller
                 name="paymentType"
                 control={control}
@@ -721,9 +728,9 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[49%]">
             <div className="flex flex-col gap-2">
-              <label>Transaction Reference Number</label>
+              <label className="text-sm font-medium text-slate-700">Transaction Reference Number</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("transactionNumber", { required: true })}
               />
             </div>
@@ -735,9 +742,9 @@ export default function Credit({ setSection }: { setSection: any }) {
           </div>
           <div className="w-[49%]">
             <div className="flex flex-col gap-2">
-              <label>Description</label>
+              <label className="text-sm font-medium text-slate-700">Description</label>
               <input
-                className="border-primary rounded-md border p-2"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                 {...register("description", { required: true })}
               />
             </div>
@@ -748,19 +755,22 @@ export default function Credit({ setSection }: { setSection: any }) {
             )}
           </div>
 
-          <div className="flex w-full justify-end gap-5">
+          <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
             <Button
               type="button"
-              variant={"outline"}
-              className="border-primary text-primary"
+              variant="outline"
+              className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button className="rounded-xl px-7" disabled={isLoading}>
+            <Button
+              className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <VscLoading size={24} className="animate-spin" />
+                <VscLoading size={18} className="animate-spin" />
               ) : formStatus === "New" ? (
                 "Record Credit"
               ) : (

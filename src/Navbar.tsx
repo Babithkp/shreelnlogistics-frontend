@@ -1,14 +1,20 @@
 import logo from "./assets/logisticsLogo.svg";
 import { HiHome } from "react-icons/hi";
 import { PiPackage } from "react-icons/pi";
-import { TbInvoice } from "react-icons/tb";
+import {
+  TbInvoice,
+  TbRadar2,
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarLeftExpand,
+} from "react-icons/tb";
 import { HiOutlineCurrencyRupee } from "react-icons/hi2";
 import { RiFileExcel2Line, RiTruckLine } from "react-icons/ri";
 import { MdDashboard } from "react-icons/md";
-import { TbRadar2 } from "react-icons/tb";
 import { LiaNewspaperSolid } from "react-icons/lia";
 import { FiSettings } from "react-icons/fi";
+import type { IconType } from "react-icons";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tooltip } from "antd";
 import { Button } from "./components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -19,6 +25,51 @@ import { VscGraph } from "react-icons/vsc";
 type DropDowns = "shipment" | "partner" | "statements";
 
 type DropDownState = Record<DropDowns, boolean>;
+
+const navItemClass =
+  "group flex w-full cursor-pointer items-center gap-3 rounded-md p-2 font-medium text-muted transition-colors hover:bg-primary hover:text-white";
+
+const subNavItemClass =
+  "group flex w-full cursor-pointer items-center gap-3 rounded-md p-2 pl-[3rem] font-medium text-muted transition-colors hover:bg-primary hover:text-white";
+
+const iconClass = (active: boolean) =>
+  `shrink-0 transition-colors group-hover:text-white ${active ? "text-primary" : "text-muted"}`;
+
+function NavItem({
+  icon: Icon,
+  label,
+  active,
+  collapsed,
+  onClick,
+}: {
+  icon: IconType;
+  label: string;
+  active: boolean;
+  collapsed: boolean;
+  onClick: () => void;
+}) {
+  const button = (
+    <button
+      className={`${navItemClass} ${collapsed ? "justify-center" : ""}`}
+      onClick={onClick}
+    >
+      <Icon size={24} className={iconClass(active)} />
+      {!collapsed && (
+        <p className={`${active ? "text-black group-hover:text-white" : ""}`}>
+          {label}
+        </p>
+      )}
+    </button>
+  );
+
+  if (!collapsed) return button;
+
+  return (
+    <Tooltip title={label} placement="right">
+      {button}
+    </Tooltip>
+  );
+}
 
 export default function Navbar({
   setSections,
@@ -34,6 +85,7 @@ export default function Navbar({
   };
 }) {
   const [version, setVersion] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
   const [dropDown, setDropDown] = useState({
     shipment: false,
     partner: false,
@@ -48,6 +100,9 @@ export default function Navbar({
   };
 
   const sectionDropChangeHandler = (section: DropDowns) => {
+    if (collapsed) {
+      setCollapsed(false);
+    }
     setDropDown((prev) => {
       const updatedSections: DropDownState = Object.keys(prev).reduce(
         (acc, key) => {
@@ -88,38 +143,55 @@ export default function Navbar({
   useEffect(() => {
     getVersion().then(setVersion);
   }, []);
+
+  useEffect(() => {
+    if (collapsed) {
+      setDropDown({ shipment: false, partner: false, statements: false });
+    }
+  }, [collapsed]);
+
   return (
-    <nav className="flex h-screen w-[20rem] flex-col justify-between gap-2 overflow-y-auto bg-white p-3">
-      <div className="flex w-full justify-center pb-5">
-        <img src={logo} alt="logo" className="w-[16rem]" />
+    <nav
+      className={`flex h-screen flex-col justify-between gap-2 overflow-y-auto overflow-x-hidden bg-white p-3 transition-all duration-300 ${
+        collapsed ? "w-[5rem]" : "w-[20rem]"
+      }`}
+    >
+      <div
+        className={`flex w-full items-center pb-5 ${collapsed ? "flex-col gap-3" : "justify-between"}`}
+      >
+        <img
+          src={logo}
+          alt="logo"
+          className={`object-contain transition-all duration-300 ${collapsed ? "w-10" : "w-[16rem]"}`}
+        />
+        <button
+          className="cursor-pointer rounded-md p-1 text-muted hover:bg-muted/20"
+          onClick={() => setCollapsed((prev) => !prev)}
+        >
+          {collapsed ? (
+            <TbLayoutSidebarLeftExpand size={24} />
+          ) : (
+            <TbLayoutSidebarLeftCollapse size={24} />
+          )}
+        </button>
       </div>
       <div className="flex h-full flex-col items-start gap-5 max-xl:text-sm">
-        <button
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+        <NavItem
+          icon={HiHome}
+          label="Dashboard"
+          active={sections.dashboard}
+          collapsed={collapsed}
           onClick={() => sectionChangeHandler("dashboard")}
-        >
-          <HiHome
-            size={24}
-            color={`${sections.dashboard ? "#2196F3" : "#A3AED0"}`}
-          />
-          <p className={`${sections.dashboard ? "text-black" : ""}`}>
-            Dashboard
-          </p>
-        </button>
+        />
         <div className="w-full">
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          <NavItem
+            icon={PiPackage}
+            label="Shipments"
+            active={dropDown.shipment}
+            collapsed={collapsed}
             onClick={() => sectionDropChangeHandler("shipment")}
-          >
-            <PiPackage
-              size={24}
-              color={`${dropDown.shipment ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${dropDown.shipment ? "text-black" : ""}`}>
-              Shipments
-            </p>
-          </button>
-          {dropDown.shipment && (
+          />
+          {dropDown.shipment && !collapsed && (
             <AnimatePresence>
               <motion.div
                 key="lr-section"
@@ -130,18 +202,18 @@ export default function Navbar({
                 className="w-full"
               >
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("LR")}
                 >
-                  <p className={`${sections.LR ? "text-black" : ""}`}>
+                  <p className={`${sections.LR ? "text-black group-hover:text-white" : ""}`}>
                     Lorry Receipts (LRs)
                   </p>
                 </button>
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("FM")}
                 >
-                  <p className={`${sections.FM ? "text-black" : ""}`}>
+                  <p className={`${sections.FM ? "text-black group-hover:text-white" : ""}`}>
                     Freight Memos (FMs)
                   </p>
                 </button>
@@ -150,43 +222,30 @@ export default function Navbar({
           )}
         </div>
         <div className="w-full">
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          <NavItem
+            icon={TbInvoice}
+            label="Billing"
+            active={sections.Bill}
+            collapsed={collapsed}
             onClick={() => sectionChangeHandler("Bill")}
-          >
-            <TbInvoice
-              size={24}
-              color={`${sections.Bill ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${sections.Bill ? "text-black" : ""}`}>Billing</p>
-          </button>
-        </div>
-        <div
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
-          onClick={() => sectionChangeHandler("outstanding")}
-        >
-          <HiOutlineCurrencyRupee
-            size={24}
-            color={`${sections.outstanding ? "#2196F3" : "#A3AED0"}`}
           />
-          <p className={`${sections.outstanding ? "text-black" : ""}`}>
-            Outstanding Payment
-          </p>
         </div>
+        <NavItem
+          icon={HiOutlineCurrencyRupee}
+          label="Outstanding Payment"
+          active={sections.outstanding}
+          collapsed={collapsed}
+          onClick={() => sectionChangeHandler("outstanding")}
+        />
         <div className="w-full">
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          <NavItem
+            icon={RiTruckLine}
+            label="Partner Management"
+            active={dropDown.partner}
+            collapsed={collapsed}
             onClick={() => sectionDropChangeHandler("partner")}
-          >
-            <RiTruckLine
-              size={24}
-              color={`${dropDown.partner ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${dropDown.partner ? "text-black" : ""}`}>
-              Partner Management
-            </p>
-          </button>
-          {dropDown.partner && (
+          />
+          {dropDown.partner && !collapsed && (
             <AnimatePresence>
               <motion.div
                 key="lr-section"
@@ -197,18 +256,18 @@ export default function Navbar({
                 className="w-full"
               >
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("vendor")}
                 >
-                  <p className={`${sections.vendor ? "text-black" : ""}`}>
+                  <p className={`${sections.vendor ? "text-black group-hover:text-white" : ""}`}>
                     Vendor management
                   </p>
                 </button>
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("client")}
                 >
-                  <p className={`${sections.client ? "text-black" : ""}`}>
+                  <p className={`${sections.client ? "text-black group-hover:text-white" : ""}`}>
                     Client management
                   </p>
                 </button>
@@ -217,43 +276,30 @@ export default function Navbar({
           )}
         </div>
         {branch.isAdmin && (
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          <NavItem
+            icon={MdDashboard}
+            label="Branch Management"
+            active={sections.branch}
+            collapsed={collapsed}
             onClick={() => sectionChangeHandler("branch")}
-          >
-            <MdDashboard
-              size={24}
-              color={`${sections.branch ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${sections.branch ? "text-black" : ""}`}>
-              Branch Management
-            </p>
-          </button>
+          />
         )}
-        <button
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+        <NavItem
+          icon={TbRadar2}
+          label="Expenses"
+          active={sections.expenses}
+          collapsed={collapsed}
           onClick={() => sectionChangeHandler("expenses")}
-        >
-          <TbRadar2
-            size={24}
-            color={`${sections.expenses ? "#2196F3" : "#A3AED0"}`}
-          />
-          <p className={`${sections.expenses ? "text-black" : ""}`}>Expenses</p>
-        </button>
+        />
         <div className="w-full">
-        <button
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
-          onClick={() => sectionDropChangeHandler("statements")}
-        >
-          <RiFileExcel2Line
-            size={24}
-            color={`${dropDown.statements ? "#2196F3" : "#A3AED0"}`}
+          <NavItem
+            icon={RiFileExcel2Line}
+            label="Statements"
+            active={dropDown.statements}
+            collapsed={collapsed}
+            onClick={() => sectionDropChangeHandler("statements")}
           />
-          <p className={`${dropDown.statements ? "text-black" : ""}`}>
-            Statements
-          </p>
-        </button>
-          {dropDown.statements && (
+          {dropDown.statements && !collapsed && (
             <AnimatePresence>
               <motion.div
                 key="lr-section"
@@ -264,18 +310,20 @@ export default function Navbar({
                 className="w-full"
               >
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("summary")}
                 >
-                  <p className={`${sections.summary ? "text-black" : ""}`}>
+                  <p className={`${sections.summary ? "text-black group-hover:text-white" : ""}`}>
                     Summary
                   </p>
                 </button>
                 <button
-                  className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 pl-[3rem] font-medium hover:text-white"
+                  className={subNavItemClass}
                   onClick={() => sectionChangeHandler("cashStatement")}
                 >
-                  <p className={`${sections.cashStatement ? "text-black" : ""}`}>
+                  <p
+                    className={`${sections.cashStatement ? "text-black group-hover:text-white" : ""}`}
+                  >
                     Cash Statement
                   </p>
                 </button>
@@ -283,51 +331,51 @@ export default function Navbar({
             </AnimatePresence>
           )}
         </div>
-        <button
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+        <NavItem
+          icon={LiaNewspaperSolid}
+          label="POD"
+          active={sections.pod}
+          collapsed={collapsed}
           onClick={() => sectionChangeHandler("pod")}
-        >
-          <LiaNewspaperSolid
-            size={24}
-            color={`${sections.pod ? "#2196F3" : "#A3AED0"}`}
-          />
-          <p className={`${sections.pod ? "text-black" : ""}`}>POD</p>
-        </button>
+        />
 
-        <button
-          className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+        <NavItem
+          icon={VscGraph}
+          label="Reports"
+          active={sections.reports}
+          collapsed={collapsed}
           onClick={() => sectionChangeHandler("reports")}
-        >
-          <VscGraph
-            size={24}
-            color={`${sections.reports ? "#2196F3" : "#A3AED0"}`}
-          />
-          <p className={`${sections.reports ? "text-black" : ""}`}>Reports</p>
-        </button>
+        />
 
         {branch.isAdmin && (
-          <button
-            className="hover:bg-muted-foreground text-muted flex w-full cursor-pointer gap-3 rounded-md p-2 font-medium hover:text-white"
+          <NavItem
+            icon={FiSettings}
+            label="Settings"
+            active={sections.settings}
+            collapsed={collapsed}
             onClick={() => sectionChangeHandler("settings")}
-          >
-            <FiSettings
-              size={24}
-              color={`${sections.settings ? "#2196F3" : "#A3AED0"}`}
-            />
-            <p className={`${sections.settings ? "text-black" : ""}`}>
-              Settings
-            </p>
-          </button>
+          />
         )}
       </div>
       <div className="flex w-full flex-col items-center justify-center">
-        <Button
-          className="bg-primary rounded-2xl px-20 text-white"
-          onClick={onLogoutHandler}
-        >
-          Logout
-        </Button>
-        {version && <p>v{version}</p>}
+        {collapsed ? (
+          <Tooltip title="Logout" placement="right">
+            <Button
+              className="bg-primary rounded-2xl px-3 text-white"
+              onClick={onLogoutHandler}
+            >
+              ⏻
+            </Button>
+          </Tooltip>
+        ) : (
+          <Button
+            className="bg-primary rounded-2xl px-20 text-white"
+            onClick={onLogoutHandler}
+          >
+            Logout
+          </Button>
+        )}
+        {version && !collapsed && <p>v{version}</p>}
       </div>
     </nav>
   );

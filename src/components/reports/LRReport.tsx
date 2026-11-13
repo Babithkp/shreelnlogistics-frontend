@@ -1,8 +1,6 @@
 import { BranchInputs, ClientInputs, LrInputs } from "@/types";
 import { Select as AntSelect } from "antd";
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { BiFilterAlt } from "react-icons/bi";
 import { toast } from "react-toastify";
 import {
   filterLRForClientApi,
@@ -11,6 +9,15 @@ import {
 import { formatter } from "@/lib/utils";
 import { saveExcelFile } from "@/lib/exportFile";
 import ExcelJS from "exceljs";
+import {
+  ReportFiltersCard,
+  ReportStatsRow,
+  ReportExportRow,
+  ReportPreviewCard,
+  ReportDateField,
+  reportTableHeadClass,
+  reportTableRowClass,
+} from "./ReportUI";
 
 export default function LRReport({
   client,
@@ -151,8 +158,12 @@ export default function LRReport({
   };
 
   return (
-    <>
-      <section className="flex w-full items-center gap-3">
+    <div className="flex flex-col gap-5">
+      <ReportFiltersCard
+        onGenerate={onFilterHandler}
+        onReset={() => setLRData([])}
+        loading={filterLoading}
+      >
         <AntSelect
           showSearch
           options={[
@@ -171,7 +182,7 @@ export default function LRReport({
           value={filterInputs.name || null}
           size="large"
           placeholder="Select a Client"
-          className="w-[48%] bg-transparent"
+          className="w-full bg-transparent"
         />
         {isAdmin && (
           <AntSelect
@@ -188,96 +199,71 @@ export default function LRReport({
             value={selectedBranchId || null}
             size="large"
             placeholder="Select a Branch"
-            className="w-[30%] bg-transparent"
+            className="w-full bg-transparent"
           />
         )}
-        <div className="flex w-[20%] items-center gap-2">
-          <p>From:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  from: e.target.value,
-                });
-              }}
-              value={filterInputs.from}
-            />
-          </div>
-        </div>
-        <div className="flex w-[20%] items-center gap-2">
-          <p>To:</p>
-          <div className="rounded-md bg-blue-50 p-1 pr-3">
-            <input
-              type="date"
-              className="ml-2 w-full bg-transparent outline-none"
-              onChange={(e) => {
-                setFilterInputs({
-                  ...filterInputs,
-                  to: e.target.value,
-                });
-              }}
-              value={filterInputs.to}
-            />
-          </div>
-        </div>
-        <Button className="rounded-md px-10" onClick={onFilterHandler}>
-          {filterLoading ? "Loading..." : "Filter"}
-        </Button>
-        <Button
-          variant={"outline"}
-          className="rounded-md bg-[#B0BEC5] px-10 py-4 text-white"
-          disabled={filterLoading}
-          onClick={() => [setLRData([])]}
-        >
-          Reset
-        </Button>
-        <Button className="rounded-md px-10" onClick={exportBillExcelHandler}>
-          Download
-        </Button>
-      </section>
-      <section className="flex h-[70vh] w-full flex-col gap-5 overflow-y-auto rounded-md bg-white text-xs">
-        {LRData.length !== 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th className="text-start font-[500] text-slate-500">LR#</th>
-                <th className="font-[500] text-slate-500">Client Name</th>
-                <th className="font-[500] text-slate-500">Date</th>
-                <th className="font-[500] text-slate-500">Origin</th>
-                <th className="font-[500] text-slate-500">Destination</th>
-                <th className="font-[500] text-slate-500">Freight Amount</th>
+        <ReportDateField
+          label="Date From"
+          value={filterInputs.from}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, from: value })
+          }
+        />
+        <ReportDateField
+          label="Date To"
+          value={filterInputs.to}
+          onChange={(value) =>
+            setFilterInputs({ ...filterInputs, to: value })
+          }
+        />
+      </ReportFiltersCard>
+
+      <ReportStatsRow
+        stats={[
+          { label: "Total Records", value: LRData.length },
+          {
+            label: "Total Value",
+            value: formatter.format(
+              LRData.reduce((acc, lr) => acc + lr.totalAmt, 0),
+            ),
+          },
+        ]}
+      />
+
+      <ReportExportRow onExport={exportBillExcelHandler} />
+
+      <ReportPreviewCard isEmpty={LRData.length === 0}>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className={`${reportTableHeadClass} pl-0`}>LR#</th>
+              <th className={reportTableHeadClass}>Client Name</th>
+              <th className={reportTableHeadClass}>Date</th>
+              <th className={reportTableHeadClass}>Origin</th>
+              <th className={reportTableHeadClass}>Destination</th>
+              <th className={`${reportTableHeadClass} text-right`}>
+                Freight Amount
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {LRData.map((data) => (
+              <tr key={data.id} className={reportTableRowClass}>
+                <td className="py-2.5">{data.lrNumber}</td>
+                <td className="py-2.5">{data.client.name}</td>
+                <td className="py-2.5">
+                  {new Date(data.date).toLocaleDateString()}
+                </td>
+                <td className="py-2.5">{data.from}</td>
+                <td className="py-2.5">{data.to}</td>
+                <td className="py-2.5 text-right">
+                  {formatter.format(data.totalAmt)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {LRData.map((data) => (
-                <tr key={data.id}>
-                  <td className="py-2">{data.lrNumber}</td>
-                  <td className="py-2 text-center">{data.client.name}</td>
-                  <td className="py-2 text-center">
-                    {new Date(data.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 text-center">{data.from}</td>
-                  <td className="py-2 text-center">{data.to}</td>
-                  <td className="py-2 text-center">
-                    {formatter.format(data.totalAmt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {LRData.length == 0 && (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-5">
-            <BiFilterAlt size={60} />
-            <p className="text-lg font-medium">
-              Please apply filters to view the data
-            </p>
-          </div>
-        )}
-      </section>
-    </>
+            ))}
+          </tbody>
+        </table>
+      </ReportPreviewCard>
+    </div>
   );
 }

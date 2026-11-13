@@ -492,7 +492,7 @@ export default function VendorManagement({
         </div>
       </div>
 
-      <section className="flex max-h-[73vh] flex-col gap-5 overflow-y-auto rounded-md bg-white p-5">
+      <section className="flex max-h-[84vh] flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-xl font-medium">
             {showVehicles ? "All Vechiles" : "All Vendors"}
@@ -512,13 +512,22 @@ export default function VendorManagement({
                 onSubmit={handleSubmit(onSubmit)}
                 className="flex flex-wrap justify-between gap-5"
               >
-                <p className="w-full text-xl font-semibold">New Vendor</p>
+                <div className="w-full">
+                  <p className="text-xl font-semibold text-slate-900">
+                    {formStatus === "New" ? "New Vendor" : "Edit Vendor"}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formStatus === "New"
+                      ? "Fill in the details to add a new vendor"
+                      : "Update the details of this vendor"}
+                  </p>
+                </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Vendor Name</label>
+                    <label className="text-sm font-medium text-slate-700">Vendor Name</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("name", { required: true })}
                     />
                   </div>
@@ -533,32 +542,32 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Vendor’s GSTIN</label>
+                    <label className="text-sm font-medium text-slate-700">Vendor’s GSTIN</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("GSTIN")}
                     />
                   </div>
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">
+                    <label className="text-sm font-medium text-slate-700">
                       Branch Name (Optional)
                     </label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("branchName")}
                     />
                   </div>
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Contact Person</label>
+                    <label className="text-sm font-medium text-slate-700">Contact Person</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("contactPerson", {
                         required: true,
                       })}
@@ -570,10 +579,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Contact Number</label>
+                    <label className="text-sm font-medium text-slate-700">Contact Number</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("contactNumber", {
                         required: true,
                         minLength: 10,
@@ -589,19 +598,19 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Email ID</label>
+                    <label className="text-sm font-medium text-slate-700">Email ID</label>
                     <input
                       type="email"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("email", {})}
                     />
                   </div>
                 </div>
                 <div className="w-full">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Address</label>
+                    <label className="text-sm font-medium text-slate-700">Address</label>
                     <textarea
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("address", { required: true })}
                     />
                   </div>
@@ -611,10 +620,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Pincode</label>
+                    <label className="text-sm font-medium text-slate-700">Pincode</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("pincode", {
                         required: true,
                       })}
@@ -626,10 +635,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">City</label>
+                    <label className="text-sm font-medium text-slate-700">City</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("city", {
                         required: true,
                       })}
@@ -641,10 +650,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">State</label>
+                    <label className="text-sm font-medium text-slate-700">State</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("state", {
                         required: true,
                       })}
@@ -656,10 +665,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">PAN</label>
+                    <label className="text-sm font-medium text-slate-700">PAN</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...register("pan", { required: true })}
                     />
                   </div>
@@ -669,7 +678,7 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">TDS</label>
+                    <label className="text-sm font-medium text-slate-700">TDS</label>
                     <Controller
                       control={control}
                       name="TDS"
@@ -684,7 +693,8 @@ export default function VendorManagement({
                           ]}
                           placeholder="Select TDS"
                           size="large"
-                          className="outline-primary rounded-md outline"
+                          className="w-full"
+                          style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                         />
                       )}
                     />
@@ -695,13 +705,13 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[30%]">
                   <div className="flex flex-col gap-2">
-                    <label className="font-medium">Outstanding Limit</label>
-                    <div className="border-primary flex items-center rounded-md border pl-2">
-                      <p className="text-xs font-medium">INR</p>
+                    <label className="text-sm font-medium text-slate-700">Outstanding Limit</label>
+                    <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 pl-3 transition-colors focus-within:border-primary focus-within:bg-white">
+                      <p className="text-xs font-medium text-slate-500">INR</p>
                       <input
                         type="number"
                         placeholder="00000.00"
-                        className="w-full p-1 py-2 pl-2 outline-none"
+                        className="w-full bg-transparent px-3 py-2 text-sm outline-none"
                         {...register("outstandingLimit", {
                           required: true,
                         })}
@@ -714,10 +724,22 @@ export default function VendorManagement({
                     </p>
                   )}
                 </div>
-                <div className="flex w-full justify-end">
-                  <Button className="rounded-xl px-7" disabled={isLoading}>
+                <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
+                    onClick={() => setIsModalOpen(false)}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                    disabled={isLoading}
+                  >
                     {isLoading ? (
-                      <VscLoading size={24} className="animate-spin" />
+                      <VscLoading size={18} className="animate-spin" />
                     ) : formStatus === "New" ? (
                       "Create Vendor"
                     ) : (
@@ -738,12 +760,19 @@ export default function VendorManagement({
                 onSubmit={VehicleHandleSubmit(onVehicleSubmit)}
                 className="flex flex-wrap justify-between gap-5"
               >
-                <p className="w-full text-xl font-medium">
-                  {formStatus === "New" ? "New Vehicle" : "Edit Vehicle"}
-                </p>
+                <div className="w-full">
+                  <p className="text-xl font-semibold text-slate-900">
+                    {formStatus === "New" ? "New Vehicle" : "Edit Vehicle"}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formStatus === "New"
+                      ? "Fill in the details to add a new vehicle"
+                      : "Update the details of this vehicle"}
+                  </p>
+                </div>
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>Vendor Name</label>
+                    <label className="text-sm font-medium text-slate-700">Vendor Name</label>
                     <Controller
                       name="vendorName"
                       control={VehicleControl}
@@ -754,7 +783,8 @@ export default function VendorManagement({
                           showSearch
                           options={extractVendorNameOptions(originalVendors)}
                           placeholder="Select Vendor Name"
-                          className="outline-primary w-full rounded-md outline"
+                          className="w-full"
+                          style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                           size="large"
                           onChange={(value) => {
                             field.onChange(value);
@@ -768,7 +798,7 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>Vehicle Type</label>
+                    <label className="text-sm font-medium text-slate-700">Vehicle Type</label>
                     <Controller
                       name="vehicletypes"
                       control={VehicleControl}
@@ -779,7 +809,8 @@ export default function VendorManagement({
                           {...field}
                           options={extractVehicleTypeOptions(vehicleTypes)}
                           placeholder="Select vehicle types"
-                          className="outline-primary w-full rounded-md outline"
+                          className="w-full"
+                          style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                           size="large"
                         />
                       )}
@@ -793,7 +824,7 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>Vehicle Number</label>
+                    <label className="text-sm font-medium text-slate-700">Vehicle Number</label>
                     <Controller
                       name="vehicleNumber"
                       control={VehicleControl}
@@ -802,7 +833,7 @@ export default function VendorManagement({
                       render={({ field }) => (
                         <input
                           type="text"
-                          className="border-primary rounded-md border p-1 py-2 pl-2"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                           {...field}
                           onChange={(e) => field.onChange(e.target.value)}
                         />
@@ -820,19 +851,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[23%]">
                   <div className="flex flex-col gap-2">
-                    <label>Owner Name</label>
+                    <label className="text-sm font-medium text-slate-700">Owner Name</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
-                      style={
-                        formStatus === "editing"
-                          ? {
-                            backgroundColor: "#F5F5F5",
-                            cursor: "not-allowed",
-                            color: "#C7C3C3FF",
-                          }
-                          : {}
-                      }
+                      className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${formStatus === "editing" ? "cursor-not-allowed text-slate-500 opacity-60" : ""}`}
                       {...VehicleRegister("ownerName", {
                         validate: (value) =>
                           VehicleWatch("vendorName")
@@ -850,19 +872,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[23%]">
                   <div className="flex flex-col gap-2">
-                    <label>Owner Contact</label>
+                    <label className="text-sm font-medium text-slate-700">Owner Contact</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
-                      style={
-                        formStatus === "editing"
-                          ? {
-                            backgroundColor: "#F5F5F5",
-                            cursor: "not-allowed",
-                            color: "#C7C3C3FF",
-                          }
-                          : {}
-                      }
+                      className={`w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white ${formStatus === "editing" ? "cursor-not-allowed text-slate-500 opacity-60" : ""}`}
                       {...VehicleRegister("ownerPhone", {
                         validate: (value) => {
                           if (VehicleWatch("vendorName")) {
@@ -884,20 +897,20 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[23%]">
                   <div className="flex flex-col gap-2">
-                    <label>Driver Name</label>
+                    <label className="text-sm font-medium text-slate-700">Driver Name</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...VehicleRegister("driverName")}
                     />
                   </div>
                 </div>
                 <div className="w-[23%]">
                   <div className="flex flex-col gap-2">
-                    <label>Driver Contact</label>
+                    <label className="text-sm font-medium text-slate-700">Driver Contact</label>
                     <input
                       type="number"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...VehicleRegister("driverPhone", {
                         required: true,
                       })}
@@ -911,10 +924,10 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>Pan Number</label>
+                    <label className="text-sm font-medium text-slate-700">Pan Number</label>
                     <input
                       type="text"
-                      className="border-primary rounded-md border p-1 py-2 pl-2"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:bg-white"
                       {...VehicleRegister("panNumber", {
                         required: true,
                       })}
@@ -927,7 +940,7 @@ export default function VendorManagement({
 
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>Insurance</label>
+                    <label className="text-sm font-medium text-slate-700">Insurance</label>
                     <Controller
                       name="insurance"
                       control={VehicleControl}
@@ -941,7 +954,8 @@ export default function VendorManagement({
                             { value: "Not insured", label: "Not insured" },
                           ]}
                           placeholder="Select insurance"
-                          className="outline-primary w-full rounded-md outline"
+                          className="w-full"
+                          style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                           size="large"
                         />
                       )}
@@ -953,7 +967,7 @@ export default function VendorManagement({
                 </div>
                 <div className="w-[32%]">
                   <div className="flex flex-col gap-2">
-                    <label>RC</label>
+                    <label className="text-sm font-medium text-slate-700">RC</label>
                     <Controller
                       control={VehicleControl}
                       name="RC"
@@ -971,7 +985,8 @@ export default function VendorManagement({
                           ]}
                           placeholder="Select RC"
                           size="large"
-                          className="outline-primary rounded-md outline"
+                          className="w-full"
+                          style={{ border: "1px solid #64BAFF", borderRadius: "10px" }}
                         />
                       )}
                     />
@@ -980,18 +995,22 @@ export default function VendorManagement({
                     <p className="text-red-500">{VehicleErrors.RC.message}</p>
                   )}
                 </div>
-                <div className="flex w-full justify-end gap-5">
+                <div className="flex w-full justify-end gap-3 border-t border-slate-100 pt-5">
                   <Button
                     type="button"
                     onClick={() => VehicleReset()}
-                    className="rounded-xl px-7"
+                    variant="outline"
+                    className="cursor-pointer rounded-lg border-primary/30 px-6 text-primary hover:bg-primary/5"
                     disabled={isLoading}
                   >
                     Reset
                   </Button>
-                  <Button className="rounded-xl px-7" disabled={isLoading}>
+                  <Button
+                    className="cursor-pointer rounded-lg bg-primary px-6 text-white hover:bg-primary/90"
+                    disabled={isLoading}
+                  >
                     {isLoading ? (
-                      <VscLoading size={24} className="animate-spin" />
+                      <VscLoading size={18} className="animate-spin" />
                     ) : formStatus === "New" ? (
                       "Add Vehicle"
                     ) : (
@@ -1074,47 +1093,49 @@ export default function VendorManagement({
           </div>
         </div>
         {!showVehicles && (
-          <div className="overflow-y-auto  ">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                    <p>Vendor Name</p>
-                    <FaChevronDown
-                      size={15}
-                      className="cursor-pointer"
-                      onClick={sortVendorsByName}
-                    />
+          <div className="overflow-y-auto pr-1">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-white">
+                <tr className="border-b border-slate-100">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <p>Vendor Name</p>
+                      <FaChevronDown
+                        size={15}
+                        className="cursor-pointer"
+                        onClick={sortVendorsByName}
+                      />
+                    </div>
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Owner Name
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Fleet size
                   </th>
-                  <th className="flex items-center gap-2 text-start font-[400] text-[#797979]">
-                    <p>Pending payment</p>
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                    Pending payment
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                     Total Hire Cost
                   </th>
-                  <th className="text-start font-[400] text-[#797979]">TDS</th>
+                  <th className="px-3 py-2.5 text-left font-medium text-slate-500">TDS</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredVendors?.map((vendor: VendorInputs) => (
                   <tr
                     key={vendor.id}
-                    className="hover:bg-accent cursor-pointer"
+                    className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 cursor-pointer"
                     onClick={() => [
                       setIsDetailsModalOpen(true),
                       setSelectedVendor(vendor),
                     ]}
                   >
-                    <td className="py-2">{vendor.name}</td>
-                    <td className="py-2">{vendor.contactPerson}</td>
-                    <td className="py-2">{vendor.vehicles.length}</td>
-                    <td className="py-2">
+                    <td className="px-3 py-2.5 font-medium text-slate-900">{vendor.name}</td>
+                    <td className="px-3 py-2.5 text-slate-700">{vendor.contactPerson}</td>
+                    <td className="px-3 py-2.5 text-slate-700">{vendor.vehicles.length}</td>
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(
                         vendor.FM.reduce(
                           (acc, data) =>
@@ -1123,7 +1144,7 @@ export default function VendorManagement({
                         ),
                       )}
                     </td>
-                    <td className="py-2">
+                    <td className="px-3 py-2.5 text-slate-700">
                       {formatter.format(
                         vendor.FM?.reduce(
                           (acc, data) =>
@@ -1137,7 +1158,7 @@ export default function VendorManagement({
                         ),
                       )}
                     </td>
-                    <td className="py-2">{vendor.TDS}</td>
+                    <td className="px-3 py-2.5 text-slate-700">{vendor.TDS}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1145,37 +1166,40 @@ export default function VendorManagement({
           </div>
         )}
         {showVehicles && (
-          <div className="overflow-y-auto  ">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-start font-[400] text-[#797979]">
+          <div className="overflow-y-auto pr-1">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Vendor Name
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Vehicle Number
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Vehicle Type
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Pan Number
                 </th>
-                <th className="text-start font-[400] text-[#797979]">
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
                   Insurance
                 </th>
-                <th className="text-start font-[400] text-[#797979]">RC</th>
+                <th className="px-3 py-2.5 text-left font-medium text-slate-500">RC</th>
               </tr>
             </thead>
             <tbody>
               {filteredVehicles?.map((vehicle) => (
-                <tr key={vehicle.id}>
-                  <td className="py-2">{vehicle.vendorName || "-"}</td>
-                  <td className="py-2">{vehicle.vehicleNumber}</td>
-                  <td className="py-2">{vehicle.vehicletypes}</td>
-                  <td className="py-2">{vehicle.panNumber}</td>
-                  <td className="py-2">{vehicle.insurance}</td>
-                  <td className="py-2">{vehicle.RC}</td>
+                <tr
+                  key={vehicle.id}
+                  className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50"
+                >
+                  <td className="px-3 py-2.5 font-medium text-slate-900">{vehicle.vendorName || "-"}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{vehicle.vehicleNumber}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{vehicle.vehicletypes}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{vehicle.panNumber}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{vehicle.insurance}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{vehicle.RC}</td>
                 </tr>
               ))}
             </tbody>
