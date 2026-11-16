@@ -9,7 +9,8 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Skeleton } from "antd";
+import { Skeleton, Tooltip as InfoTooltip } from "antd";
+import { Info } from "lucide-react";
 import { getDashboardDataApi, getDashboardDataForBranchApi } from "@/api/admin";
 import { billInputs, BranchInputs, ClientInputs, FMInputs } from "@/types";
 import { formatter } from "@/lib/utils";
@@ -49,6 +50,10 @@ export interface DashboardData {
   vendorCount: string;
   overAllBranchData: BranchInputs[];
   FMData: FMInputs[];
+  LRData?: { totalAmt: number; date: string }[];
+  // Admin only: running-cost expenses and customer-bill write-offs.
+  operatingExpenseData?: { amount: string; date: string }[];
+  billWriteOffData?: { amount: string; date: string }[];
   billData: billInputs[];
   branchData: BranchInputs[];
 }
@@ -88,6 +93,15 @@ const filterDashboardDataByRange = (
     ),
     FMData: source.FMData.filter((fm) =>
       isWithinRange(recordDate(fm), start, end),
+    ),
+    LRData: source.LRData?.filter((lr) =>
+      isWithinRange(lr.date, start, end),
+    ),
+    operatingExpenseData: source.operatingExpenseData?.filter((e) =>
+      isWithinRange(e.date, start, end),
+    ),
+    billWriteOffData: source.billWriteOffData?.filter((w) =>
+      isWithinRange(w.date, start, end),
     ),
     clientData: source.clientData.map((client) => ({
       ...client,
@@ -138,49 +152,54 @@ export default function Dashboard({
   const totalOutStanding = dashboardData?.billData
     .reduce((acc, bill) => acc + bill.pendingAmount, 0)
 
+  // Net freight per FM: hire + other + detention + RTO charges, minus TDS
+  // (same formula as the "Freight Amount" bars below).
+  const totalFMAmount = dashboardData?.FMData.reduce((acc, fm) => {
+    const val =
+      parseFloat(fm.hire || "0") +
+      parseFloat(fm.otherCharges || "0") +
+      parseFloat(fm.detentionCharges || "0") +
+      parseFloat(fm.rtoCharges || "0");
+    return acc + (val - parseFloat(fm.tds || "0"));
+  }, 0);
 
+  // Rough gross margin: what was invoiced minus what was paid out on FMs.
+  const grossMargin =
+    totalInvoice !== undefined && totalFMAmount !== undefined
+      ? Number(totalInvoice) - totalFMAmount
+      : undefined;
+  const grossMarginPercent =
+    grossMargin !== undefined && Number(totalInvoice) > 0
+      ? (grossMargin / Number(totalInvoice)) * 100
+      : 0;
 
-  const getMonthlyRevenueChange = (): number => {
-    if (!dashboardData?.billData?.length) return 0;
+  const parseAmount = (value?: string) =>
+    parseFloat((value || "0").replace(/,/g, "")) || 0;
 
-    const latestBillDate = dashboardData.billData.reduce(
-      (latest, bill) => {
-        const d = new Date(bill.date);
-        return d > latest ? d : latest;
-      },
-      new Date(dashboardData.billData[0].date)
-    );
+  // Rough net margin: gross margin minus running costs and bad debts.
+  const totalOperatingExpenses = dashboardData?.operatingExpenseData?.reduce(
+    (acc, e) => acc + parseAmount(e.amount),
+    0,
+  );
+  const totalBillWriteOffs = dashboardData?.billWriteOffData?.reduce(
+    (acc, w) => acc + parseAmount(w.amount),
+    0,
+  );
+  const netMargin =
+    grossMargin !== undefined &&
+    totalOperatingExpenses !== undefined &&
+    totalBillWriteOffs !== undefined
+      ? grossMargin - totalOperatingExpenses - totalBillWriteOffs
+      : undefined;
+  const netMarginPercent =
+    netMargin !== undefined && Number(totalInvoice) > 0
+      ? (netMargin / Number(totalInvoice)) * 100
+      : 0;
 
-    const thisMonth = latestBillDate.getUTCMonth();
-    const thisYear = latestBillDate.getUTCFullYear();
-
-    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-    let thisMonthRevenue = 0;
-    let lastMonthRevenue = 0;
-
-    for (const bill of dashboardData.billData) {
-      const billDate = new Date(bill.date);
-      const billMonth = billDate.getUTCMonth();
-      const billYear = billDate.getUTCFullYear();
-      const amount = Number(bill.subTotal) || 0;
-
-      if (billYear === thisYear && billMonth === thisMonth) {
-        thisMonthRevenue += amount;
-      }
-
-      if (billYear === lastMonthYear && billMonth === lastMonth) {
-        lastMonthRevenue += amount;
-      }
-    }
-
-    if (lastMonthRevenue === 0) return 0;
-
-    return Number(
-      (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(2)
-    );
-  };
+  const totalLRAmount = dashboardData?.LRData?.reduce(
+    (acc, lr) => acc + (Number(lr.totalAmt) || 0),
+    0,
+  );
 
 
   const formatGraphData = (): GraphPoint[] => {
@@ -284,10 +303,11 @@ export default function Dashboard({
 
   const getTop10Branches = (branches: BranchInputs[]) => {
     const result = branches.map((branch) => {
-      const totalInvoice = branch.bill?.reduce(
-        (sum: number, b: any) => sum + (b.subTotal || 0),
-        0,
-      );
+      const totalInvoice =
+        branch.bill?.reduce(
+          (sum: number, b: any) => sum + (b.subTotal || 0),
+          0,
+        ) ?? 0;
 
       const totalFreight = branch.FM?.reduce((sum: number, r: any) => {
         const val =
@@ -299,7 +319,7 @@ export default function Dashboard({
         const tds = parseFloat(r.tds || "0");
 
         return sum + (val - tds);
-      }, 0);
+      }, 0) ?? 0;
 
       return {
         name: branch.branchName,
@@ -369,31 +389,24 @@ export default function Dashboard({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-6 lg:grid-cols-12">
-        <div className="col-span-2 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:col-span-3 lg:col-span-3">
+      {/* Summary card */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <p className="mb-4 text-base font-semibold text-slate-900">
+        Financial Overview
+      </p>
+      <div className="flex flex-col divide-y divide-slate-200 lg:flex-row lg:divide-x lg:divide-y-0">
+        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
           <p className="text-2xl font-semibold text-slate-900">
             {totalInvoice
               ? formatter.format(parseInt(totalInvoice || "0"))
               : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-          </p>
-          <p
-            className={`mt-1 text-xs font-medium ${getMonthlyRevenueChange() > 0 ? "text-emerald-500" : "text-red-500"
-              }`}
-          >
-            {dashboardData ? (
-              `${getMonthlyRevenueChange() > 0 ? "+" : ""}${getMonthlyRevenueChange()}%`
-            ) : (
-              <Skeleton.Button active rootClassName="w-14 h-4" shape="square" />
-            )}{" "}
-            <span className="font-normal text-slate-400">vs Last month</span>
           </p>
           <p className="mt-2 text-sm font-medium text-slate-500">
             Total Invoicing value
           </p>
         </div>
 
-        <div className="col-span-2 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:col-span-3 lg:col-span-3">
+        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
           <p className="text-2xl font-semibold text-slate-900">
             {totalOutStanding
               ? formatter.format(totalOutStanding)
@@ -404,40 +417,115 @@ export default function Dashboard({
           </p>
         </div>
 
+        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
+          <p className="text-2xl font-semibold text-slate-900">
+            {totalFMAmount !== undefined
+              ? formatter.format(totalFMAmount)
+              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            Total FM Amount
+          </p>
+        </div>
+
+        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
+          <p className="text-2xl font-semibold text-slate-900">
+            {totalLRAmount !== undefined
+              ? formatter.format(totalLRAmount)
+              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            Total LR Amount
+          </p>
+        </div>
+
         {isAdmin && (
-          <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
-            <p className="text-xl font-semibold text-slate-900">
-              {dashboardData ? (
-                dashboardData.branchData.length
-              ) : (
-                <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
+          <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
+            <p className="text-2xl font-semibold text-slate-900">
+              {grossMargin !== undefined
+                ? `${grossMarginPercent.toFixed(1)}%`
+                : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+              {grossMargin !== undefined && (
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  {formatter.format(grossMargin)}
+                </span>
               )}
             </p>
-            <p className="mt-1 text-xs font-medium text-slate-500">Branches</p>
+            <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-500">
+              <span>Gross Margin</span>
+              <InfoTooltip
+                title={
+                  <div className="text-xs leading-relaxed">
+                    <p className="font-semibold">How this is calculated</p>
+                    <p>Total Invoicing value − Total FM Amount</p>
+                    <p className="mt-1 opacity-80">
+                      FM Amount = hire + other charges + detention + RTO
+                      charges − TDS. The % is that difference as a share of invoicing.
+                    </p>
+                    <p className="mt-1 opacity-80">
+                      Rough figure only: salaries, rent, interest and other
+                      running costs are not deducted.
+                    </p>
+                  </div>
+                }
+              >
+                <button
+                  type="button"
+                  aria-label="How gross margin is calculated"
+                  className="cursor-help text-slate-400 hover:text-slate-600"
+                >
+                  <Info size={14} />
+                </button>
+              </InfoTooltip>
+            </div>
           </div>
         )}
 
-        <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
-          <p className="text-xl font-semibold text-slate-900">
-            {dashboardData ? (
-              dashboardData.clientData.length
-            ) : (
-              <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
-            )}
-          </p>
-          <p className="mt-1 text-xs font-medium text-slate-500">Total Clients</p>
-        </div>
-
-        <div className="col-span-1 flex flex-col justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-2">
-          <p className="text-xl font-semibold text-slate-900">
-            {dashboardData ? (
-              dashboardData.vendorCount
-            ) : (
-              <Skeleton.Button active rootClassName="w-12 h-7" shape="square" />
-            )}
-          </p>
-          <p className="mt-1 text-xs font-medium text-slate-500">Vendors</p>
-        </div>
+        {isAdmin && (
+          <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
+            <p className="text-2xl font-semibold text-slate-900">
+              {netMargin !== undefined
+                ? `${netMarginPercent.toFixed(1)}%`
+                : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+              {netMargin !== undefined && (
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  {formatter.format(netMargin)}
+                </span>
+              )}
+            </p>
+            <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-500">
+              <span>Net Margin</span>
+              <InfoTooltip
+                title={
+                  <div className="text-xs leading-relaxed">
+                    <p className="font-semibold">How this is calculated</p>
+                    <p>Gross Margin − Running costs − Bad debts written off</p>
+                    <p className="mt-1 opacity-80">
+                      Running costs are expenses such as salaries, interest,
+                      rent, office, car, travel, phone, petrol and CA fees.
+                      The % is that figure as a share of invoicing.
+                    </p>
+                    <p className="mt-1 opacity-80">
+                      Not deducted: loan repayments and EMIs, owner
+                      withdrawals, asset purchases, deposits, transfers and
+                      TDS. Interest inside EMIs isn't recorded
+                      separately, so the true margin is likely a little lower.
+                    </p>
+                  </div>
+                }
+              >
+                <button
+                  type="button"
+                  aria-label="How net margin is calculated"
+                  className="cursor-help text-slate-400 hover:text-slate-600"
+                >
+                  <Info size={14} />
+                </button>
+              </InfoTooltip>
+            </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {/* Revenue + Branch performance */}
@@ -635,6 +723,9 @@ export default function Dashboard({
                       <th className="pb-2 text-right font-medium">
                         Total Freight Amt.
                       </th>
+                      <th className="pb-2 text-right font-medium">
+                        Gross Margin
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -653,6 +744,16 @@ export default function Dashboard({
                             </td>
                             <td className="py-2.5 text-right text-sm font-medium text-slate-900">
                               {formatter.format(client.totalFreight)}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <p className="text-sm font-medium text-slate-900">
+                                {client.totalInvoice > 0
+                                  ? `${(((client.totalInvoice - client.totalFreight) / client.totalInvoice) * 100).toFixed(1)}%`
+                                  : "—"}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {formatter.format(client.totalInvoice - client.totalFreight)}
+                              </p>
                             </td>
                           </tr>
                         ),

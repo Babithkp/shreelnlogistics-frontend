@@ -331,7 +331,7 @@ export const deleteFMRecordByNotificationApi = async (
 export const filterLRDetailsApi = async (text: string) => {
   try {
     const response = await axios.get(
-      `${BASE_URL}/api/v1/filterLRDetails/${text}`,
+      `${BASE_URL}/api/v1/filterLRDetails/${encodeURIComponent(text.trim())}`,
     );
     return response;
   } catch (error) {
@@ -342,7 +342,7 @@ export const filterLRDetailsApi = async (text: string) => {
 export const filterLRDetailsForBranchApi = async (branchId: string, text: string) => {
   try {
     const response = await axios.get(
-      `${BASE_URL}/api/v1/filterLRDetailsForBranch/${branchId}/${text}`,
+      `${BASE_URL}/api/v1/filterLRDetailsForBranch/${branchId}/${encodeURIComponent(text.trim())}`,
     );
     return response;
   } catch (error) {
