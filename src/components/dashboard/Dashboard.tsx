@@ -130,6 +130,42 @@ const filterDashboardDataByRange = (
   };
 };
 
+// Whole rupees keep the large overview figures short enough to fit.
+const overviewINR = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+function OverviewCell({
+  label,
+  value,
+  subValue,
+  info,
+}: {
+  label: string;
+  value?: string;
+  subValue?: string;
+  info?: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0 bg-white px-5 py-4">
+      <p className="truncate text-xl font-semibold tabular-nums text-slate-900" title={value}>
+        {value ?? <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
+      </p>
+      {subValue && (
+        <p className="truncate text-xs tabular-nums text-slate-400" title={subValue}>
+          {subValue}
+        </p>
+      )}
+      <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-500">
+        <span className="truncate">{label}</span>
+        {info}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({
   data,
   dateRange = null,
@@ -391,141 +427,105 @@ export default function Dashboard({
     <div className="flex flex-col gap-6">
       {/* Summary card */}
       <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <p className="mb-4 text-base font-semibold text-slate-900">
-        Financial Overview
-      </p>
-      <div className="flex flex-col divide-y divide-slate-200 lg:flex-row lg:divide-x lg:divide-y-0">
-        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-          <p className="text-2xl font-semibold text-slate-900">
-            {totalInvoice
-              ? formatter.format(parseInt(totalInvoice || "0"))
-              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Total Invoicing value
-          </p>
-        </div>
-
-        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-          <p className="text-2xl font-semibold text-slate-900">
-            {totalOutStanding
-              ? formatter.format(totalOutStanding)
-              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Total Outstanding value
-          </p>
-        </div>
-
-        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-          <p className="text-2xl font-semibold text-slate-900">
-            {totalFMAmount !== undefined
-              ? formatter.format(totalFMAmount)
-              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Total FM Amount
-          </p>
-        </div>
-
-        <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-          <p className="text-2xl font-semibold text-slate-900">
-            {totalLRAmount !== undefined
-              ? formatter.format(totalLRAmount)
-              : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Total LR Amount
-          </p>
-        </div>
-
-        {isAdmin && (
-          <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-            <p className="text-2xl font-semibold text-slate-900">
-              {grossMargin !== undefined
-                ? `${grossMarginPercent.toFixed(1)}%`
-                : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-              {grossMargin !== undefined && (
-                <span className="ml-2 text-sm font-normal text-slate-400">
-                  {formatter.format(grossMargin)}
-                </span>
-              )}
-            </p>
-            <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-500">
-              <span>Gross Margin</span>
-              <InfoTooltip
-                title={
-                  <div className="text-xs leading-relaxed">
-                    <p className="font-semibold">How this is calculated</p>
-                    <p>Total Invoicing value − Total FM Amount</p>
-                    <p className="mt-1 opacity-80">
-                      FM Amount = hire + other charges + detention + RTO
-                      charges − TDS. The % is that difference as a share of invoicing.
-                    </p>
-                    <p className="mt-1 opacity-80">
-                      Rough figure only: salaries, rent, interest and other
-                      running costs are not deducted.
-                    </p>
-                  </div>
-                }
-              >
-                <button
-                  type="button"
-                  aria-label="How gross margin is calculated"
-                  className="cursor-help text-slate-400 hover:text-slate-600"
+        <p className="mb-4 text-base font-semibold text-slate-900">
+          Financial Overview
+        </p>
+        {/* gap-px over a light slate background draws soft dividers between
+            figures only (no outer outline); the column counts divide the cell
+            count evenly so no row is left half empty. */}
+        <div
+          className={`grid gap-px overflow-hidden bg-slate-100 ${
+            isAdmin
+              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6"
+              : "grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4"
+          }`}
+        >
+          <OverviewCell
+            label="Total Invoicing value"
+            value={totalInvoice !== undefined ? overviewINR.format(Number(totalInvoice)) : undefined}
+          />
+          <OverviewCell
+            label="Total Outstanding value"
+            value={totalOutStanding !== undefined ? overviewINR.format(totalOutStanding) : undefined}
+          />
+          <OverviewCell
+            label="Total FM Amount"
+            value={totalFMAmount !== undefined ? overviewINR.format(totalFMAmount) : undefined}
+          />
+          <OverviewCell
+            label="Total LR Amount"
+            value={totalLRAmount !== undefined ? overviewINR.format(totalLRAmount) : undefined}
+          />
+          {isAdmin && (
+            <OverviewCell
+              label="Gross Margin"
+              value={grossMargin !== undefined ? `${grossMarginPercent.toFixed(1)}%` : undefined}
+              subValue={grossMargin !== undefined ? overviewINR.format(grossMargin) : undefined}
+              info={
+                <InfoTooltip
+                  title={
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-semibold">How this is calculated</p>
+                      <p>Total Invoicing value − Total FM Amount</p>
+                      <p className="mt-1 opacity-80">
+                        FM Amount = hire + other charges + detention + RTO
+                        charges − TDS. The % is that difference as a share of invoicing.
+                      </p>
+                      <p className="mt-1 opacity-80">
+                        Rough figure only: salaries, rent, interest and other
+                        running costs are not deducted.
+                      </p>
+                    </div>
+                  }
                 >
-                  <Info size={14} />
-                </button>
-              </InfoTooltip>
-            </div>
-          </div>
-        )}
-
-        {isAdmin && (
-          <div className="flex-1 px-5 py-4 first:pt-0 last:pb-0 lg:py-0 lg:first:pl-0 lg:last:pr-0">
-            <p className="text-2xl font-semibold text-slate-900">
-              {netMargin !== undefined
-                ? `${netMarginPercent.toFixed(1)}%`
-                : <Skeleton.Button active rootClassName="w-20 h-7" shape="square" />}
-              {netMargin !== undefined && (
-                <span className="ml-2 text-sm font-normal text-slate-400">
-                  {formatter.format(netMargin)}
-                </span>
-              )}
-            </p>
-            <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-500">
-              <span>Net Margin</span>
-              <InfoTooltip
-                title={
-                  <div className="text-xs leading-relaxed">
-                    <p className="font-semibold">How this is calculated</p>
-                    <p>Gross Margin − Running costs − Bad debts written off</p>
-                    <p className="mt-1 opacity-80">
-                      Running costs are expenses such as salaries, interest,
-                      rent, office, car, travel, phone, petrol and CA fees.
-                      The % is that figure as a share of invoicing.
-                    </p>
-                    <p className="mt-1 opacity-80">
-                      Not deducted: loan repayments and EMIs, owner
-                      withdrawals, asset purchases, deposits, transfers and
-                      TDS. Interest inside EMIs isn't recorded
-                      separately, so the true margin is likely a little lower.
-                    </p>
-                  </div>
-                }
-              >
-                <button
-                  type="button"
-                  aria-label="How net margin is calculated"
-                  className="cursor-help text-slate-400 hover:text-slate-600"
+                  <button
+                    type="button"
+                    aria-label="How gross margin is calculated"
+                    className="cursor-help text-slate-400 hover:text-slate-600"
+                  >
+                    <Info size={14} />
+                  </button>
+                </InfoTooltip>
+              }
+            />
+          )}
+          {isAdmin && (
+            <OverviewCell
+              label="Net Margin"
+              value={netMargin !== undefined ? `${netMarginPercent.toFixed(1)}%` : undefined}
+              subValue={netMargin !== undefined ? overviewINR.format(netMargin) : undefined}
+              info={
+                <InfoTooltip
+                  title={
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-semibold">How this is calculated</p>
+                      <p>Gross Margin − Running costs − Bad debts written off</p>
+                      <p className="mt-1 opacity-80">
+                        Running costs are expenses such as salaries, interest,
+                        rent, office, car, travel, phone, petrol and CA fees.
+                        The % is that figure as a share of invoicing.
+                      </p>
+                      <p className="mt-1 opacity-80">
+                        Not deducted: loan repayments and EMIs, owner
+                        withdrawals, asset purchases, deposits, transfers and
+                        TDS. Interest inside EMIs isn't recorded
+                        separately, so the true margin is likely a little lower.
+                      </p>
+                    </div>
+                  }
                 >
-                  <Info size={14} />
-                </button>
-              </InfoTooltip>
-            </div>
-          </div>
-        )}
-      </div>
+                  <button
+                    type="button"
+                    aria-label="How net margin is calculated"
+                    className="cursor-help text-slate-400 hover:text-slate-600"
+                  >
+                    <Info size={14} />
+                  </button>
+                </InfoTooltip>
+              }
+            />
+          )}
+        </div>
       </div>
 
       {/* Revenue + Branch performance */}
